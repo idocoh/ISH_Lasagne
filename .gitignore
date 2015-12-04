@@ -5,6 +5,14 @@ __pycache__/
 # C extensions
 *.so
 
+# Data and results
+pickled_images/
+prev_res/
+results/
+with_last_hidden_layer_pickled/
+pandas-master/
+ISH.pkl.gz
+
 # Distribution / packaging
 .Python
 env/
