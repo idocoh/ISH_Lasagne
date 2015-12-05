@@ -5,13 +5,16 @@ __pycache__/
 # C extensions
 *.so
 
-# Data and results
+# Data and Dependency
 pickled_images/
+ISH.pkl.gz
+pandas-master/
+*.gz
+
+#Results
 prev_res/
 results/
 with_last_hidden_layer_pickled/
-pandas-master/
-ISH.pkl.gz
 
 # Distribution / packaging
 .Python
