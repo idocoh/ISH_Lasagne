@@ -1,21 +1,21 @@
 
-from lasagne import layers
-from lasagne.updates import nesterov_momentum
-from nolearn.lasagne import NeuralNet
-
-from nolearn.lasagne import TrainSplit
-from nolearn.lasagne import BatchIterator
-from nolearn.lasagne import PrintLayerInfo
-
-from lasagne.objectives import aggregate, squared_error
-
-from logistic_sgd import load_data
-from  matplotlib import pyplot
-import cPickle as pickle
-import numpy as np
-import theano
-import time
 import os
+import time
+
+from lasagne import layers
+from lasagne.objectives import aggregate, squared_error
+from lasagne.updates import nesterov_momentum
+from  matplotlib import pyplot
+import theano
+
+import cPickle as pickle
+from logistic_sgd import load_data
+from nolearn.lasagne import BatchIterator
+from nolearn.lasagne import NeuralNet
+from nolearn.lasagne import PrintLayerInfo
+from nolearn.lasagne import TrainSplit
+import numpy as np
+from writeDataForSVM import writeDataToFile
 
 
 counter = 0
@@ -47,11 +47,14 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9, NUM_OF_EPOCH=50, OUTPUT_SIZE =
     
         train_set_x, train_set_y = datasets[0]
     #     valid_set_x, valid_set_y = datasets[1]
-    #     test_set_x, test_set_y = datasets[2]
+        test_set_x, test_set_y = datasets[2]
         
         train_set_x = train_set_x.reshape(-1, 1, input_width, input_height)
+#         valid_set_x = valid_set_x.reshape(-1, 1, input_width, input_height)
+        test_set_x = test_set_x.reshape(-1, 1, input_width, input_height)
+
         print(train_set_x.shape[0], 'train samples')
-        return train_set_x, train_set_y
+        return train_set_x, train_set_y, test_set_x, test_set_y 
     
     def last_hidden_layer(s, h):
         
@@ -66,8 +69,6 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9, NUM_OF_EPOCH=50, OUTPUT_SIZE =
 #                     allow_input_downcast=True,
 #                     )
 #         print s.output_last_hidden_layer_(X,-2)
-
-
 
     def writeOutputFile(outputFile,train_history,layer_info):
         # save the network's parameters
@@ -129,7 +130,7 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9, NUM_OF_EPOCH=50, OUTPUT_SIZE =
     
     
     
-    X, y = load2d()  # load 2-d data
+    X, y, test_x, test_y  = load2d()  # load 2-d data
     net2.fit(X, y)       
     
     run_time = (time.clock() - start_time) / 60.
@@ -137,15 +138,20 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9, NUM_OF_EPOCH=50, OUTPUT_SIZE =
     writeOutputFile(outputFile,net2.train_history_,PrintLayerInfo._get_layer_info_plain(net2))
 
     print "outputing last hidden layer"
-    ohl = net2.output_hiddenLayer(X)
+    train_last_hiddenLayer = net2.output_hiddenLayer(X)
+    test_last_hiddenLayer = net2.output_hiddenLayer(test_x)
 #     ohlFile = open(HIDDEN_LAYER_OUTPUT_FILE_NAME+".txt", "w")
-#     for line in ohl:
+#     for line in train_last_hiddenLayer:
 #         ohlFile.write(str(line) + "\n")  
     with open(HIDDEN_LAYER_OUTPUT_FILE_NAME+".pickle",'wb') as f:
-        ob = (ohl,y)
+        ob = (train_last_hiddenLayer,y,test_last_hiddenLayer,test_y)
         pickle.dump(ob, f, -1)
         f.close()
 
+    
+    writeDataToFile(HIDDEN_LAYER_OUTPUT_FILE_NAME+".pickle");
+    
+    
     # import numpy as np
     # np.sqrt(0.003255) * 48
     

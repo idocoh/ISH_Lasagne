@@ -29,13 +29,16 @@ class pickleImages(object):
 
     def getImageNames(self,dirName):
         imagesArray = []
+        count=0
         for root, subdirs, files in os.walk(dir):
             for file in files:
                 if os.path.splitext(file)[1].lower() in ('.jpg', '.jpeg'):
 #                      imagesArray.append(file)
-                     imagesArray.append(randint(0,9))
+                    if count<NUM_IMAGES :
+                         imagesArray.append(randint(0,9))
+                         count+=1
     #                  print os.path.join(root, file)                 
-        return imagesArray
+        return np.array(imagesArray)
 
 #     def picleImages(imagesArray):
 #         data = []
@@ -46,28 +49,34 @@ class pickleImages(object):
 #         print data      
           
     
-    def pickleData(self):
-        Data = dir_to_dataset(dir+"\\*.jpg")
+    def pickleData(self,start_index,end_index):
+        Data = dir_to_dataset(dir+"\\*.jpg",start_index,end_index)
 #         Data = fromPickledData("ISH.pkl.gz")
 #         Data =[]
+        
+        #TODO: fix y!!!! 
         y = self.getImageNames(dir);
         
-# #         # Divided dataset into 3 parts. 
-#         train_set_x = Data[:1001]
-#         val_set_x = Data[1001:1050]
-#         test_set_x = Data[1050:]
-#         train_set_y = y[:1001]
-#         val_set_y = y[1001:1050]
-#         test_set_y = y[1050:]
+        dataAmount = end_index-start_index
+        train_index = np.floor(dataAmount*0.8);
+        validation_index = np.floor(dataAmount*0.9)
+        test_index = dataAmount
+#         # Divided dataset into 3 parts. 
+        train_set_x = Data[:train_index]
+        val_set_x = Data[train_index:validation_index]
+        test_set_x = Data[validation_index:]
+        train_set_y = y[:train_index]
+        val_set_y = y[train_index:validation_index]
+        test_set_y = y[validation_index:]
         
-        train_set = Data, y
-        val_set = [], []
-        test_set = [], []
+        train_set = train_set_x, train_set_y
+        val_set = val_set_x, val_set_y
+        test_set = test_set_x, test_set_y
         
         dataset = [train_set, val_set, test_set]
         
 #         f = gzip.open('ISH-noLearn_all_300_140.pkl.gz','wb')
-        f = gzip.open('pickled_images/ISH-noLearn_'+str(NUM_IMAGES)+'_'+str(IMAGE_WIDTH)+'_'+str(IMAGE_HEIGHT)+'.pkl.gz','wb')
+        f = gzip.open('pickled_images/ISH-noLearn_'+str(start_index)+'_'+str(end_index)+'_'+str(IMAGE_WIDTH)+'_'+str(IMAGE_HEIGHT)+'.pkl.gz','wb')
         cPickle.dump(dataset, f, protocol=2)
         f.close()     
         
@@ -88,10 +97,12 @@ def fromPickledData(zipName):
     
     return Data
 
-def dir_to_dataset(glob_files, loc_train_labels=""):
+def dir_to_dataset(glob_files,start_index,end_index,loc_train_labels=""):
         print("Gonna process:\n\t %s"%glob_files)
         dataset = []
         for file_count, file_name in enumerate( sorted(glob(glob_files),key=len) ):
+            if file_count < start_index or end_index-1 < file_count :
+                continue;
             image = Image.open(file_name).convert('L') #tograyscale
 #             print image.format,image.size, image.mode
 #             image.show()
@@ -115,8 +126,8 @@ def dir_to_dataset(glob_files, loc_train_labels=""):
             if file_count % 10 == 0:
                 print("\t %s files processed"%file_count)
                 
-            if file_count > NUM_IMAGES:
-                break
+#             if file_count > NUM_IMAGES:
+#                 break
             
         # outfile = glob_files+"out"
         # np.save(outfile, dataset)
@@ -131,7 +142,7 @@ if __name__ == '__main__':
     start_time=time.clock()
     dir = "C:\\Users\\Ido\\Pictures\\ISH-images-mouse"
     pick = pickleImages(dir)
-    pick.pickleData()
+    pick.pickleData(0,NUM_IMAGES)
     print "time"
     print time.clock()-start_time
 #     
