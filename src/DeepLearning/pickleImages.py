@@ -13,9 +13,12 @@ from nolearnNN import run_All
 
 Image.MAX_IMAGE_PIXELS = None
 
-NUM_IMAGES = 2500
+NUM_IMAGES = 50
 IMAGE_WIDTH = 300
 IMAGE_HEIGHT = 140
+TRAIN_DATA_PRECENT = 0.8
+VALIDATION_DATA_PRECENT = TRAIN_DATA_PRECENT + 0.0
+
 
 class pickleImages(object):
     '''
@@ -86,8 +89,8 @@ class pickleImages(object):
  
         # Divided dataset into 3 parts. 
         dataAmount = end_index-start_index
-        train_index = np.floor(dataAmount*0.8);
-        validation_index = np.floor(dataAmount*0.9)
+        train_index = np.floor(dataAmount*TRAIN_DATA_PRECENT);
+        validation_index = np.floor(dataAmount*VALIDATION_DATA_PRECENT)
         test_index = dataAmount
 #         # Divided dataset into 3 parts. 
         train_set_x = Data[:train_index]

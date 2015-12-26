@@ -4,7 +4,7 @@ from sklearn import datasets
 import cPickle as pickle
 import numpy as np
 
-def checkLabelPredict(pcikledFilePath, outputFileName,labelNumber=0):
+def checkLabelPredict(pcikledFilePath,labelNumber=0):
     with open(pcikledFilePath) as f:
         ob = pickle.load(f)
         f.close()
@@ -41,13 +41,13 @@ def runSvm(pickName):
     sum_error = 0
     errorRates = np.zeros(num_labels)
     for i in range(0,num_labels):
-        labelPredRate = checkLabelPredict(pickName,"myData.txt",i) 
+        labelPredRate = checkLabelPredict(pickName,i) 
         sum_error+= labelPredRate
         errorRates[i] = labelPredRate
     
-    predRate = 100-sum_error/num_labels
-    print "Average error- ", sum_error/num_labels, "%"
-    print "Prediction rate- ", predRate, "%"
+    errorRate = np.average(errorRates)
+    print "Average error- ", errorRate, "%"
+    print "Prediction rate- ", 100-errorRate, "%"
     
     return errorRates
     
