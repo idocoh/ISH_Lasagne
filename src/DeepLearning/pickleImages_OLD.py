@@ -6,18 +6,15 @@ from glob import glob
 import numpy as np
 import pandas as pd
 from random import randint
-from logistic_sgd import load_data
-from numpy import loadtxt
 import time
+from logistic_sgd import load_data
 from nolearnNN import run_All
 
-Image.MAX_IMAGE_PIXELS = None
-
-NUM_IMAGES = 2500
+NUM_IMAGES = 50
 IMAGE_WIDTH = 300
 IMAGE_HEIGHT = 140
 
-class pickleImages(object):
+class pickleImages(object):   
     '''
     classdocs
     '''
@@ -32,30 +29,16 @@ class pickleImages(object):
 
     def getImageNames(self,dirName):
         imagesArray = []
+        count=0
         for root, subdirs, files in os.walk(dir):
             for file in files:
                 if os.path.splitext(file)[1].lower() in ('.jpg', '.jpeg'):
 #                      imagesArray.append(file)
-                     imagesArray.append(randint(0,9))
+                    if count<NUM_IMAGES :
+                         imagesArray.append(randint(0,9))
+                         count+=1
     #                  print os.path.join(root, file)                 
-        return imagesArray
-    
-    def getTopCatVector(self,glob_files,start_index,end_index):
-        
-        print("Gonna process category:\n\t %s"%glob_files)
-        topCatVectorSet = []
-        for file_count, file_name in enumerate( sorted(glob(glob_files),key=len) ):
-            if file_count < start_index or end_index-1 < file_count :
-                continue;        
-#             f = open(file_name, 'r')
-#             catVectocr = f.read().split(',') #f.readlines()
-            catVectocr = loadtxt(file_name, comments="#", delimiter=",", unpack=False)
-            float_vector  = [np.float32(x) for x in catVectocr]
-            topCatVectorSet.append(float_vector)
-#             print float_vector
-#                      imagesArray.append(randint(0,9))
-    #                  print os.path.join(root, file)                 
-        return np.array(topCatVectorSet)
+        return np.array(imagesArray)
 
 #     def picleImages(imagesArray):
 #         data = []
@@ -67,24 +50,13 @@ class pickleImages(object):
           
     
     def pickleData(self,start_index,end_index):
-      
-        y = self.getTopCatVector(self.dir+"\\*TopCat.txt",start_index,end_index);        
-#         fy = gzip.open('BraionISH_TopCAT.pkl.gz','wb')
-#         cPickle.dump(y, fy, protocol=2)
-#         fy.close()   
-          
-#         fy = gzip.open('BraionISH_TopCAT.pkl.gz', 'rb')
-#         y = cPickle.load(fy)
-#         fy.close()
-    
-        Data = dir_to_dataset(self.dir+"\\*.jpg",start_index,end_index)
-#         fd = gzip.open('BraionISH_Data.pkl.gz','wb')
-#         cPickle.dump(Data, fd, protocol=2)
-#         fd.close()
-
-#         Data = fromPickledData("ISH-origin.pkl.gz")
- 
-        # Divided dataset into 3 parts. 
+        Data = dir_to_dataset(dir+"\\*.jpg",start_index,end_index)
+#         Data = fromPickledData("ISH.pkl.gz")
+#         Data =[]
+        
+        #TODO: fix y!!!! 
+        y = self.getImageNames(dir);
+        
         dataAmount = end_index-start_index
         train_index = np.floor(dataAmount*0.8);
         validation_index = np.floor(dataAmount*0.9)
@@ -104,31 +76,24 @@ class pickleImages(object):
         dataset = [train_set, val_set, test_set]
         
 #         f = gzip.open('ISH-noLearn_all_300_140.pkl.gz','wb')
-        pickledPath = 'pickled_images/ISH-noLearn_'+str(start_index)+'_'+str(end_index)+'_'+str(IMAGE_WIDTH)+'_'+str(IMAGE_HEIGHT)+'.pkl.gz'
-        f = gzip.open(pickledPath,'wb')
+        f = gzip.open('pickled_images/ISH-noLearn_'+str(start_index)+'_'+str(end_index)+'_'+str(IMAGE_WIDTH)+'_'+str(IMAGE_HEIGHT)+'.pkl.gz','wb')
         cPickle.dump(dataset, f, protocol=2)
-        f.close()   
-        return pickledPath
+        f.close()     
         
 def fromPickledData(zipName):
-    f = gzip.open(zipName, 'rb')
-    train_set, valid_set, test_set = cPickle.load(f)
-    f.close()
-    
-    train_set_x, train_set_y = train_set
-    valid_set_x, valid_set_y = valid_set
-    test_set_x, test_set_y = test_set
-        
-#     datasets = load_data(zipName)
-#     train_set_x, train_set_y = datasets[0]
-#     valid_set_x, valid_set_y = datasets[1]
-#     test_set_x, test_set_y = datasets[2]
+    datasets = load_data(zipName)
+    train_set_x, train_set_y = datasets[0]
+    valid_set_x, valid_set_y = datasets[1]
+    test_set_x, test_set_y = datasets[2]
 
-    Data = np.concatenate((train_set_x, valid_set_x, test_set_x), axis=0) #train_set_x + valid_set_x + test_set_x
-
-#     fd = gzip.open('BraionISH_TopCAT.pkl.gz', 'rb')
-#     Data = cPickle.load(fd)
-#     fd.close()
+    Data = train_set_x + valid_set_x + test_set_x
+#     Data = []
+#     for i in xrange(train_set_x.get_value(borrow=True).shape[0]):
+#         Data.append(train_set_x[i])
+#     for i in xrange(valid_set_x.get_value(borrow=True).shape[0]):
+#         Data.append(valid_set_x[i])
+#     for i in xrange(test_set_x.get_value(borrow=True).shape[0]):
+#         Data.append(test_set_x[i])
     
     return Data
 
@@ -171,23 +136,16 @@ def dir_to_dataset(glob_files,start_index,end_index,loc_train_labels=""):
             return np.array(dataset), np.array(df["Class"])
         else:
             return np.array(dataset)
-        
-def runPickleImages(dir,startIndex=0,endIndex=NUM_IMAGES):
-    start_time=time.clock()
     
+    
+if __name__ == '__main__':
+    start_time=time.clock()
+    dir = "C:\\Users\\Ido\\Pictures\\ISH-images-mouse"
     pick = pickleImages(dir)
-    pickledPath = pick.pickleData(startIndex,endIndex)
+    pick.pickleData(0,NUM_IMAGES)
     print "time"
     print time.clock()-start_time
-    
-    return pickledPath
-    
-    
-if __name__ == '__main__':#     dir = "C:\\Users\\Abigail\\Desktop\\Ido\\pyWS\\First\\G_images\\"
-#     dir = "C:\\Users\\Abigail\\Desktop\\Ido\\BrainISHimages"
-#     pick = pickleImages(dir)
-#     pick.pickleData()
-    
-    dir = "C:\Users\Ido\Pictures\BrainISHimages"
-    runPickleImages(dir)
+#     
+#     run_All()
+
 #     test_SdA()

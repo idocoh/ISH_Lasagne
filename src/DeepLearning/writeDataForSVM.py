@@ -1,13 +1,13 @@
 import cPickle as pickle
 
-def writeDataToFile(pcikledFilePath, outputFileName,labelNumber=0):
+def writeDataToFile(pcikledFilePath, FILE_NAME,labelNumber=0):
     with open(pcikledFilePath) as f:
         ob = pickle.load(f)
         f.close()
     params , labels = ob;
     
     
-    FILE_NAME = "results/"+outputFileName
+#     FILE_NAME = "results/"+outputFileName
     outputFile = open(FILE_NAME, "w");
    
     for exapmle in zip(params,labels):

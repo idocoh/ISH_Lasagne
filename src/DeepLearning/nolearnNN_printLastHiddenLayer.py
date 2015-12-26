@@ -16,7 +16,8 @@ from nolearn.lasagne import PrintLayerInfo
 from nolearn.lasagne import TrainSplit
 import numpy as np
 from writeDataForSVM import writeDataToFile
-
+from runMySvm import runSvm
+from pickleImages import runPickleImages
 
 counter = 0
 # X = 0
@@ -30,10 +31,15 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9, NUM_OF_EPOCH=50, OUTPUT_SIZE =
     
     global counter
     FILE_PREFIX =  os.path.split(dataset)[1][4:16] #os.path.split(__file__)[1][:-3]
-    PARAMS_FILE_NAME = "results/"+FILE_PREFIX+"_parameters_"+str(counter)+".txt"
-    HIDDEN_LAYER_OUTPUT_FILE_NAME = "results/"+FILE_PREFIX+"_hiddenLayerOutput_"+str(counter)
-    FIG_FILE_NAME = "results/"+FILE_PREFIX+"_fig_"+str(counter)
-    PICKLES_NET_FILE_NAME = "results/"+FILE_PREFIX+"_picklesNN_"+str(counter)+".pickle"
+    FOLDER_PREFIX = "results/"+FILE_PREFIX+"/run_"+str(counter)+"/"
+    if not os.path.exists(FOLDER_PREFIX):
+        os.makedirs(FOLDER_PREFIX)
+    
+    PARAMS_FILE_NAME = FOLDER_PREFIX + "parameters.txt"
+    HIDDEN_LAYER_OUTPUT_FILE_NAME = FOLDER_PREFIX +"hiddenLayerOutput.pickle"
+    FIG_FILE_NAME = FOLDER_PREFIX + "fig"
+    PICKLES_NET_FILE_NAME = FOLDER_PREFIX + "picklesNN.pickle"
+    SVM_FILE_NAME = FOLDER_PREFIX + "svmData.txt"
 #     VALIDATION_FILE_NAME = "results/"+os.path.split(__file__)[1][:-3]+"_validation_"+str(counter)+".txt"
 #     PREDICTION_FILE_NAME = "results/"+os.path.split(__file__)[1][:-3]+"_prediction.txt"
     counter +=1
@@ -143,17 +149,20 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9, NUM_OF_EPOCH=50, OUTPUT_SIZE =
 #     ohlFile = open(HIDDEN_LAYER_OUTPUT_FILE_NAME+".txt", "w")
 #     for line in train_last_hiddenLayer:
 #         ohlFile.write(str(line) + "\n")  
-    with open(HIDDEN_LAYER_OUTPUT_FILE_NAME+".pickle",'wb') as f:
+    with open(HIDDEN_LAYER_OUTPUT_FILE_NAME,'wb') as f:
         ob = (train_last_hiddenLayer,y,test_last_hiddenLayer,test_y)
         pickle.dump(ob, f, -1)
         f.close()
 
     
-    writeDataToFile(HIDDEN_LAYER_OUTPUT_FILE_NAME+".pickle");
+    errorRates = runSvm(HIDDEN_LAYER_OUTPUT_FILE_NAME)
     
+    outputFile.write("SVM Prediction rate is:\n"+str(errorRates) + "\n")
+    outputFile.close()
+
+#     write svm data
+#     writeDataToFile(HIDDEN_LAYER_OUTPUT_FILE_NAME,SVM_FILE_NAME)
     
-    # import numpy as np
-    # np.sqrt(0.003255) * 48
     
     ##############################################
     train_loss = np.array([i["train_loss"] for i in net2.train_history_])
@@ -216,8 +225,13 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9, NUM_OF_EPOCH=50, OUTPUT_SIZE =
     
 def run_All():
     
-    dat='pickled_images/ISH-noLearn_50_300_140.pkl.gz'
+#     dir = "C:\Users\Ido\Pictures\BrainISHimages"
+#     dat = runPickleImages(dir,0,40)
+    dat='pickled_images/ISH-noLearn_0_2500_300_140.pkl.gz'
+    
     run(LEARNING_RATE=0.1, NUM_OF_EPOCH=3, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=1, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
+    run(LEARNING_RATE=0.1, NUM_OF_EPOCH=35, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=1, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
+
 #     run(LEARNING_RATE=0.07, NUM_OF_EPOCH=35, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=5, toShuffleInput = False , withZeroMeaning = False,dataset=dat)    
 #     run(LEARNING_RATE=0.09, NUM_OF_EPOCH=35, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=5, toShuffleInput = False , withZeroMeaning = True,dataset=dat)
 #     run(LEARNING_RATE=0.2, NUM_OF_EPOCH=35, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=5, toShuffleInput = False , withZeroMeaning = False,dataset=dat)

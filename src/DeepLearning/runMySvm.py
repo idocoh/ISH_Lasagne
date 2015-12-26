@@ -36,16 +36,23 @@ def checkLabelPredict(pcikledFilePath, outputFileName,labelNumber=0):
 #     clf = joblib.load('filename.pkl')
             
           
-
+def runSvm(pickName):
+    num_labels = 20
+    sum_error = 0
+    errorRates = np.zeros(num_labels)
+    for i in range(0,num_labels):
+        labelPredRate = checkLabelPredict(pickName,"myData.txt",i) 
+        sum_error+= labelPredRate
+        errorRates[i] = labelPredRate
+    
+    predRate = 100-sum_error/num_labels
+    print "Average error- ", sum_error/num_labels, "%"
+    print "Prediction rate- ", predRate, "%"
+    
+    return errorRates
     
 if __name__ == "__main__":
     pickName = "C:\\Users\\Ido\\workspace\\ISH_Lasagne\\src\\DeepLearning\\results\\noLearn_50_3_hiddenLayerOutput_0.pickle"
-    num_labels = 20
-    sum_error = 0
-    for i in range(0,num_labels):
-        sum_error+=checkLabelPredict(pickName,"myData.txt",i)
-    
-    print "Average error- ", sum_error/num_labels, "%"
-    print "Prediction rate- ", 100-sum_error/num_labels, "%"
+    runSvm(pickName)
 
   
