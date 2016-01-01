@@ -52,7 +52,8 @@ def runSvm(pickName):
     return errorRates
     
 if __name__ == "__main__":
-    pickName = "C:\\Users\\Ido\\workspace\\ISH_Lasagne\\src\\DeepLearning\\results\\noLearn_50_3_hiddenLayerOutput_0.pickle"
+#     pickName = "C:\\Users\\Ido\\workspace\\ISH_Lasagne\\src\\DeepLearning\\results\\noLearn_50_3_hiddenLayerOutput_0.pickle"
+    pickName = "C:\\Users\\Ido\\workspace\\ISH_Lasagne\\src\\DeepLearning\\results\\ISH-noLearn_0_2500_300_140\\run_0\\hiddenLayerOutput.pickle"
     runSvm(pickName)
 
   

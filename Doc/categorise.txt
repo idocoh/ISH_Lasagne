@@ -1,0 +1,31 @@
+Negative regulation of elastin catabolic process
+Long-chain fatty acid biosynthetic process
+-Aminobutyric acid biosynthetic process
+-Aminobutyric acid metabolic process
+Negative reg. of aldosterone biosynthetic process
+Negative regulation of cortisol biosynthetic process
+Fibril organization
+Negative reg. of glucocorticoid biosynthetic process
+Neurotransmitter biosynthetic process
+Central nervous system myelination
+Neuron recognition
+Response to cocaine
+Negative chemotaxis
+Ribosomal small subunit biogenesis
+Peptide hormone processing
+
+GO:0060311 Negative regulation of elastin catabolic process 17 1
+GO:0042759 Long-chain fatty acid biosynthetic process 23 0.98
+GO:0009449 -Aminobutyric acid biosynthetic process 20 0.96
+GO:0009448 -Aminobutyric acid metabolic process 23 0.96
+GO:0032348 Negative reg. of aldosterone biosynthetic process 21 0.94
+GO:2000065 Negative regulation of cortisol biosynthetic process 21 0.94
+GO:0043206 Fibril organization 23 0.94
+GO:0031947 Negative reg. of glucocorticoid biosynthetic process 22 0.94
+GO:0042136 Neurotransmitter biosynthetic process 23 0.94
+GO:0022010 Central nervous system myelination 29 0.89
+GO:0008038 Neuron recognition 20 0.87
+GO:0042220 Response to cocaine 30 0.87
+GO:0050919 Negative chemotaxis 16 0.86
+GO:0042274 Ribosomal small subunit biogenesis 15 0.86
+GO:0016486 Peptide hormone processing 17 0.85

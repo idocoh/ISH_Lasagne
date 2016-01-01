@@ -5,6 +5,7 @@ import time
 from lasagne import layers
 from lasagne.objectives import aggregate, squared_error
 from lasagne.updates import nesterov_momentum
+from lasagne.updates import rmsprop
 from  matplotlib import pyplot
 import theano
 
@@ -25,7 +26,9 @@ counter = 0
 # def last_hidden_layer(s, h):
 #     print s.output_last_hidden_layer_(X)
 
-def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9, NUM_OF_EPOCH=50, OUTPUT_SIZE = 20 , input_width=300, input_height=140,
+
+
+def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9,UPDATE_RHO=None, NUM_OF_EPOCH=50, OUTPUT_SIZE = 20 , input_width=300, input_height=140,
                     dataset='ISH.pkl.gz', TRAIN_VALIDATION_SPLIT=0.2, #activation=lasagne.nonlinearities.tanh, #rectify
                     NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=40, toShuffleInput = False , withZeroMeaning = False):
     
@@ -61,7 +64,75 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9, NUM_OF_EPOCH=50, OUTPUT_SIZE =
 
         print(train_set_x.shape[0], 'train samples')
         return train_set_x, train_set_y, test_set_x, test_set_y 
+
+    def createNNwithMomentom(input_height, input_width):
+        net2 = NeuralNet(layers=[
+                ('input', layers.InputLayer), 
+                ('conv1', layers.Conv2DLayer), 
+                ('pool1', layers.MaxPool2DLayer), 
+                ('conv2', layers.Conv2DLayer), 
+                ('pool2', layers.MaxPool2DLayer), 
+                ('conv3', layers.Conv2DLayer), 
+                ('pool3', layers.MaxPool2DLayer), 
+                ('conv4', layers.Conv2DLayer), 
+                ('pool4', layers.MaxPool2DLayer), 
+                ('hidden5', layers.DenseLayer), 
+                ('hidden6', layers.DenseLayer), 
+                ('hidden7', layers.DenseLayer), 
+                ('output', layers.DenseLayer)], 
+            input_shape=(None, 1, input_width, input_height), 
+            conv1_num_filters=NUM_UNITS_HIDDEN_LAYER[0], conv1_filter_size=(5, 5), pool1_pool_size=(2, 2), 
+            conv2_num_filters=NUM_UNITS_HIDDEN_LAYER[1], conv2_filter_size=(9, 9), pool2_pool_size=(2, 2), 
+            conv3_num_filters=NUM_UNITS_HIDDEN_LAYER[2], conv3_filter_size=(11, 11), pool3_pool_size=(4, 2), 
+            conv4_num_filters=NUM_UNITS_HIDDEN_LAYER[3], conv4_filter_size=(8, 5), pool4_pool_size=(2, 2), 
+            hidden5_num_units=500, hidden6_num_units=200, hidden7_num_units=100, 
+            output_num_units=20, output_nonlinearity=None, 
+            update_learning_rate=LEARNING_RATE, 
+            update_momentum=UPDATE_MOMENTUM,
+            update=nesterov_momentum, 
+            train_split=TrainSplit(eval_size=TRAIN_VALIDATION_SPLIT), 
+            batch_iterator_train=BatchIterator(batch_size=BATCH_SIZE), 
+            regression=True, 
+            max_epochs=NUM_OF_EPOCH, 
+            verbose=1, 
+            hiddenLayer_to_output=-2)
+    #         on_training_finished=last_hidden_layer,
+        return net2
     
+    def createNNwithDecay(input_height, input_width):
+        net2 = NeuralNet(layers=[
+                ('input', layers.InputLayer), 
+                ('conv1', layers.Conv2DLayer), 
+                ('pool1', layers.MaxPool2DLayer), 
+                ('conv2', layers.Conv2DLayer), 
+                ('pool2', layers.MaxPool2DLayer), 
+                ('conv3', layers.Conv2DLayer), 
+                ('pool3', layers.MaxPool2DLayer), 
+                ('conv4', layers.Conv2DLayer), 
+                ('pool4', layers.MaxPool2DLayer), 
+                ('hidden5', layers.DenseLayer), 
+                ('hidden6', layers.DenseLayer), 
+                ('hidden7', layers.DenseLayer), 
+                ('output', layers.DenseLayer)], 
+            input_shape=(None, 1, input_width, input_height), 
+            conv1_num_filters=NUM_UNITS_HIDDEN_LAYER[0], conv1_filter_size=(5, 5), pool1_pool_size=(2, 2), 
+            conv2_num_filters=NUM_UNITS_HIDDEN_LAYER[1], conv2_filter_size=(9, 9), pool2_pool_size=(2, 2), 
+            conv3_num_filters=NUM_UNITS_HIDDEN_LAYER[2], conv3_filter_size=(11, 11), pool3_pool_size=(4, 2), 
+            conv4_num_filters=NUM_UNITS_HIDDEN_LAYER[3], conv4_filter_size=(8, 5), pool4_pool_size=(2, 2), 
+            hidden5_num_units=500, hidden6_num_units=200, hidden7_num_units=100, 
+            output_num_units=20, output_nonlinearity=None, 
+            update_learning_rate=LEARNING_RATE, 
+            update_rho=UPDATE_RHO, 
+            update=rmsprop, 
+            train_split=TrainSplit(eval_size=TRAIN_VALIDATION_SPLIT), 
+            batch_iterator_train=BatchIterator(batch_size=BATCH_SIZE), 
+            regression=True, 
+            max_epochs=NUM_OF_EPOCH, 
+            verbose=1, 
+            hiddenLayer_to_output=-2)
+    #         on_training_finished=last_hidden_layer,
+        return net2
+  
     def last_hidden_layer(s, h):
         
         print s.output_last_hidden_layer_(X)
@@ -78,11 +149,11 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9, NUM_OF_EPOCH=50, OUTPUT_SIZE =
 
     def writeOutputFile(outputFile,train_history,layer_info):
         # save the network's parameters
-        outputFile.write("Validation set Error is: "+str(1-train_history[-1]['valid_accuracy']) + "\n")
+        outputFile.write("Validation set Prediction rate is: "+str((1-train_history[-1]['valid_accuracy'])*100) + "%\n")
         outputFile.write("Run time[minutes] is: "+str(run_time) + "\n\n")
         
         outputFile.write("Learning rate: " + str(LEARNING_RATE) + "\n")
-        outputFile.write("Momentum: " + str(UPDATE_MOMENTUM) + "\n")
+        outputFile.write("Momentum: " + str(UPDATE_MOMENTUM) + "\n") if (UPDATE_RHO == None) else outputFile.write("Decay Factor: " + str(UPDATE_RHO) + "\n")
         outputFile.write("Batch size: " + str(BATCH_SIZE) + "\n")
         outputFile.write("Num epochs: " + str(NUM_OF_EPOCH) + "\n")
         outputFile.write("Num units hidden layers: " + str(NUM_UNITS_HIDDEN_LAYER) + "\n")
@@ -97,43 +168,7 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9, NUM_OF_EPOCH=50, OUTPUT_SIZE =
     start_time = time.clock()
        
     
-    net2 = NeuralNet(
-        layers=[
-            ('input', layers.InputLayer),
-            ('conv1', layers.Conv2DLayer),
-            ('pool1', layers.MaxPool2DLayer),
-            ('conv2', layers.Conv2DLayer),
-            ('pool2', layers.MaxPool2DLayer),
-            ('conv3', layers.Conv2DLayer),
-            ('pool3', layers.MaxPool2DLayer),
-            ('conv4', layers.Conv2DLayer),
-            ('pool4', layers.MaxPool2DLayer),
-            ('hidden5', layers.DenseLayer),
-            ('hidden6', layers.DenseLayer),
-            ('hidden7', layers.DenseLayer),
-            ('output', layers.DenseLayer),
-            ],
-        input_shape=(None, 1, input_width, input_height),
-        conv1_num_filters=NUM_UNITS_HIDDEN_LAYER[0], conv1_filter_size=(5, 5), pool1_pool_size=(2, 2),
-        conv2_num_filters=NUM_UNITS_HIDDEN_LAYER[1], conv2_filter_size=(9, 9), pool2_pool_size=(2, 2),
-        conv3_num_filters=NUM_UNITS_HIDDEN_LAYER[2], conv3_filter_size=(11, 11), pool3_pool_size=(4, 2),
-        conv4_num_filters=NUM_UNITS_HIDDEN_LAYER[3], conv4_filter_size=(8, 5), pool4_pool_size=(2, 2),
-        hidden5_num_units=500, hidden6_num_units=200, hidden7_num_units=100,
-        output_num_units=20, output_nonlinearity=None,
-    
-        update_learning_rate=LEARNING_RATE,
-        update_momentum=UPDATE_MOMENTUM,
-        train_split=TrainSplit(eval_size=TRAIN_VALIDATION_SPLIT),
-        batch_iterator_train=BatchIterator(batch_size=BATCH_SIZE),
-    
-        regression=True,
-        max_epochs=NUM_OF_EPOCH,
-        verbose=1,
-        hiddenLayer_to_output=-2,
-#         on_training_finished=last_hidden_layer,
-        )
-
-    
+    net2 = createNNwithMomentom(input_height, input_width) if UPDATE_RHO == None else createNNwithDecay(input_height, input_width)   
     
     
     X, y, test_x, test_y  = load2d()  # load 2-d data
@@ -154,14 +189,13 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9, NUM_OF_EPOCH=50, OUTPUT_SIZE =
         f.close()
 
     
+    writeOutputFile(outputFile,net2.train_history_,PrintLayerInfo._get_layer_info_plain(net2))
+
     errorRates = runSvm(HIDDEN_LAYER_OUTPUT_FILE_NAME)
     errorRate = np.average(errorRates)
 
-    outputFile.write("SVM Total Prediction rate is: "+str(100-errorRate) + "\n")
-    
-    writeOutputFile(outputFile,net2.train_history_,PrintLayerInfo._get_layer_info_plain(net2))
-    outputFile.write("SVM Prediction rate is:\n"+str(errorRates) + "\n")
-
+    outputFile.write("\nSVM Total Prediction rate is: "+str(100-errorRate) + "\n\n")
+    outputFile.write("SVM Error rate is:\n"+str(errorRates) + "\n")
 
     outputFile.close()
 
@@ -230,25 +264,34 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9, NUM_OF_EPOCH=50, OUTPUT_SIZE =
     
 def run_All():
     
+    dat='pickled_images/ISH-noLearn_0_1500_300_140.pkl.gz'
+#     
+#     run(LEARNING_RATE=0.1, NUM_OF_EPOCH=3, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=1, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
+    run(LEARNING_RATE=0.01, NUM_OF_EPOCH=2, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=1, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
+    run(LEARNING_RATE=0.01, UPDATE_RHO=0.89, NUM_OF_EPOCH=3, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=1, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
+
+
 #     dir = "C:\Users\Ido\Pictures\BrainISHimages"
 #     dat = runPickleImages(dir,0,40)
     dat='pickled_images/ISH-noLearn_0_2500_300_140.pkl.gz'
-    
-    run(LEARNING_RATE=0.1, NUM_OF_EPOCH=3, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=1, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
-    run(LEARNING_RATE=0.1, NUM_OF_EPOCH=35, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=1, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
+#     
+#     run(LEARNING_RATE=0.1, NUM_OF_EPOCH=3, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=1, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
+    run(LEARNING_RATE=0.01, NUM_OF_EPOCH=35, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=1, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
 
     dir = "C:\Users\Ido\Pictures\BrainISHimages"
 
-    try:
-        dat = runPickleImages(dir,0,16351)
-        
-        run(LEARNING_RATE=0.1, NUM_OF_EPOCH=35, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=1, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
-    
-    except:
-        dat = runPickleImages(dir,0,5000)
-        
-        run(LEARNING_RATE=0.1, NUM_OF_EPOCH=35, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=1, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
+#     try:
+#     dat = runPickleImages(dir,0,16351)
+#     
+#     run(LEARNING_RATE=0.1, NUM_OF_EPOCH=35, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=1, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
 
+#     except:
+    dat = runPickleImages(dir,0,5000)
+     
+    run(LEARNING_RATE=0.01, NUM_OF_EPOCH=35, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=1, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
+
+    runPickleImages(dir,5001,11000)
+    runPickleImages(dir,11000,16351)
 #     run(LEARNING_RATE=0.07, NUM_OF_EPOCH=35, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=5, toShuffleInput = False , withZeroMeaning = False,dataset=dat)    
 #     run(LEARNING_RATE=0.09, NUM_OF_EPOCH=35, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=5, toShuffleInput = False , withZeroMeaning = True,dataset=dat)
 #     run(LEARNING_RATE=0.2, NUM_OF_EPOCH=35, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=5, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
