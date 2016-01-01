@@ -16,7 +16,8 @@ from nolearn.lasagne import PrintLayerInfo
 from nolearn.lasagne import TrainSplit
 import numpy as np
 from writeDataForSVM import writeDataToFile
-
+from runMySvm import runSvm
+from pickleImages import runPickleImages
 
 counter = 0
 # X = 0
@@ -29,11 +30,16 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9, NUM_OF_EPOCH=50, OUTPUT_SIZE =
                     NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=40, toShuffleInput = False , withZeroMeaning = False):
     
     global counter
-    FILE_PREFIX =  os.path.split(dataset)[1][4:16] #os.path.split(__file__)[1][:-3]
-    PARAMS_FILE_NAME = "results/"+FILE_PREFIX+"_parameters_"+str(counter)+".txt"
-    HIDDEN_LAYER_OUTPUT_FILE_NAME = "results/"+FILE_PREFIX+"_hiddenLayerOutput_"+str(counter)
-    FIG_FILE_NAME = "results/"+FILE_PREFIX+"_fig_"+str(counter)
-    PICKLES_NET_FILE_NAME = "results/"+FILE_PREFIX+"_picklesNN_"+str(counter)+".pickle"
+    FILE_PREFIX =  os.path.split(dataset)[1][:-6] #os.path.split(__file__)[1][:-3]
+    FOLDER_PREFIX = "results/"+FILE_PREFIX+"/run_"+str(counter)+"/"
+    if not os.path.exists(FOLDER_PREFIX):
+        os.makedirs(FOLDER_PREFIX)
+    
+    PARAMS_FILE_NAME = FOLDER_PREFIX + "parameters.txt"
+    HIDDEN_LAYER_OUTPUT_FILE_NAME = FOLDER_PREFIX +"hiddenLayerOutput.pickle"
+    FIG_FILE_NAME = FOLDER_PREFIX + "fig"
+    PICKLES_NET_FILE_NAME = FOLDER_PREFIX + "picklesNN.pickle"
+    SVM_FILE_NAME = FOLDER_PREFIX + "svmData.txt"
 #     VALIDATION_FILE_NAME = "results/"+os.path.split(__file__)[1][:-3]+"_validation_"+str(counter)+".txt"
 #     PREDICTION_FILE_NAME = "results/"+os.path.split(__file__)[1][:-3]+"_prediction.txt"
     counter +=1
@@ -72,16 +78,16 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9, NUM_OF_EPOCH=50, OUTPUT_SIZE =
 
     def writeOutputFile(outputFile,train_history,layer_info):
         # save the network's parameters
-        outputFile.write("error is: "+str(1-train_history[-1]['valid_accuracy']) + "\n")
-        outputFile.write("time is: "+str(run_time) + "\n\n")
+        outputFile.write("Validation set Error is: "+str(1-train_history[-1]['valid_accuracy']) + "\n")
+        outputFile.write("Run time[minutes] is: "+str(run_time) + "\n\n")
         
-        outputFile.write("learning rate: " + str(LEARNING_RATE) + "\n")
-        outputFile.write("momentum: " + str(UPDATE_MOMENTUM) + "\n")
-        outputFile.write("batch size: " + str(BATCH_SIZE) + "\n")
-        outputFile.write("num epochs: " + str(NUM_OF_EPOCH) + "\n")
-        outputFile.write("num units hidden layers: " + str(NUM_UNITS_HIDDEN_LAYER) + "\n")
+        outputFile.write("Learning rate: " + str(LEARNING_RATE) + "\n")
+        outputFile.write("Momentum: " + str(UPDATE_MOMENTUM) + "\n")
+        outputFile.write("Batch size: " + str(BATCH_SIZE) + "\n")
+        outputFile.write("Num epochs: " + str(NUM_OF_EPOCH) + "\n")
+        outputFile.write("Num units hidden layers: " + str(NUM_UNITS_HIDDEN_LAYER) + "\n")
 #         outputFile.write("activation func: " + str(activation) + "\n")
-        outputFile.write("train/validation split: " + str(TRAIN_VALIDATION_SPLIT) + "\n")
+        outputFile.write("Train/validation split: " + str(TRAIN_VALIDATION_SPLIT) + "\n")
         outputFile.write("toShuffleInput: " + str(toShuffleInput) + "\n")
         outputFile.write("withZeroMeaning: " + str(withZeroMeaning) + "\n\n")
         
@@ -135,7 +141,6 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9, NUM_OF_EPOCH=50, OUTPUT_SIZE =
     
     run_time = (time.clock() - start_time) / 60.
     
-    writeOutputFile(outputFile,net2.train_history_,PrintLayerInfo._get_layer_info_plain(net2))
 
     print "outputing last hidden layer"
     train_last_hiddenLayer = net2.output_hiddenLayer(X)
@@ -143,17 +148,26 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9, NUM_OF_EPOCH=50, OUTPUT_SIZE =
 #     ohlFile = open(HIDDEN_LAYER_OUTPUT_FILE_NAME+".txt", "w")
 #     for line in train_last_hiddenLayer:
 #         ohlFile.write(str(line) + "\n")  
-    with open(HIDDEN_LAYER_OUTPUT_FILE_NAME+".pickle",'wb') as f:
+    with open(HIDDEN_LAYER_OUTPUT_FILE_NAME,'wb') as f:
         ob = (train_last_hiddenLayer,y,test_last_hiddenLayer,test_y)
         pickle.dump(ob, f, -1)
         f.close()
 
     
-    writeDataToFile(HIDDEN_LAYER_OUTPUT_FILE_NAME+".pickle");
+    errorRates = runSvm(HIDDEN_LAYER_OUTPUT_FILE_NAME)
+    errorRate = np.average(errorRates)
+
+    outputFile.write("SVM Total Prediction rate is: "+str(100-errorRate) + "\n")
     
+    writeOutputFile(outputFile,net2.train_history_,PrintLayerInfo._get_layer_info_plain(net2))
+    outputFile.write("SVM Prediction rate is:\n"+str(errorRates) + "\n")
+
+
+    outputFile.close()
+
+#     write svm data
+#     writeDataToFile(HIDDEN_LAYER_OUTPUT_FILE_NAME,SVM_FILE_NAME)
     
-    # import numpy as np
-    # np.sqrt(0.003255) * 48
     
     ##############################################
     train_loss = np.array([i["train_loss"] for i in net2.train_history_])
@@ -216,8 +230,25 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9, NUM_OF_EPOCH=50, OUTPUT_SIZE =
     
 def run_All():
     
-    dat='pickled_images/ISH-noLearn_50_300_140.pkl.gz'
+#     dir = "C:\Users\Ido\Pictures\BrainISHimages"
+#     dat = runPickleImages(dir,0,40)
+    dat='pickled_images/ISH-noLearn_0_2500_300_140.pkl.gz'
+    
     run(LEARNING_RATE=0.1, NUM_OF_EPOCH=3, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=1, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
+    run(LEARNING_RATE=0.1, NUM_OF_EPOCH=35, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=1, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
+
+    dir = "C:\Users\Ido\Pictures\BrainISHimages"
+
+    try:
+        dat = runPickleImages(dir,0,16351)
+        
+        run(LEARNING_RATE=0.1, NUM_OF_EPOCH=35, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=1, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
+    
+    except:
+        dat = runPickleImages(dir,0,5000)
+        
+        run(LEARNING_RATE=0.1, NUM_OF_EPOCH=35, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=1, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
+
 #     run(LEARNING_RATE=0.07, NUM_OF_EPOCH=35, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=5, toShuffleInput = False , withZeroMeaning = False,dataset=dat)    
 #     run(LEARNING_RATE=0.09, NUM_OF_EPOCH=35, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=5, toShuffleInput = False , withZeroMeaning = True,dataset=dat)
 #     run(LEARNING_RATE=0.2, NUM_OF_EPOCH=35, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=5, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
