@@ -43,22 +43,7 @@ class pickleImages(object):
     #                  print os.path.join(root, file)                 
         return imagesArray
     
-    def getTopCatVector(self,glob_files,start_index,end_index):
-        
-        print("Gonna process category:\n\t %s"%glob_files)
-        topCatVectorSet = []
-        for file_count, file_name in enumerate( sorted(glob(glob_files),key=len) ):
-            if file_count < start_index or end_index-1 < file_count :
-                continue;        
-#             f = open(file_name, 'r')
-#             catVectocr = f.read().split(',') #f.readlines()
-            catVectocr = loadtxt(file_name, comments="#", delimiter=",", unpack=False)
-            float_vector  = [np.float32(x) for x in catVectocr]
-            topCatVectorSet.append(float_vector)
-#             print float_vector
-#                      imagesArray.append(randint(0,9))
-    #                  print os.path.join(root, file)                 
-        return np.array(topCatVectorSet)
+    
 
 #     def picleImages(imagesArray):
 #         data = []
@@ -71,7 +56,7 @@ class pickleImages(object):
     
     def pickleData(self,start_index,end_index):
       
-        y = self.getTopCatVector(self.dir+"\\*TopCat.txt",start_index,end_index);        
+        y = getTopCatVector(self.dir+"\\*TopCat.txt",start_index,end_index);        
 #         fy = gzip.open('BraionISH_TopCAT.pkl.gz','wb')
 #         cPickle.dump(y, fy, protocol=2)
 #         fy.close()   
@@ -174,7 +159,24 @@ def dir_to_dataset(glob_files,start_index,end_index,loc_train_labels=""):
             return np.array(dataset), np.array(df["Class"])
         else:
             return np.array(dataset)
+
+def getTopCatVector(glob_files,start_index,end_index):
         
+        print("Gonna process category:\n\t %s"%glob_files)
+        topCatVectorSet = []
+        for file_count, file_name in enumerate( sorted(glob(glob_files),key=len) ):
+            if file_count < start_index or end_index-1 < file_count :
+                continue;        
+#             f = open(file_name, 'r')
+#             catVectocr = f.read().split(',') #f.readlines()
+            catVectocr = loadtxt(file_name, comments="#", delimiter=",", unpack=False)
+            float_vector  = [np.float32(x) for x in catVectocr]
+            topCatVectorSet.append(float_vector)
+#             print float_vector
+#                      imagesArray.append(randint(0,9))
+    #                  print os.path.join(root, file)                 
+        return np.array(topCatVectorSet)
+            
 def runPickleImages(dir,startIndex=0,endIndex=NUM_IMAGES):
     start_time=time.clock()
     

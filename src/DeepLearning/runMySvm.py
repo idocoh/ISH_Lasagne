@@ -4,6 +4,7 @@ from sklearn import datasets
 import cPickle as pickle
 import numpy as np
 from pickleImages import getTopCatVector
+from numpy.f2py.auxfuncs import isstring
 
 # articleCatNames = {
 #     "Negative regulation of elastin catabolic process",
@@ -23,10 +24,13 @@ from pickleImages import getTopCatVector
 #     "Peptide hormone processing",
 #     }
 
-def checkLabelPredict(pcikledFilePath,labelNumber=0,external_lables=None):
-    with open(pcikledFilePath) as f:
-        ob = pickle.load(f)
-        f.close()
+def checkLabelPredict(pickledFilePath,labelNumber=0,external_lables=None):
+    if isstring(pickledFilePath):
+        with open(pickledFilePath) as f:
+            ob = pickle.load(f)
+            f.close()
+    else:
+        ob=pickledFilePath
     train_params, train_labels, test_params, test_labels = ob;
     
     if external_lables is not None:
@@ -60,11 +64,11 @@ def checkLabelPredict(pcikledFilePath,labelNumber=0,external_lables=None):
 #     clf = joblib.load('filename.pkl')
  
 def readNewLables(lablesPath,start_index=0,end_index=5000,TRAIN_DATA_PRECENT=0.8,VALIDATION_DATA_PRECENT=0.8):
-    y = getTopCatVector(lablesPath+"\\*articleCatagorise.txt",start_index,end_index);  
+    y = getTopCatVector(lablesPath,start_index,end_index);  
     
-    with open('articleCat.pkl.gz','wb') as f:
-        pickle.dump(y, f, -1)
-        f.close()
+#     with open('topCat.pkl.gz','wb') as f:
+#         pickle.dump(y, f, -1)
+#         f.close()
     
     dataAmount = end_index-start_index
     train_index = np.floor(dataAmount*TRAIN_DATA_PRECENT);
@@ -85,12 +89,14 @@ def loadNewLabels(pcikledFilePath):
           
 def runSvm(pickName,num_labels = 20):
     
-#     labelDir = "C:\\Users\\Ido\\workspace\\ISH_Lasagne\\articleCatagorise"
+#     labelDir = "C:\\Users\\Ido\\workspace\\ISH_Lasagne\\articleCatagorise\\*articleCatagorise.txt"
+#     labelDir = "C:\\Users\\Ido\\Pictures\\BrainISHimages\\*TopCat.txt"
 #     y = readNewLables(labelDir,end_index=16351)
+
     if num_labels==15:
         y = loadNewLabels("C:\\Users\\Ido\\workspace\\ISH_Lasagne\\src\\DeepLearning\\pickled_images\\articleCat.pkl.gz")
     else:
-        y=None
+        y = loadNewLabels("C:\\Users\\Ido\\workspace\\ISH_Lasagne\\src\\DeepLearning\\pickled_images\\topCat.pkl.gz")
     
     sum_error = 0
     errorRates = np.zeros(num_labels)

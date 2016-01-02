@@ -2,7 +2,7 @@ import cPickle
 import gzip
 import numpy
 
-def pickleAllImages(outputDir):
+def pickleAllImages(outputDir=None):
     dir1="C:\Users\Ido\workspace\ISH_Lasagne\src\DeepLearning\pickled_images\ISH-noLearn_0_5000_300_140.pkl.gz"
     f1 = gzip.open(dir1, 'rb')
     train_set1, valid_set1, test_set1 = cPickle.load(f1)
@@ -20,14 +20,17 @@ def pickleAllImages(outputDir):
 #     f3.close()   
     
 #     ,train_set2[0],test_set2[0]
-    train_set2 = numpy.concatenate((train_set1[0],test_set1[0],train_set2[0],test_set2[0]),axis=0) 
+    return numpy.concatenate((train_set1[0],test_set1[0],train_set2[0],test_set2[0]),axis=0) 
     
 #     del train_set1, valid_set1, test_set1, train_set1, valid_set1, test_set1
 #     data = numpy.concatenate((train_set1[0],test_set1[0],train_set2[0],test_set2[0],train_set3[0],test_set3[0]),axis=0) 
-    print "writing to file"
-    f = gzip.open(outputDir,'wb')
-    cPickle.dump(train_set2[:6000], f, protocol=2)
-    f.close()
+    
+#     print "writing to file"
+#     f = gzip.open(outputDir,'wb')
+#     cPickle.dump(train_set2[:6000], f, protocol=2)
+#     f.close()
+    
+    
 #     # Divided dataset into 3 parts. 
 #     dataAmount = end_index-start_index
 #     train_index = numpy.floor(dataAmount*TRAIN_DATA_PRECENT);
@@ -46,8 +49,12 @@ def pickleAllImages(outputDir):
 #     test_set = test_set_x, test_set_y    
 
 if __name__ == '__main__':
-    
-    dir = "C:\\Users\\Ido\\workspace\\ISH_Lasagne\\src\\DeepLearning\\pickled_images\\0_11000_all.pkl.gz"
-    pickleAllImages(dir)
+    import pickle
+    d="C:\\Users\\Ido\\workspace\\ISH_Lasagne\\src\\DeepLearning\\results\\articleCat\\run_0\\hiddenLayerOutput.pickle"
+    with open(d) as f:
+        ob = pickle.load(f)
+        f.close()
+#     dir = "C:\\Users\\Ido\\workspace\\ISH_Lasagne\\src\\DeepLearning\\pickled_images\\0_11000_all.pkl.gz"
+#     pickleAllImages(dir)
 
 

@@ -45,6 +45,7 @@ import random
 
 import theano
 import theano.tensor as T
+from pickleForArticleCat import pickleAllImages
 
 
 class LogisticRegression(object):
@@ -196,7 +197,7 @@ class LogisticRegression(object):
         return T.mean( T.sqrt( T.sum( (self.p_y_given_x - y) * (self.p_y_given_x - y) ,axis=1) ) )
 
 
-def load_data(dataset, toShuffleInput = True , withZeroMeaning = True):
+def load_data(dataset, toShuffleInput = True , withZeroMeaning = True, labelset=None,start_index=0,end_index=11000,TRAIN_DATA_PRECENT=0.8,VALIDATION_DATA_PRECENT=0.8):
     ''' Loads the dataset
 
     :type dataset: string
@@ -217,23 +218,53 @@ def load_data(dataset, toShuffleInput = True , withZeroMeaning = True):
             "data",
             dataset
         )
-#         if os.path.isfile(new_path) or data_file == 'mnist.pkl.gz':
-#             dataset = new_path
-# 
-#     if (not os.path.isfile(dataset)) and data_file == 'mnist.pkl.gz':
-#         import urllib
-#         origin = (
-#             'http://www.iro.umontreal.ca/~lisa/deep/data/mnist/mnist.pkl.gz'
-#         )
-#         print 'Downloading data from %s' % origin
-#         urllib.urlretrieve(origin, dataset)
 
     print '... loading data'
 
-    # Load the dataset
-    f = gzip.open(dataset, 'rb')
-    train_set, valid_set, test_set = cPickle.load(f)
-    f.close()
+#     f1 = gzip.open('ISH-noLearn_0_99_300_140.pkl.gz', 'rb')
+#     f2 = gzip.open('ISH-noLearn_100_199_300_140.pkl.gz', 'rb')
+#     train_set1, valid_set1, test_set1 = cPickle.load(f1)
+#     f1.close()
+#     train_set2, valid_set2, test_set2 = cPickle.load(f2)
+#     f2.close()
+# 
+#     train_set = (numpy.concatenate((train_set1[0],train_set2[0]),axis=0), numpy.concatenate((train_set1[1],train_set2[1]),axis=0)) 
+
+    
+    
+    if labelset is None:
+        # Load the dataset
+        f = gzip.open(dataset, 'rb')
+        train_set, valid_set, test_set = cPickle.load(f)
+        f.close()
+    else:
+        # Load the dataset for article cat
+#         f = gzip.open(dataset, 'rb')
+#         pData= cPickle.load(f)
+#         f.close()
+        pData = pickleAllImages()
+         
+        with open(labelset) as l:
+            pLabel = cPickle.load(l)
+            l.close()  
+        
+        # Divided dataset into 3 parts. 
+        dataAmount = end_index-start_index
+        train_index = numpy.floor(dataAmount*TRAIN_DATA_PRECENT);
+        validation_index = numpy.floor(dataAmount*VALIDATION_DATA_PRECENT)
+        test_index = dataAmount
+
+        train_set_x = pData[:train_index]
+        val_set_x = pData[train_index:validation_index]
+        test_set_x = pData[validation_index:]
+        train_set_y = pLabel[:train_index]
+        val_set_y = pLabel[train_index:validation_index]
+        test_set_y = pLabel[validation_index:]
+        
+        train_set = train_set_x, train_set_y
+        valid_set = val_set_x, val_set_y
+        test_set = test_set_x, test_set_y         
+        
     #train_set, valid_set, test_set format: tuple(input, target)
     #input is an numpy.ndarray of 2 dimensions (a matrix)
     #witch row's correspond to an example. target is a

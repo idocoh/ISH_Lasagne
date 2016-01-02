@@ -264,33 +264,34 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9,UPDATE_RHO=None, NUM_OF_EPOCH=5
     
 def run_All():
     
-    dat='pickled_images/ISH-noLearn_0_1500_300_140.pkl.gz'
+#     dat='pickled_images/ISH-noLearn_0_1500_300_140.pkl.gz'
 #     
 #     run(LEARNING_RATE=0.1, NUM_OF_EPOCH=3, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=1, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
-    run(LEARNING_RATE=0.01, NUM_OF_EPOCH=2, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=1, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
-    run(LEARNING_RATE=0.01, UPDATE_RHO=0.89, NUM_OF_EPOCH=3, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=1, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
+#     run(LEARNING_RATE=0.01, NUM_OF_EPOCH=2, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=1, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
+#     run(LEARNING_RATE=0.01, UPDATE_RHO=0.89, NUM_OF_EPOCH=3, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=1, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
 
 
 #     dir = "C:\Users\Ido\Pictures\BrainISHimages"
 #     dat = runPickleImages(dir,0,40)
-    dat='pickled_images/ISH-noLearn_0_2500_300_140.pkl.gz'
+#     dat='pickled_images/ISH-noLearn_0_2500_300_140.pkl.gz'
 #     
 #     run(LEARNING_RATE=0.1, NUM_OF_EPOCH=3, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=1, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
-    run(LEARNING_RATE=0.01, NUM_OF_EPOCH=35, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=1, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
+#     run(LEARNING_RATE=0.01, NUM_OF_EPOCH=35, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=1, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
 
-    dir = "C:\Users\Ido\Pictures\BrainISHimages"
-
-#     try:
-#     dat = runPickleImages(dir,0,16351)
-#     
-#     run(LEARNING_RATE=0.1, NUM_OF_EPOCH=35, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=1, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
-
-#     except:
-    dat = runPickleImages(dir,0,5000)
+#     dir = "C:\Users\Ido\Pictures\BrainISHimages"
+#     dat = runPickleImages(dir,0,5000)
+    
+#     HIDDEN_LAYER_OUTPUT_FILE_NAME = "C:\\Users\\Ido\\workspace\\ISH_Lasagne\\src\\DeepLearning\\results\\ISH-noLearn_0_5000_300_140\\run_0\\hiddenLayerOutput.pickle"
+#     errorRates = runSvm(HIDDEN_LAYER_OUTPUT_FILE_NAME)
+#     errorRate = np.average(errorRates)
+    
+    dat='pickled_images/ISH-noLearn_0_5000_300_140.pkl.gz'
      
-    run(LEARNING_RATE=0.01, NUM_OF_EPOCH=35, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=1, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
+#     run(LEARNING_RATE=0.01, NUM_OF_EPOCH=35, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=1, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
+#     run(LEARNING_RATE=0.01, UPDATE_RHO=0.89, NUM_OF_EPOCH=10, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=1, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
+    run(LEARNING_RATE=0.01, UPDATE_RHO=0.9, NUM_OF_EPOCH=35, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=1, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
 
-    runPickleImages(dir,5001,11000)
+#     runPickleImages(dir,5001,11000)
     runPickleImages(dir,11000,16351)
 #     run(LEARNING_RATE=0.07, NUM_OF_EPOCH=35, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=5, toShuffleInput = False , withZeroMeaning = False,dataset=dat)    
 #     run(LEARNING_RATE=0.09, NUM_OF_EPOCH=35, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=5, toShuffleInput = False , withZeroMeaning = True,dataset=dat)

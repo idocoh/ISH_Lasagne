@@ -29,7 +29,7 @@ counter = 0
 
 
 def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9,UPDATE_RHO=None, NUM_OF_EPOCH=50, OUTPUT_SIZE = 20 , input_width=300, input_height=140,
-                    dataset='ISH.pkl.gz', TRAIN_VALIDATION_SPLIT=0.2, #activation=lasagne.nonlinearities.tanh, #rectify
+                    dataset='ISH.pkl.gz', TRAIN_VALIDATION_SPLIT=0.2, USE_TOP_CAT=True, #activation=lasagne.nonlinearities.tanh, #rectify
                     NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=40, toShuffleInput = False , withZeroMeaning = False):
     
     global counter
@@ -52,7 +52,12 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9,UPDATE_RHO=None, NUM_OF_EPOCH=5
     def load2d(dataset='ISH.pkl.gz', toShuffleInput = False , withZeroMeaning = False):
         print 'loading data...'   
     
-        datasets = load_data(dataset, toShuffleInput, withZeroMeaning)
+        if USE_TOP_CAT:
+            labelpath = "C:\\Users\\Ido\\workspace\\ISH_Lasagne\\src\\DeepLearning\\pickled_images\\topCat.pkl.gz"
+        else:
+            labelpath = "C:\\Users\\Ido\\workspace\\ISH_Lasagne\\src\\DeepLearning\\pickled_images\\articleCat.pkl.gz"
+            
+        datasets = load_data(dataset, toShuffleInput, withZeroMeaning, labelset=labelpath)
     
         train_set_x, train_set_y = datasets[0]
     #     valid_set_x, valid_set_y = datasets[1]
@@ -66,6 +71,11 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9,UPDATE_RHO=None, NUM_OF_EPOCH=5
         return train_set_x, train_set_y, test_set_x, test_set_y 
 
     def createNNwithMomentom(input_height, input_width):
+        if USE_TOP_CAT:
+            outputLayerSize=20
+        else:
+            outputLayerSize=15
+            
         net2 = NeuralNet(layers=[
                 ('input', layers.InputLayer), 
                 ('conv1', layers.Conv2DLayer), 
@@ -86,7 +96,7 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9,UPDATE_RHO=None, NUM_OF_EPOCH=5
             conv3_num_filters=NUM_UNITS_HIDDEN_LAYER[2], conv3_filter_size=(11, 11), pool3_pool_size=(4, 2), 
             conv4_num_filters=NUM_UNITS_HIDDEN_LAYER[3], conv4_filter_size=(8, 5), pool4_pool_size=(2, 2), 
             hidden5_num_units=500, hidden6_num_units=200, hidden7_num_units=100, 
-            output_num_units=20, output_nonlinearity=None, 
+            output_num_units=outputLayerSize, output_nonlinearity=None, 
             update_learning_rate=LEARNING_RATE, 
             update_momentum=UPDATE_MOMENTUM,
             update=nesterov_momentum, 
@@ -100,6 +110,11 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9,UPDATE_RHO=None, NUM_OF_EPOCH=5
         return net2
     
     def createNNwithDecay(input_height, input_width):
+        if USE_TOP_CAT:
+            outputLayerSize=20
+        else:
+            outputLayerSize=15
+
         net2 = NeuralNet(layers=[
                 ('input', layers.InputLayer), 
                 ('conv1', layers.Conv2DLayer), 
@@ -120,7 +135,7 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9,UPDATE_RHO=None, NUM_OF_EPOCH=5
             conv3_num_filters=NUM_UNITS_HIDDEN_LAYER[2], conv3_filter_size=(11, 11), pool3_pool_size=(4, 2), 
             conv4_num_filters=NUM_UNITS_HIDDEN_LAYER[3], conv4_filter_size=(8, 5), pool4_pool_size=(2, 2), 
             hidden5_num_units=500, hidden6_num_units=200, hidden7_num_units=100, 
-            output_num_units=20, output_nonlinearity=None, 
+            output_num_units=outputLayerSize, output_nonlinearity=None, 
             update_learning_rate=LEARNING_RATE, 
             update_rho=UPDATE_RHO, 
             update=rmsprop, 
@@ -152,8 +167,9 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9,UPDATE_RHO=None, NUM_OF_EPOCH=5
         outputFile.write("Validation set Prediction rate is: "+str((1-train_history[-1]['valid_accuracy'])*100) + "%\n")
         outputFile.write("Run time[minutes] is: "+str(run_time) + "\n\n")
         
+        outputFile.write("Training NN on: " + ("20 Top Categorys\n" if USE_TOP_CAT else "Article Categorys\n"))
         outputFile.write("Learning rate: " + str(LEARNING_RATE) + "\n")
-        outputFile.write("Momentum: " + str(UPDATE_MOMENTUM) + "\n") if (UPDATE_RHO == None) else outputFile.write("Decay Factor: " + str(UPDATE_RHO) + "\n")
+        outputFile.write(("Momentum: " + str(UPDATE_MOMENTUM)+ "\n") if (UPDATE_RHO == None) else ("Decay Factor: " + str(UPDATE_RHO)+ "\n") )
         outputFile.write("Batch size: " + str(BATCH_SIZE) + "\n")
         outputFile.write("Num epochs: " + str(NUM_OF_EPOCH) + "\n")
         outputFile.write("Num units hidden layers: " + str(NUM_UNITS_HIDDEN_LAYER) + "\n")
@@ -191,7 +207,7 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9,UPDATE_RHO=None, NUM_OF_EPOCH=5
     
     writeOutputFile(outputFile,net2.train_history_,PrintLayerInfo._get_layer_info_plain(net2))
 
-    errorRates = runSvm(HIDDEN_LAYER_OUTPUT_FILE_NAME,15)
+    errorRates = runSvm(ob,15) #HIDDEN_LAYER_OUTPUT_FILE_NAME,15)
     errorRate = np.average(errorRates)
 
     outputFile.write("\nSVM Total Prediction rate is: "+str(100-errorRate) + "\n\n")
@@ -285,15 +301,18 @@ def run_All():
 #     errorRates = runSvm(HIDDEN_LAYER_OUTPUT_FILE_NAME)
 #     errorRate = np.average(errorRates)
 
+
     runPickleImages(dir,11000,16352)
 
 
-    dat='pickled_images/ISH-noLearn_0_5000_300_140.pkl.gz'
+    dat='pickled_images/ISH-noLearn_0_10999_300_140.pkl.gz'
     
+    run(USE_TOP_CAT=False,LEARNING_RATE=0.01, UPDATE_RHO=0.99, NUM_OF_EPOCH=5, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=250, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
 
-    run(LEARNING_RATE=0.01, NUM_OF_EPOCH=35, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=1, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
-#     run(LEARNING_RATE=0.01, UPDATE_RHO=0.89, NUM_OF_EPOCH=10, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=1, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
-    run(LEARNING_RATE=0.01, UPDATE_RHO=0.9, NUM_OF_EPOCH=35, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=1, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
+    run(LEARNING_RATE=0.01, NUM_OF_EPOCH=5, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=250, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
+    run(LEARNING_RATE=0.01, UPDATE_RHO=0.99, NUM_OF_EPOCH=5, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=250, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
+
+    run(USE_TOP_CAT=False,LEARNING_RATE=0.01, NUM_OF_EPOCH=10, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=250, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
 
     
 #     runPickleImages(dir,5001,11000)
