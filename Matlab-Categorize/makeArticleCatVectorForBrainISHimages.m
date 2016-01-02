@@ -13,7 +13,7 @@ function [ ] = makeArticleCatVectorForBrainISHimages()
    
     global trg_dir cat_ids go_cat_names
     trg_dir = 'C:\Users\Abigail\Desktop\Ido\BrainISHimages\articleCat\';
-    
+    ISHimageClass.loadData();
     load('onlyBrainISHrepresentation.mat')
         
     ArticleIds = [60311,42759,9449,9448,32348,2000065,43206,31947,42136,22010,8038,42220,50919,42274,16486];
@@ -23,11 +23,11 @@ function [ ] = makeArticleCatVectorForBrainISHimages()
 %         mkdir(trg_dir,topCatNames{i});
 %     end
     for j=1:length(cols)
-        cId = cols(j);
-        catName = go_cat_names{cId};
+%         cId = cols(j);
+        catName = 'articleCatagorise';%go_cat_names{cId};
         mkdir(trg_dir,catName);
         for i=1:length(brainISHrepresentation)
-            writeArticleBrainCatVectors(brainISHrepresentation{i},i,cId,catName);
+            writeArticleBrainCatVectors(brainISHrepresentation{i},i,cols,catName);
         end
     end
     
