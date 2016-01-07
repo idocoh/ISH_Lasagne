@@ -197,7 +197,7 @@ class LogisticRegression(object):
         return T.mean( T.sqrt( T.sum( (self.p_y_given_x - y) * (self.p_y_given_x - y) ,axis=1) ) )
 
 
-def load_data(dataset, toShuffleInput = True , withZeroMeaning = True, labelset=None,start_index=0,end_index=11000,TRAIN_DATA_PRECENT=0.8,VALIDATION_DATA_PRECENT=0.8):
+def load_data(dataset, toShuffleInput = True , withZeroMeaning = True, labelset=None,start_index=0,end_index=16351,TRAIN_DATA_PRECENT=0.8,VALIDATION_DATA_PRECENT=0.8):
     ''' Loads the dataset
 
     :type dataset: string

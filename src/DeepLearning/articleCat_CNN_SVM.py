@@ -16,9 +16,10 @@ from nolearn.lasagne import NeuralNet
 from nolearn.lasagne import PrintLayerInfo
 from nolearn.lasagne import TrainSplit
 import numpy as np
-from writeDataForSVM import writeDataToFile
-from runMySvm import runSvm
 from pickleImages import runPickleImages
+from runMySvm import runSvm
+from writeDataForSVM import writeDataToFile
+
 
 counter = 0
 # X = 0
@@ -29,7 +30,7 @@ counter = 0
 
 
 def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9,UPDATE_RHO=None, NUM_OF_EPOCH=50, OUTPUT_SIZE = 20 , input_width=300, input_height=140,
-                    dataset='ISH.pkl.gz', TRAIN_VALIDATION_SPLIT=0.2, USE_TOP_CAT=True, #activation=lasagne.nonlinearities.tanh, #rectify
+                    dataset='ISH.pkl.gz', TRAIN_VALIDATION_SPLIT=0.2, USE_TOP_CAT=True,end_index=16351, #activation=lasagne.nonlinearities.tanh, #rectify
                     NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=40, toShuffleInput = False , withZeroMeaning = False):
     
     global counter
@@ -57,7 +58,7 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9,UPDATE_RHO=None, NUM_OF_EPOCH=5
         else:
             labelpath = "C:\\Users\\Ido\\workspace\\ISH_Lasagne\\src\\DeepLearning\\pickled_images\\articleCat.pkl.gz"
             
-        datasets = load_data(dataset, toShuffleInput, withZeroMeaning, labelset=labelpath)
+        datasets = load_data(dataset, toShuffleInput, withZeroMeaning,end_index=end_index, labelset=labelpath)
     
         train_set_x, train_set_y = datasets[0]
     #     valid_set_x, valid_set_y = datasets[1]
@@ -180,7 +181,10 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9,UPDATE_RHO=None, NUM_OF_EPOCH=5
         
         outputFile.write("history: " + str(train_history) + "\n\n")
         outputFile.write("layer_info:\n" + str(layer_info) + "\n")
-
+        
+        outputFile.flush()
+        
+        
     start_time = time.clock()
        
     
@@ -192,28 +196,28 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9,UPDATE_RHO=None, NUM_OF_EPOCH=5
     
     run_time = (time.clock() - start_time) / 60.
     
+    writeOutputFile(outputFile,net2.train_history_,PrintLayerInfo._get_layer_info_plain(net2))
 
     print "outputing last hidden layer"
     train_last_hiddenLayer = net2.output_hiddenLayer(X)
+    print "after train output"
     test_last_hiddenLayer = net2.output_hiddenLayer(test_x)
-#     ohlFile = open(HIDDEN_LAYER_OUTPUT_FILE_NAME+".txt", "w")
-#     for line in train_last_hiddenLayer:
-#         ohlFile.write(str(line) + "\n")  
-    with open(HIDDEN_LAYER_OUTPUT_FILE_NAME,'wb') as f:
-        ob = (train_last_hiddenLayer,y,test_last_hiddenLayer,test_y)
-        pickle.dump(ob, f, -1)
-        f.close()
-
+    print "after test output"
+    lastLayerOutputs = (train_last_hiddenLayer,y,test_last_hiddenLayer,test_y)
     
-    writeOutputFile(outputFile,net2.train_history_,PrintLayerInfo._get_layer_info_plain(net2))
-
-    errorRates = runSvm(ob,15) #HIDDEN_LAYER_OUTPUT_FILE_NAME,15)
+    
+    print "running SVM"    
+    errorRates = runSvm(lastLayerOutputs,15) #HIDDEN_LAYER_OUTPUT_FILE_NAME,15)
     errorRate = np.average(errorRates)
 
     outputFile.write("\nSVM Total Prediction rate is: "+str(100-errorRate) + "\n\n")
     outputFile.write("SVM Error rate is:\n"+str(errorRates) + "\n")
-
     outputFile.close()
+    
+    print "saving last layer outputs"
+    with open(HIDDEN_LAYER_OUTPUT_FILE_NAME,'wb') as f:
+        pickle.dump(lastLayerOutputs, f, -1)
+        f.close()
 
 #     write svm data
 #     writeDataToFile(HIDDEN_LAYER_OUTPUT_FILE_NAME,SVM_FILE_NAME)
@@ -302,17 +306,21 @@ def run_All():
 #     errorRate = np.average(errorRates)
 
 
-    runPickleImages(dir,11000,16352)
+#     runPickleImages(dir,11000,16352)
 
 
     dat='pickled_images/ISH-noLearn_0_10999_300_140.pkl.gz'
-    
-    run(USE_TOP_CAT=False,LEARNING_RATE=0.01, UPDATE_RHO=0.99, NUM_OF_EPOCH=5, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=250, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
 
-    run(LEARNING_RATE=0.01, NUM_OF_EPOCH=5, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=250, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
-    run(LEARNING_RATE=0.01, UPDATE_RHO=0.99, NUM_OF_EPOCH=5, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=250, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
+    run(LEARNING_RATE=0.05, NUM_OF_EPOCH=12,end_index=10000, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = True , withZeroMeaning = False,dataset=dat)
+    run(USE_TOP_CAT=False,LEARNING_RATE=0.01,end_index=10000, NUM_OF_EPOCH=12, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = True , withZeroMeaning = False,dataset=dat)
+    run(LEARNING_RATE=0.05, UPDATE_RHO=0.99,end_index=10000, NUM_OF_EPOCH=12, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = True , withZeroMeaning = True,dataset=dat)
+    run(USE_TOP_CAT=False,LEARNING_RATE=0.05,end_index=10000, UPDATE_RHO=0.99, NUM_OF_EPOCH=12, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = True , withZeroMeaning = True,dataset=dat)
 
-    run(USE_TOP_CAT=False,LEARNING_RATE=0.01, NUM_OF_EPOCH=10, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=250, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
+    run(USE_TOP_CAT=False,LEARNING_RATE=0.15,end_index=10000, NUM_OF_EPOCH=12, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = False , withZeroMeaning = True,dataset=dat)
+
+    run(LEARNING_RATE=0.1, UPDATE_RHO=0.99,end_index=10000, NUM_OF_EPOCH=12, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = False , withZeroMeaning = True,dataset=dat)
+
+    run(USE_TOP_CAT=False,LEARNING_RATE=0.05,end_index=10000, UPDATE_RHO=0.95, NUM_OF_EPOCH=12, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = False , withZeroMeaning = True,dataset=dat)
 
     
 #     runPickleImages(dir,5001,11000)

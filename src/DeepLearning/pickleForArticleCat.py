@@ -14,13 +14,12 @@ def pickleAllImages(outputDir=None):
     f2.close()
     print "after reading dir2"
 
-#     dir3="C:\Users\Ido\workspace\ISH_Lasagne\src\DeepLearning\pickled_images\ISH-noLearn_11001_16351_300_140.pkl.gz"
-#     f3 = gzip.open(dir3, 'rb')
-#     train_set3, valid_set3, test_set3 = cPickle.load(f3)
-#     f3.close()   
+    dir3="C:\Users\Ido\workspace\ISH_Lasagne\src\DeepLearning\pickled_images\ISH-noLearn_11000_16352_300_140.pkl.gz"
+    f3 = gzip.open(dir3, 'rb')
+    train_set3, valid_set3, test_set3 = cPickle.load(f3)
+    f3.close()   
     
-#     ,train_set2[0],test_set2[0]
-    return numpy.concatenate((train_set1[0],test_set1[0],train_set2[0],test_set2[0]),axis=0) 
+    return numpy.concatenate((train_set1[0],test_set1[0],train_set2[0],test_set2[0],train_set3[0],test_set3[0]),axis=0) 
     
 #     del train_set1, valid_set1, test_set1, train_set1, valid_set1, test_set1
 #     data = numpy.concatenate((train_set1[0],test_set1[0],train_set2[0],test_set2[0],train_set3[0],test_set3[0]),axis=0) 
