@@ -199,11 +199,16 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9,UPDATE_RHO=None, NUM_OF_EPOCH=5
     writeOutputFile(outputFile,net2.train_history_,PrintLayerInfo._get_layer_info_plain(net2))
 
     print "outputing last hidden layer"
-    train_last_hiddenLayer = net2.output_hiddenLayer(X)
+#     train_last_hiddenLayer = net2.output_hiddenLayer(X)
+    half_x=np.floor(X.shape[0]/2)
+    train_last_hiddenLayer1 = net2.output_hiddenLayer(X[:half_x])
+    train_last_hiddenLayer2 = net2.output_hiddenLayer(X[half_x:])
     print "after train output"
     test_last_hiddenLayer = net2.output_hiddenLayer(test_x)
     print "after test output"
-    lastLayerOutputs = (train_last_hiddenLayer,y,test_last_hiddenLayer,test_y)
+#     lastLayerOutputs = (train_last_hiddenLayer,y,test_last_hiddenLayer,test_y)
+    lastLayerOutputs = (np.concatenate((train_last_hiddenLayer1,train_last_hiddenLayer2),axis=0),y,test_last_hiddenLayer,test_y)
+
     
     
     print "running SVM"    
@@ -310,6 +315,9 @@ def run_All():
 
 
     dat='pickled_images/ISH-noLearn_0_10999_300_140.pkl.gz'
+
+    run(LEARNING_RATE=0.01, NUM_OF_EPOCH=1,end_index=16351, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = True , withZeroMeaning = False,dataset=dat)
+
 
     run(LEARNING_RATE=0.05, NUM_OF_EPOCH=12,end_index=10000, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = True , withZeroMeaning = False,dataset=dat)
     run(USE_TOP_CAT=False,LEARNING_RATE=0.01,end_index=10000, NUM_OF_EPOCH=12, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = True , withZeroMeaning = False,dataset=dat)
