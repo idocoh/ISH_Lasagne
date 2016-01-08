@@ -5,14 +5,18 @@ import numpy as np
 from pickleImages import getTopCatVector
 from numpy.f2py.auxfuncs import isstring
 from sklearn.metrics import roc_auc_score
+import gzip
 
 
 
 def getData(pickledFilePath, external_lables=None):
     if isinstance(pickledFilePath, str):
-        with open(pickledFilePath) as f:
-            ob = pickle.load(f)
-            f.close()
+#         with open(pickledFilePath,'rb') as f:
+#             ob = pickle.load(f)
+#             f.close()
+        f = gzip.open(pickledFilePath, 'rb')
+        ob = pickle.load(f)
+        f.close()
     else:
         ob = pickledFilePath
     train_params, train_y, test_params, test_y = ob
@@ -99,6 +103,8 @@ def checkLabelPredict(allLabels,allParams,labelNumber=0,NUM_SPLITS = 5):
         differ = test_predict-test_labels
         error_rate = np.sum(np.abs(differ))/differ.shape[0] * 100
         auc_score = roc_auc_score(test_labels, test_predict)
+#         fpr, tpr, thresholds = metrics.roc_curve(test_labels, test_predict, pos_label=2)
+#         metrics.auc(fpr, tpr)
 
         
         print "        Split number- ", i
@@ -177,7 +183,7 @@ def runCrossSvm(pickName,num_labels = 20):
 if __name__ == "__main__":
 #     pickName = "C:\\Users\\Ido\\workspace\\ISH_Lasagne\\src\\DeepLearning\\results\\noLearn_50_3_hiddenLayerOutput_0.pickle"
 #     pickName = "C:\\Users\\Ido\\workspace\\ISH_Lasagne\\src\\DeepLearning\\results\\ISH-noLearn_0_5000_300_140\\run_0\\hiddenLayerOutput.pickle"
-    pickName = "C:\\Users\\Ido\\workspace\\ISH_Lasagne\\src\\DeepLearning\\results\\articleCat\\11000_pic\\run_1\\hiddenLayerOutput.pickle"
+    pickName = "C:\\Users\\Ido\\workspace\\ISH_Lasagne\\src\\DeepLearning\\results\\articleCat\\run_0\\hiddenLayerOutput.pkl.gz"
     runCrossSvm(pickName,15)
 
   

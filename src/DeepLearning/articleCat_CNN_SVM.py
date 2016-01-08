@@ -10,6 +10,8 @@ from  matplotlib import pyplot
 import theano
 
 import cPickle as pickle
+import gzip, cPickle
+
 from logistic_sgd import load_data
 from nolearn.lasagne import BatchIterator
 from nolearn.lasagne import NeuralNet
@@ -70,6 +72,7 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9,UPDATE_RHO=None, NUM_OF_EPOCH=5
         test_set_x = test_set_x.reshape(-1, 1, input_width, input_height)
 
         print(train_set_x.shape[0], 'train samples')
+        outputFile.write("Number of training examples: "+str(train_set_x.shape[0]) + "\n\n")
         return train_set_x, train_set_y, test_set_x, test_set_y 
 
     def createNNwithMomentom(input_height, input_width):
@@ -187,6 +190,7 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9,UPDATE_RHO=None, NUM_OF_EPOCH=5
         
         
     start_time = time.clock()
+    print "Start time: " , time.ctime()
        
     
     net2 = createNNwithMomentom(input_height, input_width) if UPDATE_RHO == None else createNNwithDecay(input_height, input_width)   
@@ -226,9 +230,12 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9,UPDATE_RHO=None, NUM_OF_EPOCH=5
     outputFile.close()
     
     print "saving last layer outputs"
-    with open(HIDDEN_LAYER_OUTPUT_FILE_NAME,'wb') as f:
-        pickle.dump(lastLayerOutputs, f, -1)
-        f.close()
+#     with open(HIDDEN_LAYER_OUTPUT_FILE_NAME,'wb') as f:
+#         pickle.dump(lastLayerOutputs, f, -1)
+#         f.close()
+    f = gzip.open(HIDDEN_LAYER_OUTPUT_FILE_NAME,'wb')
+    cPickle.dump(lastLayerOutputs, f, protocol=2)
+    f.close() 
 
 #     write svm data
 #     writeDataToFile(HIDDEN_LAYER_OUTPUT_FILE_NAME,SVM_FILE_NAME)
@@ -268,9 +275,12 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9,UPDATE_RHO=None, NUM_OF_EPOCH=5
     
     ########## pickle the network ##########
     print "pickling"    
-    with open(PICKLES_NET_FILE_NAME,'wb') as f:
-        pickle.dump(net2, f, -1)
-        f.close()
+#     with open(PICKLES_NET_FILE_NAME,'wb') as f:
+#         pickle.dump(net2, f, -1)
+#         f.close()
+    f = gzip.open(PICKLES_NET_FILE_NAME,'wb')
+    cPickle.dump(net2, f, protocol=2)
+    f.close()
         
     
 
@@ -303,48 +313,18 @@ def run_All():
 
 
     dir = "C:\Users\Ido\Pictures\BrainISHimages"
-#     dat = runPickleImages(dir,0,40)
-#     dat='pickled_images/ISH-noLearn_0_2500_300_140.pkl.gz'
-#     
-#     run(LEARNING_RATE=0.1, NUM_OF_EPOCH=3, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=1, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
-#     run(LEARNING_RATE=0.01, NUM_OF_EPOCH=35, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=1, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
-
-#     dir = "C:\Users\Ido\Pictures\BrainISHimages"
-#     dat = runPickleImages(dir,0,5000)
-    
-#     HIDDEN_LAYER_OUTPUT_FILE_NAME = "C:\\Users\\Ido\\workspace\\ISH_Lasagne\\src\\DeepLearning\\results\\ISH-noLearn_0_5000_300_140\\run_0\\hiddenLayerOutput.pickle"
-#     errorRates = runSvm(HIDDEN_LAYER_OUTPUT_FILE_NAME)
-#     errorRate = np.average(errorRates)
-
-
-#     runPickleImages(dir,11000,16352)
 
 
     dat='pickled_images/ISH-noLearn_0_10999_300_140.pkl.gz'
 
-    run(LEARNING_RATE=0.01, NUM_OF_EPOCH=1,end_index=16351, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
+    run(USE_TOP_CAT=False,LEARNING_RATE=0.01,end_index=16351, NUM_OF_EPOCH=3, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
 
 #     runPickleImages(dir,5000,11000)
 
-    run(LEARNING_RATE=0.01, NUM_OF_EPOCH=12,end_index=10999, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
-    run(USE_TOP_CAT=False,LEARNING_RATE=0.01,end_index=10999, NUM_OF_EPOCH=12, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
-    run(LEARNING_RATE=0.01, UPDATE_RHO=0.99,end_index=10999, NUM_OF_EPOCH=12, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = False , withZeroMeaning = True,dataset=dat)
-    run(USE_TOP_CAT=False,LEARNING_RATE=0.01,end_index=10999, UPDATE_RHO=0.99, NUM_OF_EPOCH=12, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = False , withZeroMeaning = True,dataset=dat)
-
-    run(USE_TOP_CAT=False,LEARNING_RATE=0.15,end_index=10999, NUM_OF_EPOCH=12, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = False , withZeroMeaning = True,dataset=dat)
-    run(LEARNING_RATE=0.1, UPDATE_RHO=0.99,end_index=10999, NUM_OF_EPOCH=12, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = False , withZeroMeaning = True,dataset=dat)
-    run(USE_TOP_CAT=False,LEARNING_RATE=0.05,end_index=10000, UPDATE_RHO=0.95, NUM_OF_EPOCH=12, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = False , withZeroMeaning = True,dataset=dat)
-
-    run(LEARNING_RATE=0.05, NUM_OF_EPOCH=12,end_index=10000, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = True , withZeroMeaning = False,dataset=dat)
-    run(USE_TOP_CAT=False,LEARNING_RATE=0.01,end_index=10000, NUM_OF_EPOCH=12, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = True , withZeroMeaning = False,dataset=dat)
-    run(LEARNING_RATE=0.05, UPDATE_RHO=0.99,end_index=10000, NUM_OF_EPOCH=12, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = True , withZeroMeaning = True,dataset=dat)
-    run(USE_TOP_CAT=False,LEARNING_RATE=0.05,end_index=10000, UPDATE_RHO=0.99, NUM_OF_EPOCH=12, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = True , withZeroMeaning = True,dataset=dat)
-
-    run(USE_TOP_CAT=False,LEARNING_RATE=0.15,end_index=10000, NUM_OF_EPOCH=12, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = False , withZeroMeaning = True,dataset=dat)
-
-    run(LEARNING_RATE=0.1, UPDATE_RHO=0.99,end_index=10000, NUM_OF_EPOCH=12, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = False , withZeroMeaning = True,dataset=dat)
-
-    run(USE_TOP_CAT=False,LEARNING_RATE=0.05,end_index=10000, UPDATE_RHO=0.95, NUM_OF_EPOCH=12, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = False , withZeroMeaning = True,dataset=dat)
+    run(LEARNING_RATE=0.01, NUM_OF_EPOCH=5,end_index=16351, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
+    run(USE_TOP_CAT=False,LEARNING_RATE=0.01,end_index=16351, NUM_OF_EPOCH=5, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
+    run(LEARNING_RATE=0.01, UPDATE_RHO=0.99,end_index=16351, NUM_OF_EPOCH=5, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = False , withZeroMeaning = True,dataset=dat)
+    run(USE_TOP_CAT=False,LEARNING_RATE=0.01,end_index=16351, UPDATE_RHO=0.99, NUM_OF_EPOCH=5, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = False , withZeroMeaning = True,dataset=dat)
 
     
 #     run(LEARNING_RATE=0.07, NUM_OF_EPOCH=35, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=5, toShuffleInput = False , withZeroMeaning = False,dataset=dat)    
