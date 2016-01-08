@@ -19,6 +19,7 @@ import numpy as np
 from pickleImages import runPickleImages
 from runMySvm import runSvm
 from writeDataForSVM import writeDataToFile
+from runCrossValidationSvm import runCrossSvm
 
 
 counter = 0
@@ -40,9 +41,9 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9,UPDATE_RHO=None, NUM_OF_EPOCH=5
         os.makedirs(FOLDER_PREFIX)
     
     PARAMS_FILE_NAME = FOLDER_PREFIX + "parameters.txt"
-    HIDDEN_LAYER_OUTPUT_FILE_NAME = FOLDER_PREFIX +"hiddenLayerOutput.pickle"
+    HIDDEN_LAYER_OUTPUT_FILE_NAME = FOLDER_PREFIX +"hiddenLayerOutput.pkl.gz"
     FIG_FILE_NAME = FOLDER_PREFIX + "fig"
-    PICKLES_NET_FILE_NAME = FOLDER_PREFIX + "picklesNN.pickle"
+    PICKLES_NET_FILE_NAME = FOLDER_PREFIX + "picklesNN.pkl.gz"
     SVM_FILE_NAME = FOLDER_PREFIX + "svmData.txt"
 #     VALIDATION_FILE_NAME = "results/"+os.path.split(__file__)[1][:-3]+"_validation_"+str(counter)+".txt"
 #     PREDICTION_FILE_NAME = "results/"+os.path.split(__file__)[1][:-3]+"_prediction.txt"
@@ -193,7 +194,7 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9,UPDATE_RHO=None, NUM_OF_EPOCH=5
     
     X, y, test_x, test_y  = load2d()  # load 2-d data
     net2.fit(X, y)       
-    
+
     run_time = (time.clock() - start_time) / 60.
     
     writeOutputFile(outputFile,net2.train_history_,PrintLayerInfo._get_layer_info_plain(net2))
@@ -202,6 +203,7 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9,UPDATE_RHO=None, NUM_OF_EPOCH=5
 #     train_last_hiddenLayer = net2.output_hiddenLayer(X)
     half_x=np.floor(X.shape[0]/2)
     train_last_hiddenLayer1 = net2.output_hiddenLayer(X[:half_x])
+    print "after half train output"
     train_last_hiddenLayer2 = net2.output_hiddenLayer(X[half_x:])
     print "after train output"
     test_last_hiddenLayer = net2.output_hiddenLayer(test_x)
@@ -212,11 +214,15 @@ def run(LEARNING_RATE=0.04,  UPDATE_MOMENTUM=0.9,UPDATE_RHO=None, NUM_OF_EPOCH=5
     
     
     print "running SVM"    
-    errorRates = runSvm(lastLayerOutputs,15) #HIDDEN_LAYER_OUTPUT_FILE_NAME,15)
+#     errorRates = runSvm(lastLayerOutputs,15) #HIDDEN_LAYER_OUTPUT_FILE_NAME,15)
+    errorRates, aucScores = runCrossSvm(lastLayerOutputs,15)
     errorRate = np.average(errorRates)
+    aucScore = np.average(aucScores)
 
     outputFile.write("\nSVM Total Prediction rate is: "+str(100-errorRate) + "\n\n")
-    outputFile.write("SVM Error rate is:\n"+str(errorRates) + "\n")
+    outputFile.write("SVM Error rates are:\n"+str(errorRates) + "\n")
+    outputFile.write("\nSVM Total AUC Score is: "+str(aucScore) + "\n\n")
+    outputFile.write("SVM AUC Scores are:\n"+str(aucScores) + "\n")
     outputFile.close()
     
     print "saving last layer outputs"
@@ -316,8 +322,18 @@ def run_All():
 
     dat='pickled_images/ISH-noLearn_0_10999_300_140.pkl.gz'
 
-    run(LEARNING_RATE=0.01, NUM_OF_EPOCH=1,end_index=16351, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = True , withZeroMeaning = False,dataset=dat)
+    run(LEARNING_RATE=0.01, NUM_OF_EPOCH=1,end_index=16351, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
 
+#     runPickleImages(dir,5000,11000)
+
+    run(LEARNING_RATE=0.01, NUM_OF_EPOCH=12,end_index=10999, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
+    run(USE_TOP_CAT=False,LEARNING_RATE=0.01,end_index=10999, NUM_OF_EPOCH=12, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = False , withZeroMeaning = False,dataset=dat)
+    run(LEARNING_RATE=0.01, UPDATE_RHO=0.99,end_index=10999, NUM_OF_EPOCH=12, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = False , withZeroMeaning = True,dataset=dat)
+    run(USE_TOP_CAT=False,LEARNING_RATE=0.01,end_index=10999, UPDATE_RHO=0.99, NUM_OF_EPOCH=12, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = False , withZeroMeaning = True,dataset=dat)
+
+    run(USE_TOP_CAT=False,LEARNING_RATE=0.15,end_index=10999, NUM_OF_EPOCH=12, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = False , withZeroMeaning = True,dataset=dat)
+    run(LEARNING_RATE=0.1, UPDATE_RHO=0.99,end_index=10999, NUM_OF_EPOCH=12, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = False , withZeroMeaning = True,dataset=dat)
+    run(USE_TOP_CAT=False,LEARNING_RATE=0.05,end_index=10000, UPDATE_RHO=0.95, NUM_OF_EPOCH=12, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = False , withZeroMeaning = True,dataset=dat)
 
     run(LEARNING_RATE=0.05, NUM_OF_EPOCH=12,end_index=10000, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = True , withZeroMeaning = False,dataset=dat)
     run(USE_TOP_CAT=False,LEARNING_RATE=0.01,end_index=10000, NUM_OF_EPOCH=12, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = True , withZeroMeaning = False,dataset=dat)
@@ -331,7 +347,6 @@ def run_All():
     run(USE_TOP_CAT=False,LEARNING_RATE=0.05,end_index=10000, UPDATE_RHO=0.95, NUM_OF_EPOCH=12, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=500, toShuffleInput = False , withZeroMeaning = True,dataset=dat)
 
     
-#     runPickleImages(dir,5001,11000)
 #     run(LEARNING_RATE=0.07, NUM_OF_EPOCH=35, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=5, toShuffleInput = False , withZeroMeaning = False,dataset=dat)    
 #     run(LEARNING_RATE=0.09, NUM_OF_EPOCH=35, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=5, toShuffleInput = False , withZeroMeaning = True,dataset=dat)
 #     run(LEARNING_RATE=0.2, NUM_OF_EPOCH=35, NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=5, toShuffleInput = False , withZeroMeaning = False,dataset=dat)

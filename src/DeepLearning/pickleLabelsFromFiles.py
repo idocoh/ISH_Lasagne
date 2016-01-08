@@ -31,8 +31,8 @@ def loadNewLabels(pcikledFilePath):
    
     
 if __name__ == "__main__":
-    labelDir = "C:\\Users\\Ido\\workspace\\ISH_Lasagne\\Doc\\all164cat"
-    categorysFileName = "all164cat"
+    labelDir = "C:\\Users\\Ido\\workspace\\ISH_Lasagne\\Doc\\all2081cat"
+    categorysFileName = "all2081cat"
     y = readNewLables(labelDir,categorysFileName,end_index=16351)
     
 #     labelDir = "C:\\Users\\Ido\\workspace\\ISH_Lasagne\\Doc\\all2081cat"

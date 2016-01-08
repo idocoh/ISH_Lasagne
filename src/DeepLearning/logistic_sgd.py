@@ -256,10 +256,10 @@ def load_data(dataset, toShuffleInput = True , withZeroMeaning = True, labelset=
 
         train_set_x = pData[:train_index]
         val_set_x = pData[train_index:validation_index]
-        test_set_x = pData[validation_index:]
+        test_set_x = pData[validation_index:test_index]
         train_set_y = pLabel[:train_index]
         val_set_y = pLabel[train_index:validation_index]
-        test_set_y = pLabel[validation_index:]
+        test_set_y = pLabel[validation_index:test_index]
         
         train_set = train_set_x, train_set_y
         valid_set = val_set_x, val_set_y
