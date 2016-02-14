@@ -24,14 +24,14 @@ class PrintLog:
         info_tabulate = OrderedDict([
             ('epoch', info['epoch']),
             ('train loss', "{}{:.5f}{}".format(
-                ansi.CYAN if info['train_loss_best'] else "",
+                "",#ansi.CYAN if info['train_loss_best'] else "",
                 info['train_loss'],
-                ansi.ENDC if info['train_loss_best'] else "",
+                "",#ansi.ENDC if info['train_loss_best'] else "",
                 )),
             ('valid loss', "{}{:.5f}{}".format(
-                ansi.GREEN if info['valid_loss_best'] else "",
+                "",#ansi.GREEN if info['valid_loss_best'] else "",
                 info['valid_loss'],
-                ansi.ENDC if info['valid_loss_best'] else "",
+                "",#ansi.ENDC if info['valid_loss_best'] else "",
                 )),
             ('train/val', info['train_loss'] / info['valid_loss']),
             ])

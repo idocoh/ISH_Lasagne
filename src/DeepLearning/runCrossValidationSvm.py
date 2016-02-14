@@ -9,6 +9,13 @@ import gzip
 
 
 
+
+def runAllLabels(pickName):
+    runCrossSvm(pickName, 15)
+    runCrossSvm(pickName, 20)
+    runCrossSvm(pickName, 164)
+    runCrossSvm(pickName, 2081)
+
 def getData(pickledFilePath, external_lables=None):
     if isinstance(pickledFilePath, str):
 #         with open(pickledFilePath,'rb') as f:
@@ -29,9 +36,9 @@ def getData(pickledFilePath, external_lables=None):
     
     return allLabels, allParams
 
-def checkLabelPredict(allLabels,allParams,labelNumber=0,NUM_SPLITS = 5):
+def checkLabelPredict(allLabels,allParams,NUM_SPLITS, CUT_NEGATIVE,labelNumber=0):
 
-    print "Label- ", labelNumber
+    print "Label- ", labelNumber+1
     
     negative_labels=np.zeros(allLabels.shape[0])
     positive_labels=np.zeros(allLabels.shape[0])
@@ -55,15 +62,19 @@ def checkLabelPredict(allLabels,allParams,labelNumber=0,NUM_SPLITS = 5):
             countPositives += 1
     negative_labels = negative_labels[:countNegatives]
     positive_labels = positive_labels[:countPositives]
-#     negative_params = negative_params[:countNegatives]
-#     positive_params = positive_params[:countPositives]
     negative_params = np.array(negative_params)
     positive_params = np.array(positive_params)
-#     
+    
+    if CUT_NEGATIVE>0:
+        negative_params = negative_params[:positive_labels.shape[0]*CUT_NEGATIVE]
+        negative_labels = negative_labels[:positive_labels.shape[0]*CUT_NEGATIVE]
+    #     positive_params = positive_params[:countPositives]
+    #     
     print "    Positives-", countPositives
     print "    Negatives-", countNegatives
     
     if countPositives <=0 :
+        print "bad POSITIVES"
         return 100 #bad error because svm can't run on one catagory
     
     errorRates = np.zeros(NUM_SPLITS)
@@ -98,6 +109,8 @@ def checkLabelPredict(allLabels,allParams,labelNumber=0,NUM_SPLITS = 5):
         clf = svm.SVC()
         clf.fit(train_params, train_labels)
         
+#         train_predict = clf.predict(train_params);
+
         test_predict = clf.predict(test_params);
         
         differ = test_predict-test_labels
@@ -107,11 +120,11 @@ def checkLabelPredict(allLabels,allParams,labelNumber=0,NUM_SPLITS = 5):
 #         metrics.auc(fpr, tpr)
 
         
-        print "        Split number- ", i
+        print "        Split number_", i
         print differ 
         print "        Error- ", error_rate, "%"
         
-        print "        RocAucScore- ", auc_score       
+        print "            RocAucScore- ", auc_score       
         
         errorRates[i] = error_rate
         aucScores[i] = auc_score
@@ -148,12 +161,15 @@ def loadNewLabels(pcikledFilePath):
         f.close()
     return y
           
-def runCrossSvm(pickName,num_labels = 20):
+def runCrossSvm(pickledName,num_labels = 20,NUM_SPLITS = 5,CUT_NEGATIVE=True):
     
 #     labelDir = "C:\\Users\\Ido\\workspace\\ISH_Lasagne\\articleCatagorise\\*articleCatagorise.txt"
 #     labelDir = "C:\\Users\\Ido\\Pictures\\BrainISHimages\\*TopCat.txt"
 #     y = readNewLables(labelDir,end_index=16351)
-
+    
+    print "SVM for " , num_labels, "labels"
+    print pickledName
+       
     if num_labels==15:
         y = loadNewLabels("C:\\Users\\Ido\\workspace\\ISH_Lasagne\\src\\DeepLearning\\pickled_images\\articleCat.pkl.gz")
     elif num_labels==20:
@@ -163,12 +179,12 @@ def runCrossSvm(pickName,num_labels = 20):
     else:
         y = loadNewLabels("C:\\Users\\Ido\\workspace\\ISH_Lasagne\\src\\DeepLearning\\pickled_images\\all2081cat.pkl.gz")
          
-    allLabels, allParams = getData(pickName,y)
+    allLabels, allParams = getData(pickledName,y)
 
     errorRates = np.zeros(num_labels)
     aucScores = np.zeros(num_labels)
     for i in range(0,num_labels):
-        labelPredRate,labelAucScore = checkLabelPredict(allLabels, allParams,labelNumber=i) 
+        labelPredRate,labelAucScore = checkLabelPredict(allLabels, allParams,NUM_SPLITS,CUT_NEGATIVE,labelNumber=i) 
         errorRates[i] = labelPredRate
         aucScores[i] = labelAucScore
     
@@ -183,7 +199,7 @@ def runCrossSvm(pickName,num_labels = 20):
 if __name__ == "__main__":
 #     pickName = "C:\\Users\\Ido\\workspace\\ISH_Lasagne\\src\\DeepLearning\\results\\noLearn_50_3_hiddenLayerOutput_0.pickle"
 #     pickName = "C:\\Users\\Ido\\workspace\\ISH_Lasagne\\src\\DeepLearning\\results\\ISH-noLearn_0_5000_300_140\\run_0\\hiddenLayerOutput.pickle"
-    pickName = "C:\\Users\\Ido\\workspace\\ISH_Lasagne\\src\\DeepLearning\\results\\articleCat\\run_0\\hiddenLayerOutput.pkl.gz"
-    runCrossSvm(pickName,15)
+    pickName = "C:\\Users\\Ido\\workspace\\ISH_Lasagne\\src\\DeepLearning\\results\\articleCat\\run_0_full\\hiddenLayerOutput.pkl.gz"
+    runCrossSvm(pickName,CUT_NEGATIVE=1)
 
   

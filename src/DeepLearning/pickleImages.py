@@ -56,7 +56,9 @@ class pickleImages(object):
     
     def pickleData(self,start_index,end_index):
       
-        y = getTopCatVector(self.dir+"\\*TopCat.txt",start_index,end_index);        
+        y=1
+#         y = getTopCatVector(self.dir+"\\*TopCat.txt",start_index,end_index)
+               
 #         fy = gzip.open('BraionISH_TopCAT.pkl.gz','wb')
 #         cPickle.dump(y, fy, protocol=2)
 #         fy.close()   

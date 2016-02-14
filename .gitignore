@@ -6,9 +6,10 @@ __pycache__/
 *.so
 
 # Data and Dependency
-pickled_images/
+pickled_images_tmp/
 ISH.pkl.gz
 pandas-master/
+Doc/
 *.gz
 
 #Results

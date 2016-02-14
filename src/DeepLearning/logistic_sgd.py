@@ -197,7 +197,7 @@ class LogisticRegression(object):
         return T.mean( T.sqrt( T.sum( (self.p_y_given_x - y) * (self.p_y_given_x - y) ,axis=1) ) )
 
 
-def load_data(dataset, toShuffleInput = True , withZeroMeaning = True, labelset=None,start_index=0,end_index=16351,TRAIN_DATA_PRECENT=0.8,VALIDATION_DATA_PRECENT=0.8):
+def load_data(dataset, toShuffleInput = True , withZeroMeaning = True, labelset=None,start_index=0,end_index=16351,MULTI_POSITIVES=20,dropout_percent=0.1,TRAIN_DATA_PRECENT=0.8,VALIDATION_DATA_PRECENT=0.8):
     ''' Loads the dataset
 
     :type dataset: string
@@ -219,7 +219,7 @@ def load_data(dataset, toShuffleInput = True , withZeroMeaning = True, labelset=
             dataset
         )
 
-    print '... loading data'
+#     print '... loading data'
 
 #     f1 = gzip.open('ISH-noLearn_0_99_300_140.pkl.gz', 'rb')
 #     f2 = gzip.open('ISH-noLearn_100_199_300_140.pkl.gz', 'rb')
@@ -237,19 +237,20 @@ def load_data(dataset, toShuffleInput = True , withZeroMeaning = True, labelset=
         f = gzip.open(dataset, 'rb')
         train_set, valid_set, test_set = cPickle.load(f)
         f.close()
+        
+        with open(labelset) as l:
+            pLabel = cPickle.load(l)
+            l.close()
     else:
         # Load the dataset for article cat
 #         f = gzip.open(dataset, 'rb')
 #         pData= cPickle.load(f)
 #         f.close()
-        pData = pickleAllImages()
+        pLabel, pData = pickleAllImages(num_labels=labelset,TRAIN_SPLIT=TRAIN_DATA_PRECENT, end_index=end_index,MULTI=MULTI_POSITIVES,dropout_percent=dropout_percent)
          
-        with open(labelset) as l:
-            pLabel = cPickle.load(l)
-            l.close()  
         
         # Divided dataset into 3 parts. 
-        dataAmount = end_index-start_index
+        dataAmount = pData.shape[0] #end_index-start_index
         train_index = numpy.floor(dataAmount*TRAIN_DATA_PRECENT);
         validation_index = numpy.floor(dataAmount*VALIDATION_DATA_PRECENT)
         test_index = dataAmount

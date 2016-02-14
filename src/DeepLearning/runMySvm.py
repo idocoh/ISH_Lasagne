@@ -5,6 +5,8 @@ import cPickle as pickle
 import numpy as np
 from pickleImages import getTopCatVector
 from numpy.f2py.auxfuncs import isstring
+from sklearn.metrics import roc_auc_score
+import gzip
 
 # articleCatNames = {
 #     "Negative regulation of elastin catabolic process",
@@ -25,8 +27,13 @@ from numpy.f2py.auxfuncs import isstring
 #     }
 
 def checkLabelPredict(pickledFilePath,labelNumber=0,external_lables=None):
-    if isstring(pickledFilePath):
-        with open(pickledFilePath) as f:
+    if isinstance(pickledFilePath, str):
+        try:
+            with open(pickledFilePath,'rb') as f:
+                ob = pickle.load(f)
+                f.close()
+        except :
+            f = gzip.open(pickledFilePath, 'rb')
             ob = pickle.load(f)
             f.close()
     else:
@@ -45,18 +52,26 @@ def checkLabelPredict(pickledFilePath,labelNumber=0,external_lables=None):
     for lb in range(0,test_params.shape[0]):
         test_y[lb]=test_labels[lb][labelNumber]
     
-    clf = svm.SVC()
-    clf.fit(train_params, y)
+    error_rate=-100
+    auc_score=-100
     
-    test_predict = clf.predict(test_params);
+    try:
+        clf = svm.SVC()
+        clf.fit(train_params, y)
+        
+        test_predict = clf.predict(test_params);
+        
+        differ = test_predict-test_y
+        error_rate = np.sum(np.abs(differ))/differ.shape[0] * 100
+        auc_score = roc_auc_score(test_y, test_predict)
     
-    differ = test_predict-test_y
-    error_rate = np.sum(np.abs(differ))/differ.shape[0] * 100
+        print differ 
+        print "        Error- ", error_rate, "%"
+        print "            RocAucScore- ", auc_score       
     
-    print "Predict label- ", labelNumber
-    print differ 
-    print "Error- ", error_rate, "%"
-    return error_rate
+    except:
+        print "                    bad label"
+    return (error_rate, auc_score)
    
 #     s = pickle.dumps(clf)
 #     from sklearn.externals import joblib
@@ -87,30 +102,35 @@ def loadNewLabels(pcikledFilePath):
         f.close()
     return y
           
-def runSvm(pickName,num_labels = 20):
+def runSvm(pickName,num_labels=20, readLabelsAgain = False):
     
 #     labelDir = "C:\\Users\\Ido\\workspace\\ISH_Lasagne\\articleCatagorise\\*articleCatagorise.txt"
 #     labelDir = "C:\\Users\\Ido\\Pictures\\BrainISHimages\\*TopCat.txt"
 #     y = readNewLables(labelDir,end_index=16351)
 
-    if num_labels==15:
+    if not readLabelsAgain:
+        y = None
+    elif num_labels==15:
         y = loadNewLabels("C:\\Users\\Ido\\workspace\\ISH_Lasagne\\src\\DeepLearning\\pickled_images\\articleCat.pkl.gz")
-    else:
+    elif num_labels==20:
         y = loadNewLabels("C:\\Users\\Ido\\workspace\\ISH_Lasagne\\src\\DeepLearning\\pickled_images\\topCat.pkl.gz")
     
-    sum_error = 0
     errorRates = np.zeros(num_labels)
+    aucScores = np.zeros(num_labels)
     for i in range(0,num_labels):
-        labelPredRate = checkLabelPredict(pickName,i,y) 
-        sum_error+= labelPredRate
+        labelPredRate,labelAucScore = checkLabelPredict(pickName,i,y) 
         errorRates[i] = labelPredRate
+        aucScores[i] = labelAucScore
     
     errorRate = np.average(errorRates)
+    aucAverageScore = np.average(aucScores)
     print "Average error- ", errorRate, "%"
     print "Prediction rate- ", 100-errorRate, "%"
+    print "Average Auc Score- ", aucAverageScore
     
-    return errorRates
+    return (errorRates,aucScores)
     
+        
 if __name__ == "__main__":
 #     pickName = "C:\\Users\\Ido\\workspace\\ISH_Lasagne\\src\\DeepLearning\\results\\noLearn_50_3_hiddenLayerOutput_0.pickle"
     pickName = "C:\\Users\\Ido\\workspace\\ISH_Lasagne\\src\\DeepLearning\\results\\ISH-noLearn_0_5000_300_140\\run_0\\hiddenLayerOutput.pickle"
