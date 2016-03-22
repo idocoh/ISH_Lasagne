@@ -12,6 +12,7 @@ from autoencoder import DenoisingAutoencoder
 
 import cPickle as pickle
 import gzip, cPickle
+import platform
 
 from logistic_sgd import load_data
 from nolearn.lasagne import BatchIterator
@@ -28,6 +29,8 @@ from runCrossValidationSvm import runCrossSvm, runAllLabels
 
 from rl_dae.SDA_layers import StackedDA 
 
+
+FILE_SEPARATOR="/"
 counter = 0
 # X = 0
 
@@ -58,7 +61,7 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
     
     global counter
 #     FILE_PREFIX =  os.path.split(dataset)[1][:-6] #os.path.split(__file__)[1][:-3]
-    FOLDER_PREFIX = "results_dae/"+FOLDER_NAME+"/run_"+str(counter)+"/"
+    FOLDER_PREFIX = "results_dae"+FILE_SEPARATOR+FOLDER_NAME+FILE_SEPARATOR+"run_"+str(counter)+FILE_SEPARATOR
     if not os.path.exists(FOLDER_PREFIX):
         os.makedirs(FOLDER_PREFIX)
     
@@ -343,6 +346,12 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
     
 def run_All():
 
+    if platform.dist()[0]:
+#         global FILE_SEPARATOR
+#         FILE_SEPARATOR = "\\"
+        print "IsUbuntu"
+    else :
+        print "IsWindows"
 
     folderName="try_0.2"
 
@@ -355,9 +364,9 @@ def run_All():
         
     run(NUM_UNITS_HIDDEN_LAYER=[100],input_noise_rate=0.3,pre_train_epochs=1,softmax_train_epochs=1,fine_tune_epochs=1,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
 
-    run(NUM_UNITS_HIDDEN_LAYER=[5000,2000],input_noise_rate=0.3,pre_train_epochs=1,softmax_train_epochs=1,fine_tune_epochs=1,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
-    run(NUM_UNITS_HIDDEN_LAYER=[2000,500,100],input_noise_rate=input_noise_rate,pre_train_epochs=15,softmax_train_epochs=3,fine_tune_epochs=3,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
-    run(NUM_UNITS_HIDDEN_LAYER=[5000,1000,100],input_noise_rate=input_noise_rate,pre_train_epochs=15,softmax_train_epochs=3,fine_tune_epochs=3,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
+#     run(NUM_UNITS_HIDDEN_LAYER=[5000,2000],input_noise_rate=0.3,pre_train_epochs=1,softmax_train_epochs=1,fine_tune_epochs=1,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
+#     run(NUM_UNITS_HIDDEN_LAYER=[2000,500,100],input_noise_rate=input_noise_rate,pre_train_epochs=15,softmax_train_epochs=3,fine_tune_epochs=3,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
+#     run(NUM_UNITS_HIDDEN_LAYER=[5000,1000,100],input_noise_rate=input_noise_rate,pre_train_epochs=15,softmax_train_epochs=3,fine_tune_epochs=3,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
 #     run(NUM_UNITS_HIDDEN_LAYER=[20000,8000,2000,500,100],input_noise_rate=input_noise_rate,pre_train_epochs=1,softmax_train_epochs=2,fine_tune_epochs=2,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)
 #     run(NUM_UNITS_HIDDEN_LAYER=[15000,5000,2000,500,100],input_noise_rate=input_noise_rate,pre_train_epochs=1,softmax_train_epochs=2,fine_tune_epochs=2,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
 #     run(NUM_UNITS_HIDDEN_LAYER=[15000,7000,3000,1500,700,300,100],input_noise_rate=input_noise_rate,pre_train_epochs=1,softmax_train_epochs=2,fine_tune_epochs=2,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
