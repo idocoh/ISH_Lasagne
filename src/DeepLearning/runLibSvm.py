@@ -200,6 +200,8 @@ def runSvm(pickName,num_labels=20, readLabelsAgain = False):
         
 if __name__ == "__main__":
 #     pickName = "C:\\Users\\Ido\\workspace\\ISH_Lasagne\\src\\DeepLearning\\results\\noLearn_50_3_hiddenLayerOutput_0.pickle"
-    pickName = "C:\\Users\\Owner\\workspace\\ISH_Lasagne\\src\\DeepLearning\\results_dae\\try_0.2\\run_0\\hiddenLayerOutput.pkl.gz"
+#     pickName = "C:\\Users\\Owner\\workspace\\ISH_Lasagne\\src\\DeepLearning\\results_dae\\try_0.1\\run_0\\hiddenLayerOutput.pkl.gz"
+    pickName = "C:\\Users\\Ido\\workspace\\ISH_Lasagne\\src\\DeepLearning\\results_dae\\try_0.1\\run_0\\hiddenLayerOutput.pkl.gz"
     runSvm(pickName,15)
+    
      
