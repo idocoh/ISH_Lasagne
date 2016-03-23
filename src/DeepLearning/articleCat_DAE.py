@@ -273,7 +273,7 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
 #     lastLayerOutputs = outputLastLayer_CNN(cnn, X, y, test_x, test_y)
 
     run_time = (time.clock() - start_time) / 60.    
-    
+    print "learning took- ", run_time
     print "running Category Classifier"    
     errorRates, aucScores = runSvm(lastLayerOutputs,15) #HIDDEN_LAYER_OUTPUT_FILE_NAME,15)
 #     errorRates, aucScores = runCrossSvm(lastLayerOutputs,15)
@@ -353,10 +353,10 @@ def run_All():
     else :
         print "IsWindows"
 
-    folderName="try_0.2"
+    folderName="try_0.3"
 
     num_labels=15
-    end_index=200
+    end_index=300
     MULTI_POSITIVES=0
     input_noise_rate=0.3
     withZeroMeaning=True
