@@ -83,9 +83,9 @@ class pickleImages(object):
         train_set_x = Data[:train_index]
         val_set_x = Data[train_index:validation_index]
         test_set_x = Data[validation_index:]
-        train_set_y = y[:train_index]
-        val_set_y = y[train_index:validation_index]
-        test_set_y = y[validation_index:]
+        train_set_y = y#[:train_index]
+        val_set_y = y#[train_index:validation_index]
+        test_set_y = y#[validation_index:]
         
         train_set = train_set_x, train_set_y
         val_set = val_set_x, val_set_y
