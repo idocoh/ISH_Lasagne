@@ -169,7 +169,7 @@ def loadNewLabels(pcikledFilePath):
         f.close()
     return y
           
-def runSvm(pickName,num_labels=20, readLabelsAgain = False):
+def runLibSvm(pickName,num_labels=20, readLabelsAgain = False):
     
 #     labelDir = "C:\\Users\\Ido\\workspace\\ISH_Lasagne\\articleCatagorise\\*articleCatagorise.txt"
 #     labelDir = "C:\\Users\\Ido\\Pictures\\BrainISHimages\\*TopCat.txt"
@@ -202,6 +202,6 @@ if __name__ == "__main__":
 #     pickName = "C:\\Users\\Ido\\workspace\\ISH_Lasagne\\src\\DeepLearning\\results\\noLearn_50_3_hiddenLayerOutput_0.pickle"
 #     pickName = "C:\\Users\\Owner\\workspace\\ISH_Lasagne\\src\\DeepLearning\\results_dae\\try_0.1\\run_0\\hiddenLayerOutput.pkl.gz"
     pickName = "C:\\Users\\Ido\\workspace\\ISH_Lasagne\\src\\DeepLearning\\results_dae\\try_0.1\\run_0\\hiddenLayerOutput.pkl.gz"
-    runSvm(pickName,15)
+    runLibSvm(pickName,15)
     
      
