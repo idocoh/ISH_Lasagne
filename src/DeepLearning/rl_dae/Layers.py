@@ -5,11 +5,12 @@ null = lambda x: 0
 identity = lambda x: x
 
 class BaseLayer():
-    def backwardPass(self, y):
+    def backwardPass(self, y, Log):
         gradient = self.output - y + self.w_constraint(self.W)
         #sys.stdout.write( "\rError: %4.4f"%numpy.mean((y - self.output)**2) )
-        if self.epoch % 500 == 0:
+        if self.epoch % 100 == 0:
             print "%s %d: %4.6f"%(self.name, self.epoch, numpy.mean((y - self.output)**2))
+            Log.flush()
         return gradient
         
     def update(self, transfer):

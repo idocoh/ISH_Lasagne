@@ -1,6 +1,7 @@
 
 import os
 import time
+import sys
 
 from lasagne import layers
 from lasagne.objectives import aggregate, squared_error
@@ -71,6 +72,12 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
     FIG_FILE_NAME = FOLDER_PREFIX + "fig"
     PICKLES_NET_FILE_NAME = FOLDER_PREFIX + "picklesNN.pkl.gz"
     SVM_FILE_NAME = FOLDER_PREFIX + "svmData.txt"
+    
+    old_stdout = sys.stdout
+
+    log_file = open(FOLDER_PREFIX+"message.log","w")
+
+    sys.stdout = log_file
 #     VALIDATION_FILE_NAME = "results/"+os.path.split(__file__)[1][:-3]+"_validation_"+str(counter)+".txt"
 #     PREDICTION_FILE_NAME = "results/"+os.path.split(__file__)[1][:-3]+"_prediction.txt"
     counter +=1
@@ -216,7 +223,7 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
         sDA = StackedDA(NUM_UNITS_HIDDEN_LAYER)
     
         # pre-trainning the SDA
-        sDA.pre_train(train_x, noise_rate=input_noise_rate, epochs=pre_train_epochs)
+        sDA.pre_train(train_x, noise_rate=input_noise_rate, epochs=pre_train_epochs,LOG=log_file)
     
         # saving a PNG representation of the first layer
         W = sDA.Layers[0].W.T[:, 1:]
@@ -224,24 +231,27 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
 #         utils.saveTiles(W, img_shape= (28,28), tile_shape=(10,10), filename="results/res_dA.png")
     
         # adding the final layer
-        sDA.finalLayer(train_x, train_y, epochs=softmax_train_epochs)
+#         sDA.finalLayer(train_x, train_y, epochs=softmax_train_epochs)
     
         # trainning the whole network
-        sDA.fine_tune(train_x, train_y, epochs=fine_tune_epochs)
+#         sDA.fine_tune(train_x, train_x, epochs=fine_tune_epochs)
     
         # predicting using the SDA
         testRepresentation = sDA.predict(test_x) 
         pred = testRepresentation.argmax(1)
     
         # let's see how the network did
-        test_category = test_y.argmax(1)
+#         test_category = test_y.argmax(1)
         e = 0.0
-        for i in range(len(test_category)):
-            e += test_category[i]==pred[i]
+        t = 0.0
+        for i in range(test_y.shape[0]):
+            if any(test_y[i]):
+                e += (test_y[i,pred[i]]==1)
+                t += 1
     
         # printing the result, this structure should result in 80% accuracy
-        print "DAE accuracy: %2.2f%%"%(100*e/len(train_y))
-        outputFile.write("DAE predict rate:  "+str(100*e/len(train_y)) + "%\n")
+        print "DAE accuracy: %2.2f%%"%(100*e/t)
+        outputFile.write("DAE predict rate:  "+str(100*e/t) + "%\n")
     
         lastLayerOutputs = (sDA.predict(train_x), train_y, testRepresentation, test_y)
         return lastLayerOutputs #sDA
@@ -274,8 +284,9 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
 #     lastLayerOutputs = outputLastLayer_CNN(cnn, X, y, test_x, test_y)
 
     run_time = (time.clock() - start_time) / 60.    
-    print "learning took- ", run_time
-    print "running Category Classifier"    
+    print "learning took (min)- ", run_time
+    print "running Category Classifier"  
+    log_file.flush()  
 #     errorRates, aucScores = runSvm(lastLayerOutputs,15) #HIDDEN_LAYER_OUTPUT_FILE_NAME,15)
     errorRates, aucScores = runLibSvm(lastLayerOutputs,15)
 #     errorRates, aucScores = runCrossSvm(lastLayerOutputs,15)
@@ -292,12 +303,18 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
     outputFile.close()
     
     print "saving last layer outputs"
+    log_file.flush()  
+
 #     with open(HIDDEN_LAYER_OUTPUT_FILE_NAME,'wb') as f:
 #         pickle.dump(lastLayerOutputs, f, -1)
 #         f.close()
     f = gzip.open(HIDDEN_LAYER_OUTPUT_FILE_NAME,'wb')
     cPickle.dump(lastLayerOutputs, f, protocol=2)
     f.close() 
+    
+    sys.stdout = old_stdout
+
+    log_file.close()
 
 #     write svm data
 #     writeDataToFile(HIDDEN_LAYER_OUTPUT_FILE_NAME,SVM_FILE_NAME)
@@ -347,14 +364,15 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
 
     
 def run_All():
-
+    
+    
+    
     if platform.dist()[0]:
 #         global FILE_SEPARATOR
 #         FILE_SEPARATOR = "\\"
         print "IsUbuntu"
     else :
         print "IsWindows"
-
     folderName="gpu_5000_15000"
 
     num_labels=15
@@ -368,13 +386,14 @@ def run_All():
 
 #     run(NUM_UNITS_HIDDEN_LAYER=[5000,2000],input_noise_rate=0.3,pre_train_epochs=1,softmax_train_epochs=1,fine_tune_epochs=1,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
 #     run(NUM_UNITS_HIDDEN_LAYER=[2000,500,100],input_noise_rate=input_noise_rate,pre_train_epochs=15,softmax_train_epochs=3,fine_tune_epochs=3,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
-    run(NUM_UNITS_HIDDEN_LAYER=[5000,2000,100],input_noise_rate=input_noise_rate,pre_train_epochs=15,softmax_train_epochs=3,fine_tune_epochs=3,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
-    run(NUM_UNITS_HIDDEN_LAYER=[12000,5000,2000,500,100],input_noise_rate=input_noise_rate,pre_train_epochs=5,softmax_train_epochs=2,fine_tune_epochs=2,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
-    run(NUM_UNITS_HIDDEN_LAYER=[20000,8000,2000,500,100],input_noise_rate=input_noise_rate,pre_train_epochs=5,softmax_train_epochs=2,fine_tune_epochs=2,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)
+    run(NUM_UNITS_HIDDEN_LAYER=[5000,2000,100],input_noise_rate=input_noise_rate,pre_train_epochs=12,softmax_train_epochs=0,fine_tune_epochs=2,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
+    run(NUM_UNITS_HIDDEN_LAYER=[12000,5000,2000,500,100],input_noise_rate=input_noise_rate,pre_train_epochs=6,softmax_train_epochs=0,fine_tune_epochs=2,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
+    run(NUM_UNITS_HIDDEN_LAYER=[20000,8000,2000,500,100],input_noise_rate=input_noise_rate,pre_train_epochs=6,softmax_train_epochs=0,fine_tune_epochs=2,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)
 #     run(NUM_UNITS_HIDDEN_LAYER=[15000,7000,3000,1500,700,300,100],input_noise_rate=input_noise_rate,pre_train_epochs=1,softmax_train_epochs=2,fine_tune_epochs=2,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
 #     run(NUM_UNITS_HIDDEN_LAYER=[15000,5000,2000,500,100],input_noise_rate=input_noise_rate,pre_train_epochs=2,softmax_train_epochs=2,fine_tune_epochs=2,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
 #     run(NUM_UNITS_HIDDEN_LAYER=[15000,7000,3000,1500,700,300,100],input_noise_rate=input_noise_rate,pre_train_epochs=2,softmax_train_epochs=2,fine_tune_epochs=2,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
-
+    
+    
 
 if __name__ == "__main__":
     run_All()

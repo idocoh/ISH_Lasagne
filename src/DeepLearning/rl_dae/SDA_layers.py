@@ -3,7 +3,7 @@ import Noise
 import Layers
 
 class Trainer():
-    def train(self, layers, X, y, n_iters=1):
+    def train(self, layers, X, y, LOG, n_iters=1):
         rows = numpy.arange(X.shape[0])
         for iters in range(n_iters):
             numpy.random.shuffle(rows)
@@ -11,7 +11,7 @@ class Trainer():
                 tmp = X[[idx]]
                 for i in range(len(layers)):
                     tmp = layers[i].activate(tmp)
-                grad = layers[-1].backwardPass(y[[idx]])
+                grad = layers[-1].backwardPass(y[[idx]], LOG)
                 for i in range(len(layers)-1, -1, -1):
                     grad = layers[i].update(grad)
         return layers
@@ -26,7 +26,7 @@ class StackedDA():
     def __repr__(self):
         return "\nStacked Denoising Autoencoder Structure:\t%s"%(" -> ".join([str(x) for x in self.structure]))
         
-    def pre_train(self, X, epochs=1, noise_rate=0.3):
+    def pre_train(self, X, LOG, epochs=1, noise_rate=0.3):
         self.structure = numpy.concatenate([[X.shape[1]], self.structure])
         self.X = X
         trainer = Trainer()
@@ -35,7 +35,7 @@ class StackedDA():
             print "Layer: %dx%d"%( self.structure[i], self.structure[i+1])
             s1 = Layers.SigmoidLayer(self.structure[i], self.structure[i+1], noise=Noise.SaltAndPepper(noise_rate))
             s2 = Layers.SigmoidLayer(self.structure[i+1], self.X.shape[1])
-            s1, s2 = trainer.train([s1, s2], self.X, self.X, epochs)
+            s1, s2 = trainer.train([s1, s2], self.X, self.X, LOG, epochs)
             self.X = s1.activate(self.X)
             self.Layers.append(s1)
     
