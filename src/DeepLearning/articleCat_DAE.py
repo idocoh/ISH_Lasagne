@@ -11,6 +11,16 @@ from  matplotlib import pyplot
 import theano
 from autoencoder import DenoisingAutoencoder
 
+# from theano.sandbox.neighbours import neibs2images
+# from lasagne.nonlinearities import tanh
+from sklearn.metrics import mean_squared_error as mse
+from sklearn.metrics import precision_score
+# import urllib
+from IPython.display import Image as IPImage
+from PIL import Image
+# from nolearn.lasagne import Unpool2DLayer
+
+
 import cPickle as pickle
 import gzip, cPickle
 import platform
@@ -30,7 +40,10 @@ from runCrossValidationSvm import runCrossSvm, runAllLabels
 
 from rl_dae.SDA_layers import StackedDA 
 from runLibSvm import runLibSvm
-
+### this is really dumb, current nolearn doesnt play well with lasagne,
+### so had to manually copy the file I wanted to this folder
+from shape import ReshapeLayer
+# from shape import Unpool2DLayer
 
 FILE_SEPARATOR="/"
 counter = 0
@@ -54,7 +67,67 @@ def load2d(num_labels,outputFile=None, input_width=300, input_height=140,end_ind
         outputFile.write("Number of training examples: "+str(train_set_x.shape[0]) + "\n\n")
     return train_set_x, train_set_y, test_set_x, test_set_y
 
+# <codecell>
 
+class Unpool2DLayer(layers.Layer):
+    """
+    This layer performs unpooling over the last two dimensions
+    of a 4D tensor.
+    """
+    def __init__(self, incoming, ds, **kwargs):
+ 
+        super(Unpool2DLayer, self).__init__(incoming, **kwargs)
+ 
+        if (isinstance(ds, int)):
+            raise ValueError('ds must have len == 2')
+        else:
+            ds = tuple(ds)
+            if len(ds) != 2:
+                raise ValueError('ds must have len == 2')
+            if ds[0] != ds[1]:
+                raise ValueError('ds should be symmetric (I am lazy)')
+            self.ds = ds
+ 
+    def get_output_shape_for(self, input_shape):
+        output_shape = list(input_shape)
+ 
+        output_shape[2] = input_shape[2] * self.ds[0]
+        output_shape[3] = input_shape[3] * self.ds[1]
+ 
+        return tuple(output_shape)
+ 
+    def get_output_for(self, input, **kwargs):
+        ds = self.ds
+        input_shape = input.shape
+        output_shape = self.get_output_shape_for(input_shape)
+        return input.repeat(2, axis=2).repeat(2, axis=3)
+
+
+# <codecell>
+
+### when we load the batches to input to the neural network, we randomly / flip
+### rotate the images, to artificially increase the size of the training set
+
+class FlipBatchIterator(BatchIterator):
+
+    def transform(self, X1, X2):
+        X1b, X2b = super(FlipBatchIterator, self).transform(X1, X2)
+        X2b = X2b.reshape(X1b.shape)
+
+        bs = X1b.shape[0]
+        h_indices = np.random.choice(bs, bs / 2, replace=False)  # horizontal flip
+        v_indices = np.random.choice(bs, bs / 2, replace=False)  # vertical flip
+
+        ###  uncomment these lines if you want to include rotations (images must be square)  ###
+        #r_indices = np.random.choice(bs, bs / 2, replace=False) # 90 degree rotation
+        for X in (X1b, X2b):
+            X[h_indices] = X[h_indices, :, :, ::-1]
+            X[v_indices] = X[v_indices, :, ::-1, :]
+            #X[r_indices] = np.swapaxes(X[r_indices, :, :, :], 2, 3)
+        shape = X2b.shape
+        X2b = X2b.reshape((shape[0], -1))
+
+        return X1b, X2b
 
 def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTUM=0.9, UPDATE_RHO=None, NUM_OF_EPOCH=15, input_width=300, input_height=140,
                     dataset='withOutDataSet', TRAIN_VALIDATION_SPLIT=0.2, MULTI_POSITIVES=20, dropout_percent=0.1, USE_NUM_CAT=20,end_index=16351, #activation=lasagne.nonlinearities.tanh, #rectify
@@ -75,11 +148,11 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
     LOG_FILE_NAME = FOLDER_PREFIX + "message.log"
 
     
-    old_stdout = sys.stdout
-    print "less",LOG_FILE_NAME
-    log_file = open(LOG_FILE_NAME,"w")
+#     old_stdout = sys.stdout
+#     print "less",LOG_FILE_NAME
+    log_file = open(LOG_FILE_NAME,"w") 
+#     sys.stdout = log_file
 
-    sys.stdout = log_file
 #     VALIDATION_FILE_NAME = "results/"+os.path.split(__file__)[1][:-3]+"_validation_"+str(counter)+".txt"
 #     PREDICTION_FILE_NAME = "results/"+os.path.split(__file__)[1][:-3]+"_prediction.txt"
     counter +=1
@@ -93,7 +166,11 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
             outputLayerSize=20
         else:
             outputLayerSize=15
-            
+        
+        conv_filters = 32
+        deconv_filters = 32
+        filter_sizes = 7 
+        encode_size = 40   
         cnn = NeuralNet(layers=[
                 ('input', layers.InputLayer), 
                 ('conv1', layers.Conv2DLayer), 
@@ -103,27 +180,53 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
                 ('conv3', layers.Conv2DLayer), 
                 ('pool3', layers.MaxPool2DLayer), 
                 ('conv4', layers.Conv2DLayer), 
-                ('pool4', layers.MaxPool2DLayer), 
-                ('hidden5', layers.DenseLayer), 
-                ('hidden6', layers.DenseLayer), 
-                ('hidden7', layers.DenseLayer), 
-                ('output', layers.DenseLayer)], 
+                ('pool4', layers.MaxPool2DLayer),
+                ('flatten', ReshapeLayer),  # output_dense
+                ('encode_layer', layers.DenseLayer),
+                ('hidden', layers.DenseLayer),  # output_dense
+                ('unflatten', ReshapeLayer),
+                ('unpool4', Unpool2DLayer),
+                ('deconv4', layers.Conv2DLayer),
+                ('unpool3', Unpool2DLayer),
+                ('deconv3', layers.Conv2DLayer),
+                ('unpool2', Unpool2DLayer),
+                ('deconv2', layers.Conv2DLayer),
+                ('unpool1', Unpool2DLayer),
+                ('deconv1', layers.Conv2DLayer),
+                ('output_layer', ReshapeLayer),
+                
+#                 ('hidden5', layers.DenseLayer), 
+#                 ('hidden6', layers.DenseLayer), 
+#                 ('hidden7', layers.DenseLayer), 
+#                 ('output', layers.DenseLayer)
+                ], 
             input_shape=(None, 1, input_width, input_height), 
-            conv1_num_filters=NUM_UNITS_HIDDEN_LAYER[0], conv1_filter_size=(5, 5), pool1_pool_size=(2, 2), 
-            conv2_num_filters=NUM_UNITS_HIDDEN_LAYER[1], conv2_filter_size=(9, 9), pool2_pool_size=(2, 2), 
-            conv3_num_filters=NUM_UNITS_HIDDEN_LAYER[2], conv3_filter_size=(11, 11), pool3_pool_size=(4, 2), 
-            conv4_num_filters=NUM_UNITS_HIDDEN_LAYER[3], conv4_filter_size=(8, 5), pool4_pool_size=(2, 2), 
-            hidden5_num_units=500, hidden6_num_units=200, hidden7_num_units=100, 
-            output_num_units=outputLayerSize, output_nonlinearity=None, 
+            conv1_num_filters=NUM_UNITS_HIDDEN_LAYER[0], conv1_filter_size=(5, 5), conv1_border_mode="valid", conv1_nonlinearity=None, pool1_pool_size=(2, 2), 
+            conv2_num_filters=NUM_UNITS_HIDDEN_LAYER[1], conv2_filter_size=(9, 9), conv2_border_mode="valid", conv2_nonlinearity=None, pool2_pool_size=(2, 2), 
+            conv3_num_filters=NUM_UNITS_HIDDEN_LAYER[2], conv3_filter_size=(11, 11), conv3_border_mode="valid", conv3_nonlinearity=None, pool3_pool_size=(4, 2), 
+            conv4_num_filters=NUM_UNITS_HIDDEN_LAYER[3], conv4_filter_size=(8, 5), conv4_border_mode="valid", conv4_nonlinearity=None, pool4_pool_size=(2, 2), 
+#             hidden5_num_units=500, hidden6_num_units=200, hidden7_num_units=100, 
+            flatten_shape=(([0], -1)), # not sure if necessary?
+            encode_layer_num_units = encode_size,
+            hidden_num_units= deconv_filters * (input_width + filter_sizes - 1) * (input_height + filter_sizes - 1) / 4,
+            unflatten_shape=(([0], deconv_filters, (input_width + filter_sizes - 1) / 2, (input_height + filter_sizes - 1) / 2 )),
+            deconv1_num_filters=NUM_UNITS_HIDDEN_LAYER[0], deconv1_filter_size=(5, 5), deconv1_border_mode="valid", deconv1_nonlinearity=None, unpool1_ds=(2, 2), 
+            deconv2_num_filters=NUM_UNITS_HIDDEN_LAYER[1], deconv2_filter_size=(9, 9), deconv2_border_mode="valid", deconv2_nonlinearity=None, unpool2_ds=(2, 2), 
+            deconv3_num_filters=NUM_UNITS_HIDDEN_LAYER[2], deconv3_filter_size=(11, 11), deconv3_border_mode="valid", deconv3_nonlinearity=None, unpool3_ds=(2, 2), 
+            deconv4_num_filters=NUM_UNITS_HIDDEN_LAYER[3], deconv4_filter_size=(8, 5), deconv4_border_mode="valid", deconv4_nonlinearity=None, unpool4_ds=(2, 2), 
+            output_layer_shape = (([0], -1)),
+
+#             output_num_units=outputLayerSize, output_nonlinearity=None, 
             update_learning_rate=LEARNING_RATE, 
             update_momentum=UPDATE_MOMENTUM,
             update=nesterov_momentum, 
             train_split=TrainSplit(eval_size=TRAIN_VALIDATION_SPLIT), 
-            batch_iterator_train=BatchIterator(batch_size=BATCH_SIZE), 
+#             batch_iterator_train=BatchIterator(batch_size=BATCH_SIZE),
+            batch_iterator_train=FlipBatchIterator(batch_size=BATCH_SIZE), 
             regression=True, 
             max_epochs=NUM_OF_EPOCH, 
             verbose=1, 
-            hiddenLayer_to_output=-2)
+            hiddenLayer_to_output=-11)
     #         on_training_finished=last_hidden_layer,
         return cnn
     
@@ -267,7 +370,7 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
     else:
         X, y, test_x, test_y = loadedData 
     
-
+#######
 #     print 1
 #     dae = DenoisingAutoencoder(n_hidden=10)
 #     print 2
@@ -276,17 +379,132 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
 #     new_X = dae.transform(X)  
 #     print new_X    
 
-    lastLayerOutputs = outputLastLayer_DAE(X, y, test_x, test_y)
+#######
+#     lastLayerOutputs = outputLastLayer_DAE(X, y, test_x, test_y)
 
-#     cnn = createNNwithMomentom(input_height, input_width) if UPDATE_RHO == None else createNNwithDecay(input_height, input_width)   
-#     cnn.fit(X, y) 
-#     
-#     writeOutputFile(outputFile,cnn.train_history_,PrintLayerInfo._get_layer_info_plain(cnn))
-# 
-#     lastLayerOutputs = outputLastLayer_CNN(cnn, X, y, test_x, test_y)
+#######
 
+    X = np.rint(X * 256).astype(np.int).reshape((-1, 1, input_width, input_height ))  # convert to (0,255) int range (we'll do our own scaling)
+    mu, sigma = np.mean(X.flatten()), np.std(X.flatten())
+    
+    # <codecell>
+    
+    X_train = X.astype(np.float64)
+    X_train = (X_train - mu) / sigma
+    X_train = X_train.astype(np.float32)
+    
+    # we need our target to be 1 dimensional
+    X_out = X_train.reshape((X_train.shape[0], -1))
+
+    cnn = createNNwithMomentom(input_height, input_width) if UPDATE_RHO == None else createNNwithDecay(input_height, input_width)   
+    cnn.fit(X_train, X_out) 
+     
     run_time = (time.clock() - start_time) / 60.    
+
+    writeOutputFile(outputFile,cnn.train_history_,PrintLayerInfo._get_layer_info_plain(cnn))
+ 
+    lastLayerOutputs = outputLastLayer_CNN(cnn, X, y, test_x, test_y)
+
     print "learning took (min)- ", run_time
+    
+    
+    # <codecell>
+
+    sys.setrecursionlimit(10000)
+    
+    pickle.dump(cnn, open('mnist/conv_ae.pkl','w'))
+    #ae = pickle.load(open('mnist/conv_ae.pkl','r'))
+    cnn.save_weights_to('mnist/conv_ae.np')
+    
+    # <codecell>
+    
+    X_train_pred = cnn.predict(X_train).reshape(-1, 28, 28) * sigma + mu
+    X_pred = np.rint(X_train_pred).astype(int)
+    X_pred = np.clip(X_pred, a_min = 0, a_max = 255)
+    X_pred = X_pred.astype('uint8')
+    print X_pred.shape , X.shape
+    
+    # <codecell>
+    
+    ###  show random inputs / outputs side by side
+    
+    def get_picture_array(X, index):
+        array = X[index].reshape(28,28)
+        array = np.clip(array, a_min = 0, a_max = 255)
+        return  array.repeat(4, axis = 0).repeat(4, axis = 1).astype(np.uint8())
+    
+    def get_random_images():
+        index = np.random.randint(5000)
+        print index
+        original_image = Image.fromarray(get_picture_array(X, index))
+        new_size = (original_image.size[0] * 2, original_image.size[1])
+        new_im = Image.new('L', new_size)
+        new_im.paste(original_image, (0,0))
+        rec_image = Image.fromarray(get_picture_array(X_pred, index))
+        new_im.paste(rec_image, (original_image.size[0],0))
+        new_im.save('data/test.png', format="PNG")
+    
+    get_random_images()
+    IPImage('data/test.png')
+    
+    # <codecell>
+    
+    ## we find the encode layer from our ae, and use it to define an encoding function
+    
+    encode_layer_index = map(lambda pair : pair[0], cnn.layers).index('encode_layer')
+    encode_layer = cnn.get_all_layers()[encode_layer_index]
+    
+    def get_output_from_nn(last_layer, X):
+        indices = np.arange(128, X.shape[0], 128)
+        sys.stdout.flush()
+    
+        # not splitting into batches can cause a memory error
+        X_batches = np.split(X, indices)
+        out = []
+        for count, X_batch in enumerate(X_batches):
+            out.append(last_layer.get_output(X_batch).eval())
+            sys.stdout.flush()
+        return np.vstack(out)
+    
+    
+    def encode_input(X):
+        return get_output_from_nn(encode_layer, X)
+    
+    X_encoded = encode_input(X_train)
+    
+    # <codecell>
+    
+    next_layer = cnn.get_all_layers()[encode_layer_index + 1]
+    final_layer = cnn.get_all_layers()[-1]
+    new_layer = layers.InputLayer(shape = (None, encode_layer.num_units))
+    
+    # N.B after we do this, we won't be able to use the original autoencoder , as the layers are broken up
+    next_layer.input_layer = new_layer
+    
+    def decode_encoded_input(X):
+        return get_output_from_nn(final_layer, X)
+    
+    X_decoded = decode_encoded_input(X_encoded) * sigma + mu
+    
+    X_decoded = np.rint(X_decoded ).astype(int)
+    X_decoded = np.clip(X_decoded, a_min = 0, a_max = 255)
+    X_decoded  = X_decoded.astype('uint8')
+    print X_decoded.shape
+    
+    ### check it worked :
+    
+    pic_array = get_picture_array(X_decoded, np.random.randint(len(X_decoded)))
+    image = Image.fromarray(pic_array)
+    image.save('data/test.png', format="PNG")
+    IPImage('data/test.png')
+    
+    # <codecell>
+
+    
+    
+    
+    
+    
     print "running Category Classifier"  
     log_file.flush()  
 #     errorRates, aucScores = runSvm(lastLayerOutputs,15) #HIDDEN_LAYER_OUTPUT_FILE_NAME,15)
@@ -314,7 +532,7 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
     cPickle.dump(lastLayerOutputs, f, protocol=2)
     f.close() 
     
-    sys.stdout = old_stdout
+#     sys.stdout = old_stdout
 
     log_file.close()
 
@@ -384,7 +602,7 @@ def run_All():
     withZeroMeaning=True
     data = load2d(num_labels=num_labels, end_index=end_index, MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)
         
-#     run(NUM_UNITS_HIDDEN_LAYER=[100],input_noise_rate=0.3,pre_train_epochs=1,softmax_train_epochs=0,fine_tune_epochs=1,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
+    run(NUM_UNITS_HIDDEN_LAYER=[3,6,12,24],input_noise_rate=0.3,pre_train_epochs=1,softmax_train_epochs=0,fine_tune_epochs=1,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
 
 #     run(NUM_UNITS_HIDDEN_LAYER=[5000,2000],input_noise_rate=0.3,pre_train_epochs=1,softmax_train_epochs=1,fine_tune_epochs=1,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
 #     run(NUM_UNITS_HIDDEN_LAYER=[2000,500,100],input_noise_rate=input_noise_rate,pre_train_epochs=15,softmax_train_epochs=3,fine_tune_epochs=3,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
