@@ -167,10 +167,7 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
         else:
             outputLayerSize=15
         
-        conv_filters = 32
-        deconv_filters = 32
-        filter_sizes = 7 
-        encode_size = 40   
+        encode_size = 200   
         cnn = NeuralNet(layers=[
                 ('input', layers.InputLayer), 
                 ('conv1', layers.Conv2DLayer), 
@@ -179,14 +176,14 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
                 ('pool2', layers.MaxPool2DLayer), 
                 ('conv3', layers.Conv2DLayer), 
                 ('pool3', layers.MaxPool2DLayer), 
-                ('conv4', layers.Conv2DLayer), 
-                ('pool4', layers.MaxPool2DLayer),
+#                 ('conv4', layers.Conv2DLayer), 
+#                 ('pool4', layers.MaxPool2DLayer),
                 ('flatten', ReshapeLayer),  # output_dense
                 ('encode_layer', layers.DenseLayer),
                 ('hidden', layers.DenseLayer),  # output_dense
                 ('unflatten', ReshapeLayer),
-                ('unpool4', Unpool2DLayer),
-                ('deconv4', layers.Conv2DLayer),
+#                 ('unpool4', Unpool2DLayer),
+#                 ('deconv4', layers.Conv2DLayer),
                 ('unpool3', Unpool2DLayer),
                 ('deconv3', layers.Conv2DLayer),
                 ('unpool2', Unpool2DLayer),
@@ -200,22 +197,52 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
 #                 ('hidden7', layers.DenseLayer), 
 #                 ('output', layers.DenseLayer)
                 ], 
-            input_shape=(None, 1, input_width, input_height), 
-            conv1_num_filters=NUM_UNITS_HIDDEN_LAYER[0], conv1_filter_size=(5, 5), conv1_border_mode="valid", conv1_nonlinearity=None, pool1_pool_size=(2, 2), 
-            conv2_num_filters=NUM_UNITS_HIDDEN_LAYER[1], conv2_filter_size=(9, 9), conv2_border_mode="valid", conv2_nonlinearity=None, pool2_pool_size=(2, 2), 
-            conv3_num_filters=NUM_UNITS_HIDDEN_LAYER[2], conv3_filter_size=(11, 11), conv3_border_mode="valid", conv3_nonlinearity=None, pool3_pool_size=(4, 2), 
-            conv4_num_filters=NUM_UNITS_HIDDEN_LAYER[3], conv4_filter_size=(8, 5), conv4_border_mode="valid", conv4_nonlinearity=None, pool4_pool_size=(2, 2), 
-#             hidden5_num_units=500, hidden6_num_units=200, hidden7_num_units=100, 
-            flatten_shape=(([0], -1)), # not sure if necessary?
-            encode_layer_num_units = encode_size,
-            hidden_num_units= deconv_filters * (input_width + filter_sizes - 1) * (input_height + filter_sizes - 1) / 4,
-            unflatten_shape=(([0], deconv_filters, (input_width + filter_sizes - 1) / 2, (input_height + filter_sizes - 1) / 2 )),
-            deconv1_num_filters=NUM_UNITS_HIDDEN_LAYER[0], deconv1_filter_size=(5, 5), deconv1_border_mode="valid", deconv1_nonlinearity=None, unpool1_ds=(2, 2), 
-            deconv2_num_filters=NUM_UNITS_HIDDEN_LAYER[1], deconv2_filter_size=(9, 9), deconv2_border_mode="valid", deconv2_nonlinearity=None, unpool2_ds=(2, 2), 
-            deconv3_num_filters=NUM_UNITS_HIDDEN_LAYER[2], deconv3_filter_size=(11, 11), deconv3_border_mode="valid", deconv3_nonlinearity=None, unpool3_ds=(2, 2), 
-            deconv4_num_filters=NUM_UNITS_HIDDEN_LAYER[3], deconv4_filter_size=(8, 5), deconv4_border_mode="valid", deconv4_nonlinearity=None, unpool4_ds=(2, 2), 
-            output_layer_shape = (([0], -1)),
 
+            input_shape=(None, 1, input_width, input_height), 
+            #Layer current size - 1x300x140
+            conv1_num_filters=NUM_UNITS_HIDDEN_LAYER[0], conv1_filter_size=(5, 5), conv1_border_mode="valid", conv1_nonlinearity=None,
+            #Layer current size - NFx296x136
+            pool1_pool_size=(2, 2), 
+            #Layer current size - NFx148x68
+            conv2_num_filters=NUM_UNITS_HIDDEN_LAYER[1], conv2_filter_size=(5, 5), conv2_border_mode="valid", conv2_nonlinearity=None,
+            #Layer current size - NFx144x64
+            pool2_pool_size=(2, 2), 
+            #Layer current size - NFx72x32
+            conv3_num_filters=NUM_UNITS_HIDDEN_LAYER[2], conv3_filter_size=(9, 5), conv3_border_mode="valid", conv3_nonlinearity=None,
+            #Layer current size - NFx64x28
+            pool3_pool_size=(2, 2), 
+
+#             conv4_num_filters=NUM_UNITS_HIDDEN_LAYER[3], conv4_filter_size=(5, 5), conv4_border_mode="valid", conv4_nonlinearity=None,
+#             pool4_pool_size=(2, 2),
+ 
+            #Layer current size - NFx32x14
+            flatten_shape=(([0], -1)), # not sure if necessary?
+            #Layer current size - 448
+            encode_layer_num_units = encode_size,
+            #Layer current size - 100
+            hidden_num_units= NUM_UNITS_HIDDEN_LAYER[-1] * 924,
+            #Layer current size - NF*448
+            unflatten_shape=(([0], NUM_UNITS_HIDDEN_LAYER[-1], 42, 22 )),
+            
+#             deconv4_num_filters=NUM_UNITS_HIDDEN_LAYER[3], deconv4_filter_size=(5, 5), deconv4_border_mode="valid", deconv4_nonlinearity=None,
+#             unpool4_ds=(2, 2), 
+
+            #Layer current size - NFx42x22
+            unpool3_ds=(2, 2),
+            #Layer current size - NFx84x44
+            deconv3_num_filters=NUM_UNITS_HIDDEN_LAYER[-2], deconv3_filter_size=(5, 5), deconv3_border_mode="valid", deconv3_nonlinearity=None,
+            #Layer current size - NFx80x40
+            unpool2_ds=(2, 2),
+            #Layer current size - NFx160x80
+            deconv2_num_filters=NUM_UNITS_HIDDEN_LAYER[-3], deconv2_filter_size=(9, 9), deconv2_border_mode="valid", deconv2_nonlinearity=None,
+            #Layer current size - NFx152x72
+            unpool1_ds=(2, 2),  
+            #Layer current size - NFx304x144
+            deconv1_num_filters=1, deconv1_filter_size=(5, 5), deconv1_border_mode="valid", deconv1_nonlinearity=None,
+            #Layer current size - 1x300x140
+            output_layer_shape = (([0], -1)),
+            #Layer current size - 300*140
+            
 #             output_num_units=outputLayerSize, output_nonlinearity=None, 
             update_learning_rate=LEARNING_RATE, 
             update_momentum=UPDATE_MOMENTUM,
@@ -602,7 +629,7 @@ def run_All():
     withZeroMeaning=True
     data = load2d(num_labels=num_labels, end_index=end_index, MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)
         
-    run(NUM_UNITS_HIDDEN_LAYER=[3,6,12,24],input_noise_rate=0.3,pre_train_epochs=1,softmax_train_epochs=0,fine_tune_epochs=1,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
+    run(NUM_UNITS_HIDDEN_LAYER=[3,6,12],input_noise_rate=0.3,pre_train_epochs=1,softmax_train_epochs=0,fine_tune_epochs=1,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
 
 #     run(NUM_UNITS_HIDDEN_LAYER=[5000,2000],input_noise_rate=0.3,pre_train_epochs=1,softmax_train_epochs=1,fine_tune_epochs=1,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
 #     run(NUM_UNITS_HIDDEN_LAYER=[2000,500,100],input_noise_rate=input_noise_rate,pre_train_epochs=15,softmax_train_epochs=3,fine_tune_epochs=3,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
