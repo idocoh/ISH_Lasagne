@@ -277,13 +277,15 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
 
         return cnn4       
 
-    def createCnn_SAE(input_height, input_width):
+    def createCnn_AE(input_height, input_width):
         if USE_NUM_CAT==20:
             outputLayerSize=20
         else:
             outputLayerSize=15
         
-        encode_size = 200   
+        encode_size = 200  
+        border_mode = "same"
+         
         cnn = NeuralNet(layers=[
                 ('input', layers.InputLayer), 
                 ('conv1', layers.Conv2DLayer), 
@@ -320,41 +322,41 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
             #Layer current size - NFx296x136
             pool1_pool_size=(2, 2), 
             #Layer current size - NFx148x68
-            conv2_num_filters=NUM_UNITS_HIDDEN_LAYER[1], conv2_filter_size=(5, 5), conv2_border_mode="valid", conv2_nonlinearity=None,
-            #Layer current size - NFx144x64
+            conv2_num_filters=NUM_UNITS_HIDDEN_LAYER[1], conv2_filter_size=(5, 5), conv2_border_mode=border_mode, conv2_nonlinearity=None,
+            #Layer current size - NFx148x68
             pool2_pool_size=(2, 2), 
-            #Layer current size - NFx72x32
-            conv3_num_filters=NUM_UNITS_HIDDEN_LAYER[2], conv3_filter_size=(9, 5), conv3_border_mode="valid", conv3_nonlinearity=None,
-            #Layer current size - NFx64x28
+            #Layer current size - NFx74x34
+            conv3_num_filters=NUM_UNITS_HIDDEN_LAYER[2], conv3_filter_size=(5, 5), conv3_border_mode=border_mode, conv3_nonlinearity=None,
+            #Layer current size - NFx74x34
             pool3_pool_size=(2, 2), 
 
-#             conv4_num_filters=NUM_UNITS_HIDDEN_LAYER[3], conv4_filter_size=(5, 5), conv4_border_mode="valid", conv4_nonlinearity=None,
+#             conv4_num_filters=NUM_UNITS_HIDDEN_LAYER[3], conv4_filter_size=(5, 5), conv4_border_mode=border_mode, conv4_nonlinearity=None,
 #             pool4_pool_size=(2, 2),
  
-            #Layer current size - NFx32x14
+            #Layer current size - NFx37x17
             flatten_shape=(([0], -1)), # not sure if necessary?
-            #Layer current size - NF*448
+            #Layer current size - NF*37*17
             encode_layer_num_units = encode_size,
-            #Layer current size - 100
-            hidden_num_units= NUM_UNITS_HIDDEN_LAYER[-1] * 42 * 22,
-            #Layer current size - NF*42*22
-            unflatten_shape=(([0], NUM_UNITS_HIDDEN_LAYER[-1], 42, 22 )),
+            #Layer current size - 200
+            hidden_num_units= NUM_UNITS_HIDDEN_LAYER[-1] * 37 * 17,
+            #Layer current size - NF*37*17
+            unflatten_shape=(([0], NUM_UNITS_HIDDEN_LAYER[-1], 37, 17 )),
             
-#             deconv4_num_filters=NUM_UNITS_HIDDEN_LAYER[3], deconv4_filter_size=(5, 5), deconv4_border_mode="valid", deconv4_nonlinearity=None,
+#             deconv4_num_filters=NUM_UNITS_HIDDEN_LAYER[3], deconv4_filter_size=(5, 5), deconv4_border_mode=border_mode, deconv4_nonlinearity=None,
 #             unpool4_ds=(2, 2), 
 
-            #Layer current size - NFx42x22
+            #Layer current size - NFx37x17
             unpool3_ds=(2, 2),
-            #Layer current size - NFx84x44
-            deconv3_num_filters=NUM_UNITS_HIDDEN_LAYER[-2], deconv3_filter_size=(5, 5), deconv3_border_mode="valid", deconv3_nonlinearity=None,
-            #Layer current size - NFx80x40
+            #Layer current size - NFx74x34
+            deconv3_num_filters=NUM_UNITS_HIDDEN_LAYER[-2], deconv3_filter_size=(5, 5), deconv3_border_mode=border_mode, deconv3_nonlinearity=None,
+            #Layer current size - NFx74x34
             unpool2_ds=(2, 2),
-            #Layer current size - NFx160x80
-            deconv2_num_filters=NUM_UNITS_HIDDEN_LAYER[-3], deconv2_filter_size=(9, 9), deconv2_border_mode="valid", deconv2_nonlinearity=None,
-            #Layer current size - NFx152x72
+            #Layer current size - NFx148x68
+            deconv2_num_filters=NUM_UNITS_HIDDEN_LAYER[-3], deconv2_filter_size=(9, 9), deconv2_border_mode=border_mode, deconv2_nonlinearity=None,
+            #Layer current size - NFx148x68
             unpool1_ds=(2, 2),  
-            #Layer current size - NFx304x144
-            deconv1_num_filters=1, deconv1_filter_size=(5, 5), deconv1_border_mode="valid", deconv1_nonlinearity=None,
+            #Layer current size - NFx296x136
+            deconv1_num_filters=1, deconv1_filter_size=(5, 5), deconv1_border_mode="full", deconv1_nonlinearity=None,
             #Layer current size - 1x300x140
             output_layer_shape = (([0], -1)),
             #Layer current size - 300*140
@@ -550,7 +552,7 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
 #     cnn.fit(X, y) 
 
     ##AE (not Stacked) with Convolutional layers
-    cnn = createCnn_SAE(input_height, input_width)
+    cnn = createCnn_AE(input_height, input_width)
     cnn.fit(X_train, X_out)
 
     ##Stacaked AE with lasagne
@@ -591,7 +593,7 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
         return  array.repeat(4, axis = 0).repeat(4, axis = 1).astype(np.uint8())
     
     def get_random_images():
-        index = np.random.randint(5000)
+        index = np.random.randint(X.shape[0])
         print index
         original_image = Image.fromarray(get_picture_array(X, index))
         new_size = (original_image.size[0] * 2, original_image.size[1])
@@ -768,3 +770,5 @@ def run_All():
 
 if __name__ == "__main__":
     run_All()
+    
+#IMPORTANT: I have put in comment line number 625 in /home/ido_local/theano-env/lib/python2.7/site-packages/theano/tensor/nnet/conv.py
