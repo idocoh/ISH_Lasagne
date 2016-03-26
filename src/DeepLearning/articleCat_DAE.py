@@ -161,17 +161,7 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
     
     def createSAE(input_height, input_width,X_train,X_out):
         
-        encode_size = 200  
-#         X = np.rint(X * 256).astype(np.int).reshape((-1, 1, input_width, input_height ))  # convert to (0,255) int range (we'll do our own scaling)
-#         mu, sigma = np.mean(X.flatten()), np.std(X.flatten())
-#             
-#         X_train = X.astype(np.float64)
-#         X_train = (X_train - mu) / sigma
-#         X_train = X_train.astype(np.float32)
-#         
-#         # we need our target to be 1 dimensional
-#         X_out = X_train.reshape((X_train.shape[0], -1))
- 
+        encode_size = 200   
      
         cnn1 = NeuralNet(layers=[
                 ('input', layers.InputLayer), 
@@ -181,7 +171,7 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
                 ], 
 
             input_shape=(None, 1, input_width, input_height), 
-            hidden_num_units= 10000,
+            hidden_num_units= 8000,
             hiddenOut_num_units= 42000,
             output_layer_shape = (([0], -1)),
 
@@ -194,7 +184,7 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
             regression=True, 
             max_epochs=NUM_OF_EPOCH, 
             verbose=1, 
-            hiddenLayer_to_output=-2)
+            hiddenLayer_to_output=-3)
         
         cnn1.fit(X_train, X_out)
         trian_last_hiddenLayer = cnn1.output_hiddenLayer(X_train)
@@ -205,21 +195,23 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
                 ('hidden', layers.DenseLayer),
                 ('output_layer', layers.DenseLayer),
                 ], 
-
-            input_shape=10000, 
-            hidden_num_units= 5000,
-            output_layer_shape = 10000,
+                    
+            input_shape=(None,8000), 
+            hidden_num_units= 2000,
+            output_layer_num_units = 8000,
 
             update_learning_rate=LEARNING_RATE, 
             update_momentum=UPDATE_MOMENTUM,
             update=nesterov_momentum, 
             train_split=TrainSplit(eval_size=TRAIN_VALIDATION_SPLIT), 
-#             batch_iterator_train=BatchIterator(batch_size=BATCH_SIZE),
-            batch_iterator_train=FlipBatchIterator(batch_size=BATCH_SIZE), 
+            batch_iterator_train=BatchIterator(batch_size=BATCH_SIZE),
+#             batch_iterator_train=FlipBatchIterator(batch_size=BATCH_SIZE), 
             regression=True, 
             max_epochs=NUM_OF_EPOCH, 
             verbose=1, 
             hiddenLayer_to_output=-2)
+        
+        trian_last_hiddenLayer = trian_last_hiddenLayer.astype(np.float32)  
         
         cnn2.fit(trian_last_hiddenLayer, trian_last_hiddenLayer)
         trian_last_hiddenLayer = cnn2.output_hiddenLayer(trian_last_hiddenLayer)
@@ -231,21 +223,22 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
                 ('output_layer', layers.DenseLayer),
                 ], 
 
-            input_shape=5000, 
-            hidden_num_units= 2000,
-            output_layer_shape = 5000,
+            input_shape=(None,2000), 
+            hidden_num_units= 1000,
+            output_layer_num_units = 2000,
 
             update_learning_rate=LEARNING_RATE, 
             update_momentum=UPDATE_MOMENTUM,
             update=nesterov_momentum, 
             train_split=TrainSplit(eval_size=TRAIN_VALIDATION_SPLIT), 
-#             batch_iterator_train=BatchIterator(batch_size=BATCH_SIZE),
-            batch_iterator_train=FlipBatchIterator(batch_size=BATCH_SIZE), 
+            batch_iterator_train=BatchIterator(batch_size=BATCH_SIZE),
+#             batch_iterator_train=FlipBatchIterator(batch_size=BATCH_SIZE), 
             regression=True, 
             max_epochs=NUM_OF_EPOCH, 
             verbose=1, 
             hiddenLayer_to_output=-2)
         
+        trian_last_hiddenLayer = trian_last_hiddenLayer.astype(np.float32)  
         cnn3.fit(trian_last_hiddenLayer, trian_last_hiddenLayer)
         trian_last_hiddenLayer = cnn3.output_hiddenLayer(trian_last_hiddenLayer)
         test_last_hiddenLayer = cnn3.output_hiddenLayer(test_last_hiddenLayer)
@@ -256,26 +249,48 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
                 ('output_layer', layers.DenseLayer),
                 ], 
 
-            input_shape=2000, 
+            input_shape=(None,1000), 
             hidden_num_units= 500,
-            output_layer_shape = 2000,
+            output_layer_num_units = 1000,
 
             update_learning_rate=LEARNING_RATE, 
             update_momentum=UPDATE_MOMENTUM,
             update=nesterov_momentum, 
             train_split=TrainSplit(eval_size=TRAIN_VALIDATION_SPLIT), 
-#             batch_iterator_train=BatchIterator(batch_size=BATCH_SIZE),
-            batch_iterator_train=FlipBatchIterator(batch_size=BATCH_SIZE), 
+            batch_iterator_train=BatchIterator(batch_size=BATCH_SIZE),
+#             batch_iterator_train=FlipBatchIterator(batch_size=BATCH_SIZE), 
             regression=True, 
             max_epochs=NUM_OF_EPOCH, 
             verbose=1, 
             hiddenLayer_to_output=-2)
         
+        trian_last_hiddenLayer = trian_last_hiddenLayer.astype(np.float32)  
         cnn4.fit(trian_last_hiddenLayer, trian_last_hiddenLayer)
         trian_last_hiddenLayer = cnn4.output_hiddenLayer(trian_last_hiddenLayer)
         test_last_hiddenLayer = cnn4.output_hiddenLayer(test_last_hiddenLayer)
 
-        return cnn4       
+
+        input_layer = cnn1.get_all_layers()[0]
+        hidden1_layer = cnn1.get_all_layers()[1]
+        hidden1_layer.input_layer = input_layer
+        hidden2_layer = cnn2.get_all_layers()[1]
+        hidden2_layer.input_layer = hidden1_layer
+        hidden3_layer = cnn3.get_all_layers()[1]
+        hidden3_layer.input_layer = hidden2_layer
+        final_layer = cnn4.get_all_layers()[1]
+        final_layer.input_layer = hidden3_layer 
+        
+        out_train = final_layer.get_output(X_train).eval()
+        out_test = final_layer.get_output(test_x).eval()
+        
+        f = gzip.open(FOLDER_PREFIX + "output.pkl.gz",'wb')
+        cPickle.dump((trian_last_hiddenLayer, test_last_hiddenLayer), f, protocol=2)
+        f.close()       
+#         f = gzip.open("pickled_images/tmp.pkl.gz", 'rb')
+#         trian_last_hiddenLayer, test_last_hiddenLayer = cPickle.load(f)
+#         f.close()
+
+        return cnn1       
 
     def createCnn_AE(input_height, input_width):
         if USE_NUM_CAT==20:
@@ -283,7 +298,7 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
         else:
             outputLayerSize=15
         
-        encode_size = 200  
+        encode_size = 1024  
         border_mode = "same"
          
         cnn = NeuralNet(layers=[
@@ -326,7 +341,7 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
             #Layer current size - NFx148x68
             pool2_pool_size=(2, 2), 
             #Layer current size - NFx74x34
-            conv3_num_filters=NUM_UNITS_HIDDEN_LAYER[2], conv3_filter_size=(5, 5), conv3_border_mode=border_mode, conv3_nonlinearity=None,
+            conv3_num_filters=NUM_UNITS_HIDDEN_LAYER[2], conv3_filter_size=(3, 3), conv3_border_mode=border_mode, conv3_nonlinearity=None,
             #Layer current size - NFx74x34
             pool3_pool_size=(2, 2), 
 
@@ -348,11 +363,11 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
             #Layer current size - NFx37x17
             unpool3_ds=(2, 2),
             #Layer current size - NFx74x34
-            deconv3_num_filters=NUM_UNITS_HIDDEN_LAYER[-2], deconv3_filter_size=(5, 5), deconv3_border_mode=border_mode, deconv3_nonlinearity=None,
+            deconv3_num_filters=NUM_UNITS_HIDDEN_LAYER[-2], deconv3_filter_size=(3, 3), deconv3_border_mode=border_mode, deconv3_nonlinearity=None,
             #Layer current size - NFx74x34
             unpool2_ds=(2, 2),
             #Layer current size - NFx148x68
-            deconv2_num_filters=NUM_UNITS_HIDDEN_LAYER[-3], deconv2_filter_size=(9, 9), deconv2_border_mode=border_mode, deconv2_nonlinearity=None,
+            deconv2_num_filters=NUM_UNITS_HIDDEN_LAYER[-3], deconv2_filter_size=(5, 5), deconv2_border_mode=border_mode, deconv2_nonlinearity=None,
             #Layer current size - NFx148x68
             unpool1_ds=(2, 2),  
             #Layer current size - NFx296x136
@@ -552,11 +567,11 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
 #     cnn.fit(X, y) 
 
     ##AE (not Stacked) with Convolutional layers
-    cnn = createCnn_AE(input_height, input_width)
-    cnn.fit(X_train, X_out)
+#     cnn = createCnn_AE(input_height, input_width)
+#     cnn.fit(X_train, X_out)
 
     ##Stacaked AE with lasagne
-#     cnn = createSAE(input_height, input_width,X_train,X_out)
+    cnn = createSAE(input_height, input_width,X_train,X_out)
      
     run_time = (time.clock() - start_time) / 60.    
 
@@ -746,7 +761,7 @@ def run_All():
         print "IsUbuntu"
     else :
         print "IsWindows"
-    folderName="gpu_5000_15000"
+    folderName="StackedAE_1"
 
     num_labels=15
     end_index=300
@@ -755,7 +770,7 @@ def run_All():
     withZeroMeaning=False
     data = load2d(num_labels=num_labels, end_index=end_index, MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)
         
-    run(NUM_UNITS_HIDDEN_LAYER=[3,6,12],input_noise_rate=0.3,NUM_OF_EPOCH=5,pre_train_epochs=1,softmax_train_epochs=0,fine_tune_epochs=1,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
+    run(NUM_UNITS_HIDDEN_LAYER=[16,32,64],input_noise_rate=0.3,NUM_OF_EPOCH=10,pre_train_epochs=1,softmax_train_epochs=0,fine_tune_epochs=1,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
 
 #     run(NUM_UNITS_HIDDEN_LAYER=[5000,2000],input_noise_rate=0.3,pre_train_epochs=1,softmax_train_epochs=1,fine_tune_epochs=1,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
 #     run(NUM_UNITS_HIDDEN_LAYER=[2000,500,100],input_noise_rate=input_noise_rate,pre_train_epochs=15,softmax_train_epochs=3,fine_tune_epochs=3,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
