@@ -54,6 +54,7 @@ def pickleAllImages(num_labels,TRAIN_SPLIT=0.8,end_index=16351,dropout_percent=0
            
     pData = np.concatenate((train_set1[0],test_set1[0],train_set2[0],test_set2[0],train_set3[0],test_set3[0]),axis=0)
     
+    return pLabel[:end_index], pData[:end_index]
 #     f = gzip.open("images_16351_300_140",'wb')
 #     cPickle.dump(pData, f, protocol=2)
 #     f.close()

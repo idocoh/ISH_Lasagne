@@ -249,7 +249,7 @@ def load_data(dataset, toShuffleInput = True , withZeroMeaning = True, labelset=
 # 
 
           
-        fileName = "piclked_articleCat_" + str(end_index) + "_" + str(dropout_percent)
+        fileName = "piclked_articleCat_" + str(end_index) # + "_" + str(dropout_percent)
         try:
             f = gzip.open("pickled_images/" + fileName + ".pkl.gz", 'rb')
             pLabel, pData = cPickle.load(f)

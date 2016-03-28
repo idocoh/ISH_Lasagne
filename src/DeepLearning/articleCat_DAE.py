@@ -18,6 +18,8 @@ from sklearn.metrics import precision_score
 # import urllib
 from IPython.display import Image as IPImage
 from PIL import Image
+import matplotlib.pyplot as plt
+
 # from nolearn.lasagne import Unpool2DLayer
 
 
@@ -161,6 +163,70 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
     
     def createSAE(input_height, input_width,X_train,X_out):
         
+        from theano.tensor.shared_randomstreams import RandomStreams
+
+#         rng = np.random.RandomState(123)
+#         theano_rng = RandomStreams(rng.randint(2 ** 30))
+#         X_train = theano_rng.binomial(size=X_train.shape, n=1,
+#                                         p=1 - corruption_level,
+#                                         dtype=theano.config.floatX) * X_train
+        X_train = np.random.binomial(1, 1-dropout_percent, size=X_train.shape) * X_train
+        
+        
+        cnn = NeuralNet(layers=[
+                ('input', layers.InputLayer), 
+                ('conv1', layers.Conv2DLayer),
+                ('output_layer', ReshapeLayer),
+                ], 
+            input_shape=(None, 1, input_width, input_height), 
+            #Layer current size - 1x300x140
+            conv1_num_filters=NUM_UNITS_HIDDEN_LAYER[0], conv1_filter_size=(3, 3), conv1_border_mode="same", conv1_nonlinearity=None,
+            output_layer_shape = (([0], -1)),
+
+            update_learning_rate=LEARNING_RATE, 
+            update_momentum=UPDATE_MOMENTUM,
+            update=nesterov_momentum, 
+            train_split=TrainSplit(eval_size=TRAIN_VALIDATION_SPLIT), 
+#             batch_iterator_train=BatchIterator(batch_size=BATCH_SIZE),
+            batch_iterator_train=FlipBatchIterator(batch_size=BATCH_SIZE), 
+            regression=True, 
+            max_epochs=NUM_OF_EPOCH, 
+            verbose=1,
+            hiddenLayer_to_output=-2)
+        
+        cnn.fit(X_train, X_out)
+        X_train_pred = cnn.predict(X_train).reshape(-1, input_height, input_width) * sigma + mu
+        X_pred = np.rint(X_train_pred).astype(int)
+        X_pred = np.clip(X_pred, a_min = 0, a_max = 255)
+        X_pred = X_pred.astype('uint8')
+        print X_pred.shape , X.shape
+        for i in range(10):
+            index = np.random.randint(X.shape[0])
+            print index
+            def get_picture_array(X, index):
+                array = X[index].reshape(input_height, input_width)
+                array = np.clip(array, a_min = 0, a_max = 255)
+                return  array.repeat(4, axis = 0).repeat(4, axis = 1).astype(np.uint8())
+            
+            original_image = Image.fromarray(get_picture_array(X_out, index))
+            new_size = (original_image.size[0] * 2, original_image.size[1])
+            new_im = Image.new('L', new_size)
+            new_im.paste(original_image, (0,0))
+            rec_image = Image.fromarray(get_picture_array(X_pred, index))
+            new_im.paste((original_image.size[0],0), rec_image)
+            new_im.save(FOLDER_PREFIX+'outVSpred'+str(index)+'.png', format="PNG")
+            plt.imshow(new_im)
+            new_size = (original_image.size[0] * 2, original_image.size[1])
+            new_im = Image.new('L', new_size)
+            new_im.paste(original_image, (0,0))
+            rec_image = Image.fromarray(get_picture_array(X_train, index))
+            new_im.paste((original_image.size[0],0), rec_image)
+            new_im.save(FOLDER_PREFIX+'outVSnoise'+str(index)+'.png', format="PNG")
+            plt.imshow(new_im)
+        trian_last_hiddenLayer = cnn.output_hiddenLayer(X_train)
+        test_last_hiddenLayer = cnn.output_hiddenLayer(test_x)
+        
+        
         encode_size = 200   
      
         cnn1 = NeuralNet(layers=[
@@ -171,7 +237,7 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
                 ], 
 
             input_shape=(None, 1, input_width, input_height), 
-            hidden_num_units= 8000,
+            hidden_num_units= 10000,
             hiddenOut_num_units= 42000,
             output_layer_shape = (([0], -1)),
 
@@ -183,7 +249,7 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
             batch_iterator_train=FlipBatchIterator(batch_size=BATCH_SIZE), 
             regression=True, 
             max_epochs=NUM_OF_EPOCH, 
-            verbose=1, 
+            verbose=1,
             hiddenLayer_to_output=-3)
         
         cnn1.fit(X_train, X_out)
@@ -196,9 +262,9 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
                 ('output_layer', layers.DenseLayer),
                 ], 
                     
-            input_shape=(None,8000), 
-            hidden_num_units= 2000,
-            output_layer_num_units = 8000,
+            input_shape=(None,10000), 
+            hidden_num_units= 3000,
+            output_layer_num_units = 10000,
 
             update_learning_rate=LEARNING_RATE, 
             update_momentum=UPDATE_MOMENTUM,
@@ -223,9 +289,9 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
                 ('output_layer', layers.DenseLayer),
                 ], 
 
-            input_shape=(None,2000), 
+            input_shape=(None,3000), 
             hidden_num_units= 1000,
-            output_layer_num_units = 2000,
+            output_layer_num_units = 3000,
 
             update_learning_rate=LEARNING_RATE, 
             update_momentum=UPDATE_MOMENTUM,
@@ -250,7 +316,7 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
                 ], 
 
             input_shape=(None,1000), 
-            hidden_num_units= 500,
+            hidden_num_units= 300,
             output_layer_num_units = 1000,
 
             update_learning_rate=LEARNING_RATE, 
@@ -280,8 +346,8 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
         final_layer = cnn4.get_all_layers()[1]
         final_layer.input_layer = hidden3_layer 
         
-        out_train = final_layer.get_output(X_train).eval()
-        out_test = final_layer.get_output(test_x).eval()
+#         out_train = final_layer.get_output(X_train).eval()
+#         out_test = final_layer.get_output(test_x).eval()
         
         f = gzip.open(FOLDER_PREFIX + "output.pkl.gz",'wb')
         cPickle.dump((trian_last_hiddenLayer, test_last_hiddenLayer), f, protocol=2)
@@ -577,7 +643,7 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
 
     writeOutputFile(outputFile,cnn.train_history_,PrintLayerInfo._get_layer_info_plain(cnn))
  
-    lastLayerOutputs = outputLastLayer_CNN(cnn, X, y, test_x, test_y)
+    lastLayerOutputs =[]# outputLastLayer_CNN(cnn, X, y, test_x, test_y)
 
     print "learning took (min)- ", run_time
     
@@ -625,7 +691,7 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
     
     ## we find the encode layer from our ae, and use it to define an encoding function
     
-    encode_layer_index = map(lambda pair : pair[0], cnn.layers).index('encode_layer')
+    encode_layer_index = -1# map(lambda pair : pair[0], cnn.layers).index('encode_layer')
     encode_layer = cnn.get_all_layers()[encode_layer_index]
     
     def get_output_from_nn(last_layer, X):
@@ -761,25 +827,25 @@ def run_All():
         print "IsUbuntu"
     else :
         print "IsWindows"
-    folderName="StackedAE_1"
+    folderName="StackedAE_2"
 
     num_labels=15
-    end_index=300
+    end_index=2000
     MULTI_POSITIVES=0
-    input_noise_rate=0.3
+    input_noise_rate=0.0
     withZeroMeaning=False
     data = load2d(num_labels=num_labels, end_index=end_index, MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)
         
-    run(NUM_UNITS_HIDDEN_LAYER=[16,32,64],input_noise_rate=0.3,NUM_OF_EPOCH=10,pre_train_epochs=1,softmax_train_epochs=0,fine_tune_epochs=1,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
+    run(NUM_UNITS_HIDDEN_LAYER=[1,32,64],input_noise_rate=0.3,NUM_OF_EPOCH=5,pre_train_epochs=1,softmax_train_epochs=0,fine_tune_epochs=1,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
 
 #     run(NUM_UNITS_HIDDEN_LAYER=[5000,2000],input_noise_rate=0.3,pre_train_epochs=1,softmax_train_epochs=1,fine_tune_epochs=1,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
 #     run(NUM_UNITS_HIDDEN_LAYER=[2000,500,100],input_noise_rate=input_noise_rate,pre_train_epochs=15,softmax_train_epochs=3,fine_tune_epochs=3,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
-    run(NUM_UNITS_HIDDEN_LAYER=[5000,2000,100],input_noise_rate=input_noise_rate,pre_train_epochs=12,softmax_train_epochs=0,fine_tune_epochs=2,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
-    run(NUM_UNITS_HIDDEN_LAYER=[12000,5000,2000,500,100],input_noise_rate=input_noise_rate,pre_train_epochs=6,softmax_train_epochs=0,fine_tune_epochs=2,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
-    run(NUM_UNITS_HIDDEN_LAYER=[20000,8000,2000,500,100],input_noise_rate=input_noise_rate,pre_train_epochs=6,softmax_train_epochs=0,fine_tune_epochs=2,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)
+#     run(NUM_UNITS_HIDDEN_LAYER=[5000,2000,100],input_noise_rate=input_noise_rate,pre_train_epochs=12,softmax_train_epochs=0,fine_tune_epochs=2,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
+#     run(NUM_UNITS_HIDDEN_LAYER=[12000,5000,2000,500,100],input_noise_rate=input_noise_rate,pre_train_epochs=6,softmax_train_epochs=0,fine_tune_epochs=2,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
+#     run(NUM_UNITS_HIDDEN_LAYER=[20000,8000,2000,500,100],input_noise_rate=input_noise_rate,pre_train_epochs=6,softmax_train_epochs=0,fine_tune_epochs=2,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)
 #     run(NUM_UNITS_HIDDEN_LAYER=[15000,7000,3000,1500,700,300,100],input_noise_rate=input_noise_rate,pre_train_epochs=1,softmax_train_epochs=2,fine_tune_epochs=2,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
 #     run(NUM_UNITS_HIDDEN_LAYER=[15000,5000,2000,500,100],input_noise_rate=input_noise_rate,pre_train_epochs=2,softmax_train_epochs=2,fine_tune_epochs=2,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
-#     run(NUM_UNITS_HIDDEN_LAYER=[15000,7000,3000,1500,700,300,100],input_noise_rate=input_noise_rate,pre_train_epochs=2,softmax_train_epochs=2,fine_tune_epochs=2,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
+#     run(NUM_UNITS_HIDDEN_LAYER=[0,7000,3000,1500,700,300,100],input_noise_rate=input_noise_rate,pre_train_epochs=2,softmax_train_epochs=2,fine_tune_epochs=2,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
     
     
 
