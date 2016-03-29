@@ -176,11 +176,13 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
         cnn = NeuralNet(layers=[
                 ('input', layers.InputLayer), 
                 ('conv1', layers.Conv2DLayer),
+                ('deconv1', layers.Conv2DLayer),
                 ('output_layer', ReshapeLayer),
                 ], 
             input_shape=(None, 1, input_width, input_height), 
             #Layer current size - 1x300x140
             conv1_num_filters=NUM_UNITS_HIDDEN_LAYER[0], conv1_filter_size=(3, 3), conv1_border_mode="same", conv1_nonlinearity=None,
+            deconv1_num_filters=1, deconv1_filter_size=(3, 3), deconv1_border_mode="same", deconv1_nonlinearity=None,
             output_layer_shape = (([0], -1)),
 
             update_learning_rate=LEARNING_RATE, 
@@ -213,15 +215,15 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
             new_im = Image.new('L', new_size)
             new_im.paste(original_image, (0,0))
             rec_image = Image.fromarray(get_picture_array(X_pred, index))
-            new_im.paste((original_image.size[0],0), rec_image)
-            new_im.save(FOLDER_PREFIX+'outVSpred'+str(index)+'.png', format="PNG")
+            new_im.paste(rec_image, (original_image.size[0],0))
+            new_im.save(FOLDER_PREFIX+'pred&out'+str(index)+'.png', format="PNG")
             plt.imshow(new_im)
             new_size = (original_image.size[0] * 2, original_image.size[1])
             new_im = Image.new('L', new_size)
             new_im.paste(original_image, (0,0))
             rec_image = Image.fromarray(get_picture_array(X_train, index))
-            new_im.paste((original_image.size[0],0), rec_image)
-            new_im.save(FOLDER_PREFIX+'outVSnoise'+str(index)+'.png', format="PNG")
+            new_im.paste(rec_image, (original_image.size[0],0))
+            new_im.save(FOLDER_PREFIX+'noise&out'+str(index)+'.png', format="PNG")
             plt.imshow(new_im)
         trian_last_hiddenLayer = cnn.output_hiddenLayer(X_train)
         test_last_hiddenLayer = cnn.output_hiddenLayer(test_x)
@@ -827,16 +829,16 @@ def run_All():
         print "IsUbuntu"
     else :
         print "IsWindows"
-    folderName="StackedAE_2"
+    folderName="StackedCAE_2conv"
 
     num_labels=15
-    end_index=2000
+    end_index=300
     MULTI_POSITIVES=0
-    input_noise_rate=0.0
+    input_noise_rate=0.2
     withZeroMeaning=False
     data = load2d(num_labels=num_labels, end_index=end_index, MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)
         
-    run(NUM_UNITS_HIDDEN_LAYER=[1,32,64],input_noise_rate=0.3,NUM_OF_EPOCH=5,pre_train_epochs=1,softmax_train_epochs=0,fine_tune_epochs=1,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
+    run(NUM_UNITS_HIDDEN_LAYER=[16,32,64],input_noise_rate=0.3,NUM_OF_EPOCH=5,pre_train_epochs=1,softmax_train_epochs=0,fine_tune_epochs=1,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
 
 #     run(NUM_UNITS_HIDDEN_LAYER=[5000,2000],input_noise_rate=0.3,pre_train_epochs=1,softmax_train_epochs=1,fine_tune_epochs=1,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
 #     run(NUM_UNITS_HIDDEN_LAYER=[2000,500,100],input_noise_rate=input_noise_rate,pre_train_epochs=15,softmax_train_epochs=3,fine_tune_epochs=3,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
