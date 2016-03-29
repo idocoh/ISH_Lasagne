@@ -161,7 +161,7 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
 
     outputFile = open(PARAMS_FILE_NAME, "w")   
     
-    def createSAE(input_height, input_width,X_train,X_out):
+    def createSCAE(input_height, input_width,X_train,X_out):
         
         from theano.tensor.shared_randomstreams import RandomStreams
 
@@ -228,7 +228,10 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
         trian_last_hiddenLayer = cnn.output_hiddenLayer(X_train)
         test_last_hiddenLayer = cnn.output_hiddenLayer(test_x)
         
+        return cnn
         
+    def createSAE(input_height, input_width,X_train,X_out):
+    
         encode_size = 200   
      
         cnn1 = NeuralNet(layers=[
@@ -639,7 +642,10 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
 #     cnn.fit(X_train, X_out)
 
     ##Stacaked AE with lasagne
-    cnn = createSAE(input_height, input_width,X_train,X_out)
+#     cnn = createSAE(input_height, input_width,X_train,X_out)
+    
+    ##Stacaked Conv AE with lasagne
+    cnn = createSCAE(input_height, input_width,X_train,X_out)
      
     run_time = (time.clock() - start_time) / 60.    
 
@@ -653,92 +659,93 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
     # <codecell>
 
     sys.setrecursionlimit(10000)
-    
-    pickle.dump(cnn, open(FOLDER_PREFIX+'conv_ae.pkl','w'))
-    #ae = pickle.load(open('mnist/conv_ae.pkl','r'))
-    cnn.save_weights_to(FOLDER_PREFIX+'conv_ae.np')
-    
+    try:
+        pickle.dump(cnn, open(FOLDER_PREFIX+'conv_sae.pkl','w'))
+        #ae = pickle.load(open('mnist/conv_ae.pkl','r'))
+        cnn.save_weights_to(FOLDER_PREFIX+'conv_sae.np')
+    except:
+        pass
     # <codecell>
     
-    X_train_pred = cnn.predict(X_train).reshape(-1, input_height, input_width) * sigma + mu
-    X_pred = np.rint(X_train_pred).astype(int)
-    X_pred = np.clip(X_pred, a_min = 0, a_max = 255)
-    X_pred = X_pred.astype('uint8')
-    print X_pred.shape , X.shape
-    
-    # <codecell>
-    
-    ###  show random inputs / outputs side by side
-    
-    def get_picture_array(X, index):
-        array = X[index].reshape(input_height, input_width)
-        array = np.clip(array, a_min = 0, a_max = 255)
-        return  array.repeat(4, axis = 0).repeat(4, axis = 1).astype(np.uint8())
-    
-    def get_random_images():
-        index = np.random.randint(X.shape[0])
-        print index
-        original_image = Image.fromarray(get_picture_array(X, index))
-        new_size = (original_image.size[0] * 2, original_image.size[1])
-        new_im = Image.new('L', new_size)
-        new_im.paste(original_image, (0,0))
-        rec_image = Image.fromarray(get_picture_array(X_pred, index))
-        new_im.paste(rec_image, (original_image.size[0],0))
-        new_im.save(FOLDER_PREFIX+'test.png', format="PNG")
-    
-    get_random_images()
-    IPImage(FOLDER_PREFIX+'test.png')
-    
-    # <codecell>
-    
-    ## we find the encode layer from our ae, and use it to define an encoding function
-    
-    encode_layer_index = -1# map(lambda pair : pair[0], cnn.layers).index('encode_layer')
-    encode_layer = cnn.get_all_layers()[encode_layer_index]
-    
-    def get_output_from_nn(last_layer, X):
-        indices = np.arange(128, X.shape[0], 128)
-        sys.stdout.flush()
-    
-        # not splitting into batches can cause a memory error
-        X_batches = np.split(X, indices)
-        out = []
-        for count, X_batch in enumerate(X_batches):
-            out.append(last_layer.get_output(X_batch).eval())
-            sys.stdout.flush()
-        return np.vstack(out)
-    
-    def encode_input(X):
-        return get_output_from_nn(encode_layer, X)
-    
-    X_encoded = encode_input(X_train)
-    
-    # <codecell>
-    
-    next_layer = cnn.get_all_layers()[encode_layer_index + 1]
-    final_layer = cnn.get_all_layers()[-1]
-    new_layer = layers.InputLayer(shape = (None, encode_layer.num_units))
-    
-    # N.B after we do this, we won't be able to use the original autoencoder , as the layers are broken up
-    next_layer.input_layer = new_layer
-    
-    def decode_encoded_input(X):
-        return get_output_from_nn(final_layer, X)
-    
-    X_decoded = decode_encoded_input(X_encoded) * sigma + mu
-    
-    X_decoded = np.rint(X_decoded ).astype(int)
-    X_decoded = np.clip(X_decoded, a_min = 0, a_max = 255)
-    X_decoded  = X_decoded.astype('uint8')
-    print X_decoded.shape
-    
-    ### check it worked :
-    
-    pic_array = get_picture_array(X_decoded, np.random.randint(len(X_decoded)))
-    image = Image.fromarray(pic_array)
-    image.save(FOLDER_PREFIX+'test1.png', format="PNG")
-    IPImage(FOLDER_PREFIX+'test1.png')
-    
+#     X_train_pred = cnn.predict(X_train).reshape(-1, input_height, input_width) * sigma + mu
+#     X_pred = np.rint(X_train_pred).astype(int)
+#     X_pred = np.clip(X_pred, a_min = 0, a_max = 255)
+#     X_pred = X_pred.astype('uint8')
+#     print X_pred.shape , X.shape
+#     
+#     # <codecell>
+#     
+#     ###  show random inputs / outputs side by side
+#     
+#     def get_picture_array(X, index):
+#         array = X[index].reshape(input_height, input_width)
+#         array = np.clip(array, a_min = 0, a_max = 255)
+#         return  array.repeat(4, axis = 0).repeat(4, axis = 1).astype(np.uint8())
+#     
+#     def get_random_images():
+#         index = np.random.randint(X.shape[0])
+#         print index
+#         original_image = Image.fromarray(get_picture_array(X, index))
+#         new_size = (original_image.size[0] * 2, original_image.size[1])
+#         new_im = Image.new('L', new_size)
+#         new_im.paste(original_image, (0,0))
+#         rec_image = Image.fromarray(get_picture_array(X_pred, index))
+#         new_im.paste(rec_image, (original_image.size[0],0))
+#         new_im.save(FOLDER_PREFIX+'test.png', format="PNG")
+#     
+#     get_random_images()
+#     IPImage(FOLDER_PREFIX+'test.png')
+#     
+#     # <codecell>
+#     
+#     ## we find the encode layer from our ae, and use it to define an encoding function
+#     
+#     encode_layer_index = -1# map(lambda pair : pair[0], cnn.layers).index('encode_layer')
+#     encode_layer = cnn.get_all_layers()[encode_layer_index]
+#     
+#     def get_output_from_nn(last_layer, X):
+#         indices = np.arange(128, X.shape[0], 128)
+#         sys.stdout.flush()
+#     
+#         # not splitting into batches can cause a memory error
+#         X_batches = np.split(X, indices)
+#         out = []
+#         for count, X_batch in enumerate(X_batches):
+#             out.append(last_layer.get_output(X_batch).eval())
+#             sys.stdout.flush()
+#         return np.vstack(out)
+#     
+#     def encode_input(X):
+#         return get_output_from_nn(encode_layer, X)
+#     
+#     X_encoded = encode_input(X_train)
+#     
+#     # <codecell>
+#     
+#     next_layer = cnn.get_all_layers()[encode_layer_index + 1]
+#     final_layer = cnn.get_all_layers()[-1]
+#     new_layer = layers.InputLayer(shape = (None, encode_layer.num_units))
+#     
+#     # N.B after we do this, we won't be able to use the original autoencoder , as the layers are broken up
+#     next_layer.input_layer = new_layer
+#     
+#     def decode_encoded_input(X):
+#         return get_output_from_nn(final_layer, X)
+#     
+#     X_decoded = decode_encoded_input(X_encoded) * sigma + mu
+#     
+#     X_decoded = np.rint(X_decoded ).astype(int)
+#     X_decoded = np.clip(X_decoded, a_min = 0, a_max = 255)
+#     X_decoded  = X_decoded.astype('uint8')
+#     print X_decoded.shape
+#     
+#     ### check it worked :
+#     
+#     pic_array = get_picture_array(X_decoded, np.random.randint(len(X_decoded)))
+#     image = Image.fromarray(pic_array)
+#     image.save(FOLDER_PREFIX+'test1.png', format="PNG")
+#     IPImage(FOLDER_PREFIX+'test1.png')
+#     
     # <codecell>
     
     print "running Category Classifier"  
@@ -838,7 +845,7 @@ def run_All():
     withZeroMeaning=False
     data = load2d(num_labels=num_labels, end_index=end_index, MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)
         
-    run(NUM_UNITS_HIDDEN_LAYER=[16,32,64],input_noise_rate=0.3,NUM_OF_EPOCH=5,pre_train_epochs=1,softmax_train_epochs=0,fine_tune_epochs=1,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
+    run(NUM_UNITS_HIDDEN_LAYER=[16,32,64],input_noise_rate=0.3,NUM_OF_EPOCH=15,pre_train_epochs=1,softmax_train_epochs=0,fine_tune_epochs=1,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
 
 #     run(NUM_UNITS_HIDDEN_LAYER=[5000,2000],input_noise_rate=0.3,pre_train_epochs=1,softmax_train_epochs=1,fine_tune_epochs=1,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
 #     run(NUM_UNITS_HIDDEN_LAYER=[2000,500,100],input_noise_rate=input_noise_rate,pre_train_epochs=15,softmax_train_epochs=3,fine_tune_epochs=3,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
