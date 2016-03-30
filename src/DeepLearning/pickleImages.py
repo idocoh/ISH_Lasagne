@@ -9,7 +9,7 @@ from random import randint
 from logistic_sgd import load_data
 from numpy import loadtxt
 import time
-from nolearnNN import run_All
+#from nolearnNN import run_All
 
 Image.MAX_IMAGE_PIXELS = None
 

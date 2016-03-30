@@ -179,15 +179,15 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
                 ('output_layer', ReshapeLayer),
                 ], 
             input_shape=(None, 1, input_width, input_height), 
-            #Layer current size - 1x300x140
-            conv1_num_filters=NUM_UNITS_HIDDEN_LAYER[0], conv1_filter_size=(3, 3), conv1_border_mode="same", conv1_nonlinearity=None,
-            output_layer_shape = (([0], -1)),
+            # Layer current size - 1x300x140
+            conv1_num_filters=NUM_UNITS_HIDDEN_LAYER[0], conv1_filter_size=(5, 5), conv1_border_mode="same", conv1_nonlinearity=None,
+            output_layer_shape=(([0], -1)),
 
             update_learning_rate=LEARNING_RATE, 
             update_momentum=UPDATE_MOMENTUM,
             update=nesterov_momentum, 
             train_split=TrainSplit(eval_size=TRAIN_VALIDATION_SPLIT), 
-#             batch_iterator_train=BatchIterator(batch_size=BATCH_SIZE),
+            # batch_iterator_train=BatchIterator(batch_size=BATCH_SIZE),
             batch_iterator_train=FlipBatchIterator(batch_size=BATCH_SIZE), 
             regression=True, 
             max_epochs=NUM_OF_EPOCH, 
@@ -206,26 +206,27 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
             def get_picture_array(X, index):
                 array = X[index].reshape(input_height, input_width)
                 array = np.clip(array, a_min = 0, a_max = 255)
-                return  array.repeat(4, axis = 0).repeat(4, axis = 1).astype(np.uint8())
+                return array.repeat(4, axis = 0).repeat(4, axis = 1).astype(np.uint8())
             
             original_image = Image.fromarray(get_picture_array(X_out, index))
             new_size = (original_image.size[0] * 2, original_image.size[1])
             new_im = Image.new('L', new_size)
             new_im.paste(original_image, (0,0))
             rec_image = Image.fromarray(get_picture_array(X_pred, index))
-            new_im.paste((original_image.size[0],0), rec_image)
-            new_im.save(FOLDER_PREFIX+'outVSpred'+str(index)+'.png', format="PNG")
+            new_im.paste(rec_image, (original_image.size[0],0))
+            new_im.save(FOLDER_PREFIX+'out_VS_pred'+str(index)+'.png', format="PNG")
             plt.imshow(new_im)
             new_size = (original_image.size[0] * 2, original_image.size[1])
             new_im = Image.new('L', new_size)
             new_im.paste(original_image, (0,0))
             rec_image = Image.fromarray(get_picture_array(X_train, index))
-            new_im.paste((original_image.size[0],0), rec_image)
-            new_im.save(FOLDER_PREFIX+'outVSnoise'+str(index)+'.png', format="PNG")
+            new_im.paste(rec_image, (original_image.size[0],0))
+            new_im.save(FOLDER_PREFIX+'out_VS_noise'+str(index)+'.png', format="PNG")
             plt.imshow(new_im)
         trian_last_hiddenLayer = cnn.output_hiddenLayer(X_train)
         test_last_hiddenLayer = cnn.output_hiddenLayer(test_x)
-        
+
+        return cnn
         
         encode_size = 200   
      
@@ -245,7 +246,7 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
             update_momentum=UPDATE_MOMENTUM,
             update=nesterov_momentum, 
             train_split=TrainSplit(eval_size=TRAIN_VALIDATION_SPLIT), 
-#             batch_iterator_train=BatchIterator(batch_size=BATCH_SIZE),
+            # batch_iterator_train=BatchIterator(batch_size=BATCH_SIZE),
             batch_iterator_train=FlipBatchIterator(batch_size=BATCH_SIZE), 
             regression=True, 
             max_epochs=NUM_OF_EPOCH, 
@@ -271,7 +272,7 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
             update=nesterov_momentum, 
             train_split=TrainSplit(eval_size=TRAIN_VALIDATION_SPLIT), 
             batch_iterator_train=BatchIterator(batch_size=BATCH_SIZE),
-#             batch_iterator_train=FlipBatchIterator(batch_size=BATCH_SIZE), 
+            # batch_iterator_train=FlipBatchIterator(batch_size=BATCH_SIZE),
             regression=True, 
             max_epochs=NUM_OF_EPOCH, 
             verbose=1, 
@@ -298,8 +299,8 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
             update=nesterov_momentum, 
             train_split=TrainSplit(eval_size=TRAIN_VALIDATION_SPLIT), 
             batch_iterator_train=BatchIterator(batch_size=BATCH_SIZE),
-#             batch_iterator_train=FlipBatchIterator(batch_size=BATCH_SIZE), 
-            regression=True, 
+            # batch_iterator_train=FlipBatchIterator(batch_size=BATCH_SIZE),
+            regression=True,
             max_epochs=NUM_OF_EPOCH, 
             verbose=1, 
             hiddenLayer_to_output=-2)
@@ -324,7 +325,7 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
             update=nesterov_momentum, 
             train_split=TrainSplit(eval_size=TRAIN_VALIDATION_SPLIT), 
             batch_iterator_train=BatchIterator(batch_size=BATCH_SIZE),
-#             batch_iterator_train=FlipBatchIterator(batch_size=BATCH_SIZE), 
+            # batch_iterator_train=FlipBatchIterator(batch_size=BATCH_SIZE),
             regression=True, 
             max_epochs=NUM_OF_EPOCH, 
             verbose=1, 
