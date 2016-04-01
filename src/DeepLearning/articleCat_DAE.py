@@ -49,7 +49,7 @@ from theano.tensor.shared_randomstreams import RandomStreams
 
 FILE_SEPARATOR = "/"
 counter = 0
-# X = 0
+isUbuntu = False
 
 def load2d(num_labels, outputFile=None, input_width=300, input_height=140, end_index=16351, MULTI_POSITIVES=20,
            dropout_percent=0.1, data_set='ISH.pkl.gz', toShuffleInput = False, withZeroMeaning = False):
@@ -133,11 +133,11 @@ class FlipBatchIterator(BatchIterator):
 
         return X1b, X2b
 
-def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTUM=0.9, UPDATE_RHO=None, NUM_OF_EPOCH=15,
+def run(loadedData=None,FOLDER_NAME="defualt", LEARNING_RATE=0.04, UPDATE_MOMENTUM=0.9, UPDATE_RHO=None, NUM_OF_EPOCH=15,
         input_width=300, input_height=140, dataset='withOutDataSet', TRAIN_VALIDATION_SPLIT=0.2, MULTI_POSITIVES=20,
         dropout_percent=0.1, USE_NUM_CAT=20,end_index=16351, #activation=lasagne.nonlinearities.tanh, #rectify
         NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=40, toShuffleInput = False ,
-        withZeroMeaning = False, input_noise_rate=0.3,pre_train_epochs=1,softmax_train_epochs=2,fine_tune_epochs=2):
+        withZeroMeaning = False, input_noise_rate=0.3, pre_train_epochs=1, softmax_train_epochs=2, fine_tune_epochs=2):
     
     global counter
 #     FILE_PREFIX =  os.path.split(dataset)[1][:-6] #os.path.split(__file__)[1][:-3]
@@ -158,13 +158,12 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
     log_file = open(LOG_FILE_NAME, "w")
 #     sys.stdout = log_file
 
-#     VALIDATION_FILE_NAME = "results/"+os.path.split(__file__)[1][:-3]+"_validation_"+str(counter)+".txt"
-#     PREDICTION_FILE_NAME = "results/"+os.path.split(__file__)[1][:-3]+"_prediction.txt"
+
     counter += 1
 
     outputFile = open(PARAMS_FILE_NAME, "w")   
     
-    def createSAE(input_height, input_width, X_train, X_out):
+    def createCSAE(input_height, input_width, X_train, X_out):
         
         X_train = np.random.binomial(1, 1-dropout_percent, size=X_train.shape) * X_train
         
@@ -180,12 +179,12 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
                 ], 
             input_shape=(None, 1, input_width, input_height), 
             # Layer current size - 1x300x140
-            conv1_num_filters=NUM_UNITS_HIDDEN_LAYER[0], conv1_filter_size=(7, 7), conv1_border_mode="same", conv1_nonlinearity=None,
+            conv1_num_filters=NUM_UNITS_HIDDEN_LAYER[0], conv1_filter_size=(5, 5), conv1_border_mode="same", conv1_nonlinearity=None,
             # pool1_pool_size=(2, 2),
             # conv2_num_filters=NUM_UNITS_HIDDEN_LAYER[1], conv2_filter_size=(5, 5), conv2_border_mode="same", conv2_nonlinearity=None,
             # conv3_num_filters=NUM_UNITS_HIDDEN_LAYER[2], conv3_filter_size=(5, 5), conv3_border_mode="same", conv3_nonlinearity=None,
             # unpool1_ds=(2, 2),
-            conv4_num_filters=NUM_UNITS_HIDDEN_LAYER[3], conv4_filter_size=(7, 7), conv4_border_mode="same", conv4_nonlinearity=None,
+            conv4_num_filters=NUM_UNITS_HIDDEN_LAYER[3], conv4_filter_size=(5, 5), conv4_border_mode="same", conv4_nonlinearity=None,
             output_layer_shape=(([0], -1)),
 
             update_learning_rate=LEARNING_RATE, 
@@ -205,48 +204,48 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
         # cnn = pickle.load(open(FOLDER_PREFIX + 'conv_ae.pkl','r'))
         # cnn.save_weights_to(FOLDER_PREFIX + 'conv_ae.np')
 
-        X_train_pred = cnn.predict(X_train).reshape(-1, input_height, input_width) * sigma + mu
-        X_pred = np.rint(X_train_pred).astype(int)
-        X_pred = np.clip(X_pred, a_min=0, a_max=255)
-        X_pred = X_pred.astype('uint8')
-        print X_pred.shape, train_x.shape
+        X_pred = cnn.predict(X_train).reshape(-1, input_height, input_width) # * sigma + mu
+        # X_pred = np.rint(X_pred).astype(int)
+        # X_pred = np.clip(X_pred, a_min=0, a_max=255)
+        # X_pred = X_pred.astype('uint8')
+
+        print "Saving some images...."
         for i in range(10):
             index = np.random.randint(train_x.shape[0])
             print index
 
             def get_picture_array(X, index):
-                array = X[index].reshape(input_height, input_width)
+                array = np.rint(X[index] * 256).astype(np.int).reshape(input_height, input_width)
                 array = np.clip(array, a_min=0, a_max=255)
                 return array.repeat(4, axis=0).repeat(4, axis=1).astype(np.uint8())
             
             original_image = Image.fromarray(get_picture_array(X_out, index))
-            original_image.save(FOLDER_PREFIX + 'original' + str(index) + '.png', format="PNG")
+            # original_image.save(FOLDER_PREFIX + 'original' + str(index) + '.png', format="PNG")
 
             new_size = (original_image.size[0] * 2, original_image.size[1])
             new_im = Image.new('L', new_size)
             new_im.paste(original_image, (0, 0))
             rec_image = Image.fromarray(get_picture_array(X_pred, index))
-            rec_image.save(FOLDER_PREFIX + 'pred' + str(index) + '.png', format="PNG")
-
+            # rec_image.save(FOLDER_PREFIX + 'pred' + str(index) + '.png', format="PNG")
             new_im.paste(rec_image, (original_image.size[0], 0))
-            new_im.save(FOLDER_PREFIX+'out_VS_pred'+str(index)+'.png', format="PNG")
-            plt.imshow(new_im)
+            new_im.save(FOLDER_PREFIX+'origin_VS_prediction-'+str(index)+'.png', format="PNG")
+            # plt.imshow(new_im)
 
             new_size = (original_image.size[0] * 2, original_image.size[1])
             new_im = Image.new('L', new_size)
             new_im.paste(original_image, (0, 0))
             rec_image = Image.fromarray(get_picture_array(X_train, index))
-            rec_image.save(FOLDER_PREFIX + 'noisyInput' + str(index) + '.png', format="PNG")
-
+            # rec_image.save(FOLDER_PREFIX + 'noisyInput' + str(index) + '.png', format="PNG")
             new_im.paste(rec_image, (original_image.size[0], 0))
-            new_im.save(FOLDER_PREFIX+'out_VS_noise'+str(index)+'.png', format="PNG")
-            plt.imshow(new_im)
+            new_im.save(FOLDER_PREFIX+'origin_VS_noise-'+str(index)+'.png', format="PNG")
+            # plt.imshow(new_im)
 
-        trian_last_hiddenLayer = cnn.output_hiddenLayer(X_train)
-        test_last_hiddenLayer = cnn.output_hiddenLayer(test_x)
+        # trian_last_hiddenLayer = cnn.output_hiddenLayer(X_train)
+        # test_last_hiddenLayer = cnn.output_hiddenLayer(test_x)
 
         return cnn
-        
+
+    def createSAE(input_height, input_width, X_train, X_out):
         encode_size = 200   
      
         cnn1 = NeuralNet(layers=[
@@ -529,19 +528,19 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
 #                     )
 #         print s.output_last_hidden_layer_(train_x,-2)
 
-    def writeOutputFile(outputFile,train_history,layer_info):
+    def writeOutputFile(outputFile, train_history, layer_info):
         # save the network's parameters
         outputFile.write("Validation set Prediction rate is: "+str((1-train_history[-1]['valid_accuracy'])*100) + "%\n")
         outputFile.write("Run time[minutes] is: "+str(run_time) + "\n\n")
         
-        outputFile.write("Training NN on: " + ("20 Top Categorys\n" if USE_NUM_CAT==20 else "Article Categorys\n"))
+        outputFile.write("Training NN on: " + ("20 Top Categorys\n" if USE_NUM_CAT==20 else "Article Categories\n"))
         outputFile.write("Learning rate: " + str(LEARNING_RATE) + "\n")
         outputFile.write(("Momentum: " + str(UPDATE_MOMENTUM)+ "\n") if (UPDATE_RHO == None) else ("Decay Factor: " + str(UPDATE_RHO)+ "\n") )
         outputFile.write("Batch size: " + str(BATCH_SIZE) + "\n")
         outputFile.write("Num epochs: " + str(NUM_OF_EPOCH) + "\n")
         outputFile.write("Num units hidden layers: " + str(NUM_UNITS_HIDDEN_LAYER) + "\n\n")
 #         outputFile.write("activation func: " + str(activation) + "\n")
-        outputFile.write("Multipuly Positives by: " + str(MULTI_POSITIVES) + "\n")
+        outputFile.write("Multiple Positives by: " + str(MULTI_POSITIVES) + "\n")
         outputFile.write("New Positives Dropout rate: " + str(dropout_percent) + "\n")
         outputFile.write("Train/validation split: " + str(TRAIN_VALIDATION_SPLIT) + "\n")
         outputFile.write("toShuffleInput: " + str(toShuffleInput) + "\n")
@@ -608,78 +607,81 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
         return lastLayerOutputs #sDA
    
     start_time = time.clock()
-    print "Start time: " , time.ctime()
+    print "Start time: ", time.ctime()
            
     if loadedData is None:
         train_x, train_y, test_x, test_y = load2d(USE_NUM_CAT, outputFile, input_width, input_height, end_index, MULTI_POSITIVES, dropout_percent)  # load 2-d data
     else:
         train_x, train_y, test_x, test_y = loadedData
-    
-#######
-#     dae = DenoisingAutoencoder(n_hidden=10)
-#     dae.fit(train_x)
-#     new_X = dae.transform(train_x)
-#     print new_X    
 
-#######
-#     lastLayerOutputs = outputLastLayer_DAE(train_x, train_y, test_x, test_y)
+    x_train = train_x.astype(np.float32).reshape((-1, 1, input_width, input_height))
+    x_out = x_train.reshape((x_train.shape[0], -1))
+    test_x = test_x.astype(np.float32).reshape((-1, 1, input_width, input_height))
+    cnn = createCSAE(input_height, input_width, x_train, x_out)
 
-#######
+    ''' Denoising Autoencoder
+    dae = DenoisingAutoencoder(n_hidden=10)
+    dae.fit(train_x)
+    new_X = dae.transform(train_x)
+    print new_X
+    '''
+
+    '''Conv Stacked AE
     train_x = np.rint(train_x * 256).astype(np.int).reshape((-1, 1, input_width, input_height ))  # convert to (0,255) int range (we'll do our own scaling)
     mu, sigma = np.mean(train_x.flatten()), np.std(train_x.flatten())
 
     x_train = train_x.astype(np.float64)
     x_train = (x_train - mu) / sigma
     x_train = x_train.astype(np.float32)
-     
+
     # we need our target to be 1 dimensional
     x_out = x_train.reshape((x_train.shape[0], -1))
-# 
+
     test_x = np.rint(test_x * 256).astype(np.int).reshape((-1, 1, input_width, input_height ))  # convert to (0,255) int range (we'll do our own scaling)
     # mu, sigma = np.mean(test_x.flatten()), np.std(test_x.flatten())
     test_x = train_x.astype(np.float64)
     test_x = (x_train - mu) / sigma
     test_x = x_train.astype(np.float32)
+    '''
 
-######  CNN with lasagne
-#     cnn = createNNwithMomentom(input_height, input_width) if UPDATE_RHO == None else createNNwithDecay(input_height, input_width)
-#     cnn.fit(train_x, train_y)
+    ''' CNN with lasagne
+    cnn = createNNwithMomentom(input_height, input_width) if UPDATE_RHO == None else createNNwithDecay(input_height, input_width)
+    cnn.fit(train_x, train_y)
+    lastLayerOutputs = outputLastLayer_CNN(cnn, train_x, train_y, test_x, test_y)
+    '''
 
-######  AE (not Stacked) with Convolutional layers
-#     cnn = createCnn_AE(input_height, input_width)
-#     cnn.fit(x_train, x_out)
+    '''  AE (not Stacked) with Convolutional layers
+    cnn = createCnn_AE(input_height, input_width)
+    cnn.fit(x_train, x_out)
+    '''
 
-######  Stacaked AE with lasagne
+    ''' Stacaked AE with lasagne
     cnn = createSAE(input_height, input_width, x_train, x_out)
-     
+    '''
+
     run_time = (time.clock() - start_time) / 60.    
 
     writeOutputFile(outputFile, cnn.train_history_, PrintLayerInfo._get_layer_info_plain(cnn))
- 
-    lastLayerOutputs = []    # outputLastLayer_CNN(cnn, train_x, train_y, test_x, test_y)
 
     print "learning took (min)- ", run_time
-    
-    
-    # <codecell>
 
-    sys.setrecursionlimit(10000)
-    
-    pickle.dump(cnn, open(FOLDER_PREFIX+'conv_ae.pkl','w'))
-    #ae = pickle.load(open('mnist/conv_ae.pkl','r'))
-    cnn.save_weights_to(FOLDER_PREFIX+'conv_ae.np')
+    # sys.setrecursionlimit(10000)
+    # pickle.dump(cnn, open(FOLDER_PREFIX+'conv_ae.pkl', 'w'))
+    # #ae = pickle.load(open('mnist/conv_ae.pkl','r'))
+    # cnn.save_weights_to(FOLDER_PREFIX+'conv_ae.np')
 
     return
-    # <codecell>
-    
+
+'''
+    # lastLayerOutputs = outputLastLayer_DAE(train_x, train_y, test_x, test_y)
+
     X_train_pred = cnn.predict(x_train).reshape(-1, input_height, input_width) * sigma + mu
     X_pred = np.rint(X_train_pred).astype(int)
     X_pred = np.clip(X_pred, a_min = 0, a_max = 255)
     X_pred = X_pred.astype('uint8')
     print X_pred.shape , train_x.shape
     
-    # <codecell>
-    
+
     ###  show random inputs / outputs side by side
     
     def get_picture_array(X, index):
@@ -827,23 +829,29 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
 #     f = gzip.open(PICKLES_NET_FILE_NAME,'wb')
 #     cPickle.dump(cnn, f, protocol=2)
 #     f.close()
+'''
+
 
 def run_all():
     if platform.dist()[0]:
-        print "IsUbuntu"
+        isUbuntu = True
+        print "Running in Ubuntu"
     else:
-        print "IsWindows"
-    folder_name = "StackedAE_2"
+        print "Running in Windows"
+    folder_name = "CSAE_300_FlipB_1"
 
     num_labels = 15
-    end_index = 300
-    multi_positives = 0
-    input_noise_rate = 0.0
-    with_zero_meaning = False
-    data = load2d(num_labels=num_labels, end_index=end_index, MULTI_POSITIVES=multi_positives, dropout_percent=input_noise_rate,withZeroMeaning=with_zero_meaning)
-        
-    run(NUM_UNITS_HIDDEN_LAYER=[32, 32, 32, 1], input_noise_rate=0.3, NUM_OF_EPOCH=5, pre_train_epochs=1, softmax_train_epochs=0, fine_tune_epochs=1, loadedData=data, FOLDER_NAME=folder_name, USE_NUM_CAT=num_labels, MULTI_POSITIVES=multi_positives, dropout_percent=input_noise_rate, withZeroMeaning=with_zero_meaning)
-    
+    end_index = 1000
+    input_noise_rate = 0.2
+    zero_meaning = False
+    data = load2d(num_labels=num_labels, end_index=end_index)
+
+    for i in range(1, 30, 2):
+        run(NUM_UNITS_HIDDEN_LAYER=[32, 32, 32, 1], NUM_OF_EPOCH=12, LEARNING_RATE=0.01*i, UPDATE_MOMENTUM=0.9,
+            dropout_percent=input_noise_rate, loadedData=data, FOLDER_NAME=folder_name, withZeroMeaning=zero_meaning)
+        run(NUM_UNITS_HIDDEN_LAYER=[16, 32, 32, 1], NUM_OF_EPOCH=12, LEARNING_RATE=0.01 * i, UPDATE_MOMENTUM=0.99,
+            dropout_percent=input_noise_rate, loadedData=data, FOLDER_NAME=folder_name, withZeroMeaning=zero_meaning)
+
 
 if __name__ == "__main__":
     import os
@@ -854,3 +862,4 @@ if __name__ == "__main__":
     run_all()
     
 #IMPORTANT: I have put in comment line number 625 in /home/ido_local/theano-env/lib/python2.7/site-packages/theano/tensor/nnet/conv.py
+#IMPORTANT: I have changed line 534 in /home/ido_local/theano-env/lib/python2.7/site-packages/theano/compile/function module.py  to- "allow_downcast=True"
