@@ -256,11 +256,11 @@ def load_data(dataset, toShuffleInput = True , withZeroMeaning = True, labelset=
             f.close()
         except:
             pLabel, pData = pickleAllImages(num_labels=labelset,TRAIN_SPLIT=TRAIN_DATA_PRECENT, end_index=end_index,MULTI=MULTI_POSITIVES,dropout_percent=dropout_percent)
-            f = gzip.open("pickled_temp/" + fileName + ".pkl.gz",'wb')
-            try:
-                cPickle.dump((pLabel, pData), f, protocol=2)
-            except:
-                f.close()
+            # f = gzip.open("pickled_temp/" + fileName + ".pkl.gz",'wb')
+            # try:
+            #     cPickle.dump((pLabel, pData), f, protocol=2)
+            # except:
+            #     f.close()
         
         # Divided dataset into 3 parts. 
         dataAmount = pData.shape[0] #end_index-start_index

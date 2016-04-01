@@ -176,11 +176,21 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
         cnn = NeuralNet(layers=[
                 ('input', layers.InputLayer), 
                 ('conv1', layers.Conv2DLayer),
+                ('pool1', layers.MaxPool2DLayer),
+                ('conv2', layers.Conv2DLayer),
+                ('conv3', layers.Conv2DLayer),
+                ('unpool1', Unpool2DLayer),
+                ('conv4', layers.Conv2DLayer),
                 ('output_layer', ReshapeLayer),
                 ], 
             input_shape=(None, 1, input_width, input_height), 
             # Layer current size - 1x300x140
-            conv1_num_filters=NUM_UNITS_HIDDEN_LAYER[0], conv1_filter_size=(5, 5), conv1_border_mode="same", conv1_nonlinearity=None,
+            conv1_num_filters=NUM_UNITS_HIDDEN_LAYER[0], conv1_filter_size=(7, 7), conv1_border_mode="same", conv1_nonlinearity=None,
+            pool1_pool_size=(2, 2),
+            conv2_num_filters=NUM_UNITS_HIDDEN_LAYER[1], conv2_filter_size=(5, 5), conv2_border_mode="same", conv2_nonlinearity=None,
+            conv3_num_filters=NUM_UNITS_HIDDEN_LAYER[2], conv3_filter_size=(5, 5), conv3_border_mode="same", conv3_nonlinearity=None,
+            unpool1_ds=(2, 2),
+            conv4_num_filters=NUM_UNITS_HIDDEN_LAYER[3], conv4_filter_size=(7, 7), conv4_border_mode="same", conv4_nonlinearity=None,
             output_layer_shape=(([0], -1)),
 
             update_learning_rate=LEARNING_RATE, 
@@ -195,6 +205,11 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
             hiddenLayer_to_output=-2)
         
         cnn.fit(X_train, X_out)
+
+        pickle.dump(cnn, open(FOLDER_PREFIX + 'conv_ae.pkl', 'w'))
+        # ae = pickle.load(open('mnist/conv_ae.pkl','r'))
+        cnn.save_weights_to(FOLDER_PREFIX + 'conv_ae.np')
+
         X_train_pred = cnn.predict(X_train).reshape(-1, input_height, input_width) * sigma + mu
         X_pred = np.rint(X_train_pred).astype(int)
         X_pred = np.clip(X_pred, a_min = 0, a_max = 255)
@@ -656,7 +671,8 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
     pickle.dump(cnn, open(FOLDER_PREFIX+'conv_ae.pkl','w'))
     #ae = pickle.load(open('mnist/conv_ae.pkl','r'))
     cnn.save_weights_to(FOLDER_PREFIX+'conv_ae.np')
-    
+
+    return
     # <codecell>
     
     X_train_pred = cnn.predict(X_train).reshape(-1, input_height, input_width) * sigma + mu
@@ -726,7 +742,7 @@ def run(loadedData=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTU
     
     X_decoded = decode_encoded_input(X_encoded) * sigma + mu
     
-    X_decoded = np.rint(X_decoded ).astype(int)
+    X_decoded = np.rint(X_decoded).astype(int)
     X_decoded = np.clip(X_decoded, a_min = 0, a_max = 255)
     X_decoded  = X_decoded.astype('uint8')
     print X_decoded.shape
@@ -831,23 +847,13 @@ def run_All():
     folderName="StackedAE_2"
 
     num_labels=15
-    end_index=2000
+    end_index=10000
     MULTI_POSITIVES=0
     input_noise_rate=0.0
     withZeroMeaning=False
     data = load2d(num_labels=num_labels, end_index=end_index, MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)
         
-    run(NUM_UNITS_HIDDEN_LAYER=[1,32,64],input_noise_rate=0.3,NUM_OF_EPOCH=5,pre_train_epochs=1,softmax_train_epochs=0,fine_tune_epochs=1,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
-
-#     run(NUM_UNITS_HIDDEN_LAYER=[5000,2000],input_noise_rate=0.3,pre_train_epochs=1,softmax_train_epochs=1,fine_tune_epochs=1,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
-#     run(NUM_UNITS_HIDDEN_LAYER=[2000,500,100],input_noise_rate=input_noise_rate,pre_train_epochs=15,softmax_train_epochs=3,fine_tune_epochs=3,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
-#     run(NUM_UNITS_HIDDEN_LAYER=[5000,2000,100],input_noise_rate=input_noise_rate,pre_train_epochs=12,softmax_train_epochs=0,fine_tune_epochs=2,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
-#     run(NUM_UNITS_HIDDEN_LAYER=[12000,5000,2000,500,100],input_noise_rate=input_noise_rate,pre_train_epochs=6,softmax_train_epochs=0,fine_tune_epochs=2,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
-#     run(NUM_UNITS_HIDDEN_LAYER=[20000,8000,2000,500,100],input_noise_rate=input_noise_rate,pre_train_epochs=6,softmax_train_epochs=0,fine_tune_epochs=2,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)
-#     run(NUM_UNITS_HIDDEN_LAYER=[15000,7000,3000,1500,700,300,100],input_noise_rate=input_noise_rate,pre_train_epochs=1,softmax_train_epochs=2,fine_tune_epochs=2,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
-#     run(NUM_UNITS_HIDDEN_LAYER=[15000,5000,2000,500,100],input_noise_rate=input_noise_rate,pre_train_epochs=2,softmax_train_epochs=2,fine_tune_epochs=2,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
-#     run(NUM_UNITS_HIDDEN_LAYER=[0,7000,3000,1500,700,300,100],input_noise_rate=input_noise_rate,pre_train_epochs=2,softmax_train_epochs=2,fine_tune_epochs=2,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)    
-    
+    run(NUM_UNITS_HIDDEN_LAYER=[32,32,32,1],input_noise_rate=0.3,NUM_OF_EPOCH=60,pre_train_epochs=1,softmax_train_epochs=0,fine_tune_epochs=1,loadedData=data,FOLDER_NAME=folderName,USE_NUM_CAT=num_labels,MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=input_noise_rate,withZeroMeaning=withZeroMeaning)
     
 
 if __name__ == "__main__":
