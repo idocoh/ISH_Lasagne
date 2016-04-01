@@ -27,7 +27,7 @@ def pickleAllImages(num_labels,TRAIN_SPLIT=0.8,end_index=16351,dropout_percent=0
         pLabel = cPickle.load(l)
         l.close()
     
-    dir1="pickled_images"+FILE_SEPARATOR+"ISH-noLearn_0_5000_300_140.pkl.gz"
+    dir1 = "pickled_images"+FILE_SEPARATOR+"ISH-noLearn_0_5000_300_140.pkl.gz"
     f1 = gzip.open(dir1, 'rb')
     train_set1, valid_set1, test_set1 = cPickle.load(f1)
     f1.close()
@@ -37,7 +37,7 @@ def pickleAllImages(num_labels,TRAIN_SPLIT=0.8,end_index=16351,dropout_percent=0
 #         pData =  np.concatenate((train_set1[0],test_set1[0]),axis=0) 
  
 #     else :
-    dir2="pickled_images"+FILE_SEPARATOR+"ISH-noLearn_5000_11000_300_140.pkl.gz"
+    dir2 = "pickled_images"+FILE_SEPARATOR+"ISH-noLearn_5000_11000_300_140.pkl.gz"
     f2 = gzip.open(dir2, 'rb')
     train_set2, valid_set2, test_set2 = cPickle.load(f2)
     f2.close()
@@ -46,13 +46,13 @@ def pickleAllImages(num_labels,TRAIN_SPLIT=0.8,end_index=16351,dropout_percent=0
 #         if end_index <= 11000:
 #             pData = np.concatenate((train_set1[0],test_set1[0],train_set2[0],test_set2[0]),axis=0) 
 #         else:
-    dir3="pickled_images"+FILE_SEPARATOR+"ISH-noLearn_11000_16352_300_140.pkl.gz"
+    dir3 = "pickled_images"+FILE_SEPARATOR+"ISH-noLearn_11000_16352_300_140.pkl.gz"
     f3 = gzip.open(dir3, 'rb')
     train_set3, valid_set3, test_set3 = cPickle.load(f3)
     f3.close()   
     print "after reading part 3"
            
-    pData = np.concatenate((train_set1[0],test_set1[0],train_set2[0],test_set2[0],train_set3[0],test_set3[0]),axis=0)
+    pData = np.concatenate((train_set1[0], test_set1[0], train_set2[0], test_set2[0], train_set3[0], test_set3[0]), axis = 0)
     
     return pLabel[:end_index], pData[:end_index]
 #     f = gzip.open("images_16351_300_140",'wb')

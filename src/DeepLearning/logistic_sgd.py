@@ -246,27 +246,26 @@ def load_data(dataset, toShuffleInput = True , withZeroMeaning = True, labelset=
 # #         f = gzip.open(dataset, 'rb')
 # #         pData= cPickle.load(f)
 # #         f.close()
-# 
 
-          
-        fileName = "piclked_articleCat_" + str(end_index) # + "_" + str(dropout_percent)
+        file_name = "piclked_articleCat_" + str(end_index) # + "_" + str(dropout_percent)
         try:
-            f = gzip.open("pickled_temp/" + fileName + ".pkl.gz", 'rb')
+            f = gzip.open("pickled_temp/" + file_name + ".pkl.gz", 'rb')
             pLabel, pData = cPickle.load(f)
             f.close()
         except:
-            pLabel, pData = pickleAllImages(num_labels=labelset,TRAIN_SPLIT=TRAIN_DATA_PRECENT, end_index=end_index,MULTI=MULTI_POSITIVES,dropout_percent=dropout_percent)
-            # f = gzip.open("pickled_temp/" + fileName + ".pkl.gz",'wb')
-            # try:
-            #     cPickle.dump((pLabel, pData), f, protocol=2)
-            # except:
-            #     f.close()
+            pLabel, pData = pickleAllImages(num_labels=labelset, TRAIN_SPLIT=TRAIN_DATA_PRECENT, end_index=end_index,MULTI=MULTI_POSITIVES,dropout_percent=dropout_percent)
+            if end_index < 10001:
+                f = gzip.open("pickled_temp/" + file_name + ".pkl.gz", 'wb')
+                try:
+                    cPickle.dump((pLabel, pData), f, protocol=2)
+                except:
+                    f.close()
         
-        # Divided dataset into 3 parts. 
-        dataAmount = pData.shape[0] #end_index-start_index
-        train_index = numpy.floor(dataAmount*TRAIN_DATA_PRECENT);
-        validation_index = numpy.floor(dataAmount*VALIDATION_DATA_PRECENT)
-        test_index = dataAmount
+        # Divided data set into 3 parts.
+        data_amount = pData.shape[0]    # end_index-start_index
+        train_index = numpy.floor(data_amount*TRAIN_DATA_PRECENT)
+        validation_index = numpy.floor(data_amount*VALIDATION_DATA_PRECENT)
+        test_index = data_amount
 
         train_set_x = pData[:train_index]
         val_set_x = pData[train_index:validation_index]
@@ -285,9 +284,7 @@ def load_data(dataset, toShuffleInput = True , withZeroMeaning = True, labelset=
     #numpy.ndarray of 1 dimensions (vector)) that have the same length as
     #the number of rows in the input. It should give the target
     #target to the example with the same index in the input.
-    
-    
-    
+
     def zero_meaning(train_set, valid_set, test_set):
         train_x, train_y = train_set
         valid_x, valid_y = valid_set
@@ -310,7 +307,7 @@ def load_data(dataset, toShuffleInput = True , withZeroMeaning = True, labelset=
         updateData(valid_x)
         updateData(test_x)
     
-    def shared_dataset(data_xy, borrow=True , toShuffleInput = False ):
+    def shared_dataset(data_xy, borrow=True, toShuffleInput=False ):
         """ Function that loads the dataset into shared variables
 
         The reason we store our dataset in shared variables is to allow
@@ -321,19 +318,18 @@ def load_data(dataset, toShuffleInput = True , withZeroMeaning = True, labelset=
         """
         data_x, data_y = data_xy
         
-        if(toShuffleInput):
+        if toShuffleInput:
             correspondenceZip  = zip(data_x, data_y)
             random.shuffle(correspondenceZip)
             data_x = [e[0] for e in correspondenceZip]
             data_y = [e[1] for e in correspondenceZip]
-       
-             
-#         shared_x = theano.shared(numpy.asarray(data_x,
-#                                                dtype='float64'), #theano.config.floatX),
-#                                  borrow=borrow)
-#         shared_y = theano.shared(numpy.asarray(data_y,
-#                                                dtype='float64'), #theano.config.floatX),
-#                                  borrow=borrow)
+
+        # shared_x = theano.shared(numpy.asarray(data_x,
+        #                                        dtype='float64'), #theano.config.floatX),
+        #                          borrow=borrow)
+        # shared_y = theano.shared(numpy.asarray(data_y,
+        #                                        dtype='float64'), #theano.config.floatX),
+        #                          borrow=borrow)
 #         # When storing data on the GPU it has to be stored as floats
 #         # therefore we will store the labels as ``floatX`` as well
 #         # (``shared_y`` does exactly that). But during our computations
@@ -341,16 +337,15 @@ def load_data(dataset, toShuffleInput = True , withZeroMeaning = True, labelset=
 #         # floats it doesn't make sense) therefore instead of returning
 #         # ``shared_y`` we will have to cast it to int. This little hack
 #         # lets ous get around this issue
-#         return shared_x, shared_y #T.cast(shared_y, 'int32')
-        return numpy.array(data_x) , numpy.array(data_y) 
+#         return shared_x, shared_y   # T.cast(shared_y, 'int32')
+        return numpy.array(data_x), numpy.array(data_y)
 
-
-    if (withZeroMeaning):
+    if withZeroMeaning:
         zero_meaning(train_set, valid_set, test_set)
 
     test_set_x, test_set_y = shared_dataset(test_set)
     valid_set_x, valid_set_y = shared_dataset(valid_set)
-    train_set_x, train_set_y = shared_dataset(train_set , toShuffleInput = True)
+    train_set_x, train_set_y = shared_dataset(train_set, toShuffleInput=True)
 
     rval = [(train_set_x, train_set_y), (valid_set_x, valid_set_y),
             (test_set_x, test_set_y)]
