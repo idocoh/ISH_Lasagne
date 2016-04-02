@@ -136,7 +136,7 @@ class FlipBatchIterator(BatchIterator):
 def run(loadedData=None,FOLDER_NAME="defualt", LEARNING_RATE=0.04, UPDATE_MOMENTUM=0.9, UPDATE_RHO=None, NUM_OF_EPOCH=15,
         input_width=300, input_height=140, dataset='withOutDataSet', TRAIN_VALIDATION_SPLIT=0.2, MULTI_POSITIVES=20,
         dropout_percent=0.1, USE_NUM_CAT=20,end_index=16351, #activation=lasagne.nonlinearities.tanh, #rectify
-        NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=40, toShuffleInput = False ,
+        NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=128, toShuffleInput = False ,
         withZeroMeaning = False, input_noise_rate=0.3, pre_train_epochs=1, softmax_train_epochs=2, fine_tune_epochs=2):
     
     global counter
@@ -171,20 +171,28 @@ def run(loadedData=None,FOLDER_NAME="defualt", LEARNING_RATE=0.04, UPDATE_MOMENT
                 ('input', layers.InputLayer), 
                 ('conv1', layers.Conv2DLayer),
                 # ('pool1', layers.MaxPool2DLayer),
-                # ('conv2', layers.Conv2DLayer),
-                # ('conv3', layers.Conv2DLayer),
+                ('conv2', layers.Conv2DLayer),
+                ('conv3', layers.Conv2DLayer),
                 # ('unpool1', Unpool2DLayer),
                 ('conv4', layers.Conv2DLayer),
                 ('output_layer', ReshapeLayer),
                 ], 
             input_shape=(None, 1, input_width, input_height), 
             # Layer current size - 1x300x140
-            conv1_num_filters=NUM_UNITS_HIDDEN_LAYER[0], conv1_filter_size=(5, 5), conv1_border_mode="same", conv1_nonlinearity=None,
+            conv1_num_filters=NUM_UNITS_HIDDEN_LAYER[0], conv1_filter_size=(5, 5), conv1_nonlinearity=None,
+            # conv1_border_mode="same",
+            conv1_pad="same",
             # pool1_pool_size=(2, 2),
-            # conv2_num_filters=NUM_UNITS_HIDDEN_LAYER[1], conv2_filter_size=(5, 5), conv2_border_mode="same", conv2_nonlinearity=None,
-            # conv3_num_filters=NUM_UNITS_HIDDEN_LAYER[2], conv3_filter_size=(5, 5), conv3_border_mode="same", conv3_nonlinearity=None,
+            conv2_num_filters=NUM_UNITS_HIDDEN_LAYER[1], conv2_filter_size=(5, 5), conv2_nonlinearity=None,
+            # conv2_border_mode="same",
+            conv2_pad="same",
+            conv3_num_filters=NUM_UNITS_HIDDEN_LAYER[2], conv3_filter_size=(5, 5), conv3_nonlinearity=None,
+            # conv3_border_mode="same",
+            conv3_pad="same",
             # unpool1_ds=(2, 2),
-            conv4_num_filters=NUM_UNITS_HIDDEN_LAYER[3], conv4_filter_size=(5, 5), conv4_border_mode="same", conv4_nonlinearity=None,
+            conv4_num_filters=NUM_UNITS_HIDDEN_LAYER[3], conv4_filter_size=(5, 5), conv4_nonlinearity=None,
+            # conv4_border_mode="same",
+            conv4_pad="same",
             output_layer_shape=(([0], -1)),
 
             update_learning_rate=LEARNING_RATE, 
@@ -192,7 +200,7 @@ def run(loadedData=None,FOLDER_NAME="defualt", LEARNING_RATE=0.04, UPDATE_MOMENT
             update=nesterov_momentum, 
             train_split=TrainSplit(eval_size=TRAIN_VALIDATION_SPLIT), 
             # batch_iterator_train=BatchIterator(batch_size=BATCH_SIZE),
-            batch_iterator_train=FlipBatchIterator(batch_size=BATCH_SIZE), 
+            batch_iterator_train=FlipBatchIterator(batch_size=BATCH_SIZE),
             regression=True, 
             max_epochs=NUM_OF_EPOCH, 
             verbose=1,
@@ -222,22 +230,25 @@ def run(loadedData=None,FOLDER_NAME="defualt", LEARNING_RATE=0.04, UPDATE_MOMENT
             original_image = Image.fromarray(get_picture_array(X_out, index))
             # original_image.save(FOLDER_PREFIX + 'original' + str(index) + '.png', format="PNG")
 
-            new_size = (original_image.size[0] * 2, original_image.size[1])
+            new_size = (original_image.size[0] * 3, original_image.size[1])
             new_im = Image.new('L', new_size)
             new_im.paste(original_image, (0, 0))
             rec_image = Image.fromarray(get_picture_array(X_pred, index))
             # rec_image.save(FOLDER_PREFIX + 'pred' + str(index) + '.png', format="PNG")
             new_im.paste(rec_image, (original_image.size[0], 0))
-            new_im.save(FOLDER_PREFIX+'origin_VS_prediction-'+str(index)+'.png', format="PNG")
+
+            rec_image = Image.fromarray(get_picture_array(X_train, index))
+            new_im.paste(rec_image, (original_image.size[0]*2, 0))
+            new_im.save(FOLDER_PREFIX+'origin_prediction_noise-'+str(index)+'.png', format="PNG")
             # plt.imshow(new_im)
 
-            new_size = (original_image.size[0] * 2, original_image.size[1])
-            new_im = Image.new('L', new_size)
-            new_im.paste(original_image, (0, 0))
-            rec_image = Image.fromarray(get_picture_array(X_train, index))
-            # rec_image.save(FOLDER_PREFIX + 'noisyInput' + str(index) + '.png', format="PNG")
-            new_im.paste(rec_image, (original_image.size[0], 0))
-            new_im.save(FOLDER_PREFIX+'origin_VS_noise-'+str(index)+'.png', format="PNG")
+            # new_size = (original_image.size[0] * 2, original_image.size[1])
+            # new_im = Image.new('L', new_size)
+            # new_im.paste(original_image, (0, 0))
+            # rec_image = Image.fromarray(get_picture_array(X_train, index))
+            # # rec_image.save(FOLDER_PREFIX + 'noisyInput' + str(index) + '.png', format="PNG")
+            # new_im.paste(rec_image, (original_image.size[0], 0))
+            # new_im.save(FOLDER_PREFIX+'origin_VS_noise-'+str(index)+'.png', format="PNG")
             # plt.imshow(new_im)
 
         # trian_last_hiddenLayer = cnn.output_hiddenLayer(X_train)
@@ -540,7 +551,8 @@ def run(loadedData=None,FOLDER_NAME="defualt", LEARNING_RATE=0.04, UPDATE_MOMENT
         outputFile.write("Num epochs: " + str(NUM_OF_EPOCH) + "\n")
         outputFile.write("Num units hidden layers: " + str(NUM_UNITS_HIDDEN_LAYER) + "\n\n")
 #         outputFile.write("activation func: " + str(activation) + "\n")
-        outputFile.write("Multiple Positives by: " + str(MULTI_POSITIVES) + "\n")
+#         outputFile.write("Multiple Positives by: " + str(MULTI_POSITIVES) + "\n")
+        outputFile.write("Number of images: " + str(end_index) + "\n")
         outputFile.write("New Positives Dropout rate: " + str(dropout_percent) + "\n")
         outputFile.write("Train/validation split: " + str(TRAIN_VALIDATION_SPLIT) + "\n")
         outputFile.write("toShuffleInput: " + str(toShuffleInput) + "\n")
@@ -670,7 +682,7 @@ def run(loadedData=None,FOLDER_NAME="defualt", LEARNING_RATE=0.04, UPDATE_MOMENT
     # #ae = pickle.load(open('mnist/conv_ae.pkl','r'))
     # cnn.save_weights_to(FOLDER_PREFIX+'conv_ae.np')
 
-    return
+    return cnn.train_history_[-1]['valid_accuracy']
 
 '''
     # lastLayerOutputs = outputLastLayer_DAE(train_x, train_y, test_x, test_y)
@@ -838,19 +850,29 @@ def run_all():
         print "Running in Ubuntu"
     else:
         print "Running in Windows"
-    folder_name = "CSAE_300_FlipB_1"
+    folder_name = "CSAE_1000_FlipB-"+str(time.time())
 
     num_labels = 15
-    end_index = 1000
+    end_index = 3000
     input_noise_rate = 0.2
     zero_meaning = False
     data = load2d(num_labels=num_labels, end_index=end_index)
 
-    for i in range(1, 30, 2):
-        run(NUM_UNITS_HIDDEN_LAYER=[32, 32, 32, 1], NUM_OF_EPOCH=12, LEARNING_RATE=0.01*i, UPDATE_MOMENTUM=0.9,
-            dropout_percent=input_noise_rate, loadedData=data, FOLDER_NAME=folder_name, withZeroMeaning=zero_meaning)
-        run(NUM_UNITS_HIDDEN_LAYER=[16, 32, 32, 1], NUM_OF_EPOCH=12, LEARNING_RATE=0.01 * i, UPDATE_MOMENTUM=0.99,
-            dropout_percent=input_noise_rate, loadedData=data, FOLDER_NAME=folder_name, withZeroMeaning=zero_meaning)
+    ac1, ac2, ac3, ac4 = 1, 1, 1, 1
+    for i in range(1, 9, 1):
+        print "Run #", i
+        if np.isfinite(ac1):
+            ac1 = run(NUM_UNITS_HIDDEN_LAYER=[16, 32, 64, 1], NUM_OF_EPOCH=30, LEARNING_RATE=0.04*i, UPDATE_MOMENTUM=0.9,
+                      dropout_percent=0.0, loadedData=data, FOLDER_NAME=folder_name, withZeroMeaning=zero_meaning)
+        if np.isfinite(ac2):
+            ac2 = run(NUM_UNITS_HIDDEN_LAYER=[16, 32, 64, 1], NUM_OF_EPOCH=30, LEARNING_RATE=0.04*i, UPDATE_MOMENTUM=0.98,
+                      dropout_percent=input_noise_rate, loadedData=data, FOLDER_NAME=folder_name, withZeroMeaning=zero_meaning)
+        if np.isfinite(ac3):
+            ac3 = run(NUM_UNITS_HIDDEN_LAYER=[16, 32, 64, 1], NUM_OF_EPOCH=30, LEARNING_RATE=0.04*i, UPDATE_MOMENTUM=0.9,
+                      dropout_percent=input_noise_rate, loadedData=data, FOLDER_NAME=folder_name, withZeroMeaning=zero_meaning)
+        if np.isfinite(ac4):
+            ac4 = run(NUM_UNITS_HIDDEN_LAYER=[32, 64, 128, 1], NUM_OF_EPOCH=30, LEARNING_RATE=0.03 * i, UPDATE_MOMENTUM=0.95,
+                      dropout_percent=input_noise_rate, loadedData=data, FOLDER_NAME=folder_name, withZeroMeaning=zero_meaning)
 
 
 if __name__ == "__main__":
