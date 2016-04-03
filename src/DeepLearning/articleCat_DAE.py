@@ -17,7 +17,7 @@ from sklearn.metrics import mean_squared_error as mse
 from sklearn.metrics import precision_score
 # import urllib
 from IPython.display import Image as IPImage
-from PIL import Image
+from PIL import Image, ImageChops
 import matplotlib.pyplot as plt
 
 # from nolearn.lasagne import Unpool2DLayer
@@ -135,8 +135,8 @@ class FlipBatchIterator(BatchIterator):
 
 def run(loadedData=None,FOLDER_NAME="defualt", LEARNING_RATE=0.04, UPDATE_MOMENTUM=0.9, UPDATE_RHO=None, NUM_OF_EPOCH=15,
         input_width=300, input_height=140, dataset='withOutDataSet', TRAIN_VALIDATION_SPLIT=0.2, MULTI_POSITIVES=20,
-        dropout_percent=0.1, USE_NUM_CAT=20,end_index=16351, #activation=lasagne.nonlinearities.tanh, #rectify
-        NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=64, toShuffleInput = False ,
+        dropout_percent=0.1, USE_NUM_CAT=15,end_index=16351, #activation=lasagne.nonlinearities.tanh, #rectify
+        NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=64, toShuffleInput = False , FlipBatch = True,
         withZeroMeaning = False, input_noise_rate=0.3, pre_train_epochs=1, softmax_train_epochs=2, fine_tune_epochs=2):
     
     global counter
@@ -161,50 +161,76 @@ def run(loadedData=None,FOLDER_NAME="defualt", LEARNING_RATE=0.04, UPDATE_MOMENT
 
     counter += 1
 
-    outputFile = open(PARAMS_FILE_NAME, "w")   
+    outputFile = open(PARAMS_FILE_NAME, "w")
+
+    filter_1 = (5, 5)
+    filter_2 = (5, 5)
+    filter_3 = (5, 5)
+    filter_4 = (5, 5)
+    filter_5 = (5, 5)
+    filter_6 = (5, 5)
     
     def createCSAE(input_height, input_width, X_train, X_out):
         
         X_train = np.random.binomial(1, 1-dropout_percent, size=X_train.shape) * X_train
-        
+
         cnn = NeuralNet(layers=[
                 ('input', layers.InputLayer), 
                 ('conv1', layers.Conv2DLayer),
-                ('conv2', layers.Conv2DLayer),
                 ('pool1', layers.MaxPool2DLayer),
+                ('conv2', layers.Conv2DLayer),
+                ('pool2', layers.MaxPool2DLayer),
                 ('conv3', layers.Conv2DLayer),
                 ('unpool1', Unpool2DLayer),
                 ('conv4', layers.Conv2DLayer),
+                ('unpool2', Unpool2DLayer),
+                ('conv5', layers.Conv2DLayer),
+                ('conv6', layers.Conv2DLayer),
                 ('output_layer', ReshapeLayer),
-                ], 
+                ],
+
             input_shape=(None, 1, input_width, input_height), 
             # Layer current size - 1x300x140
-            conv1_num_filters=NUM_UNITS_HIDDEN_LAYER[0], conv1_filter_size=(5, 5), conv1_nonlinearity=None,
+
+            conv1_num_filters=NUM_UNITS_HIDDEN_LAYER[0], conv1_filter_size=filter_1, conv1_nonlinearity=None,
             # conv1_border_mode="same",
             conv1_pad="same",
             pool1_pool_size=(2, 2),
-            conv2_num_filters=NUM_UNITS_HIDDEN_LAYER[1], conv2_filter_size=(5, 5), conv2_nonlinearity=None,
+
+            conv2_num_filters=NUM_UNITS_HIDDEN_LAYER[1], conv2_filter_size=filter_2, conv2_nonlinearity=None,
             # conv2_border_mode="same",
             conv2_pad="same",
-            conv3_num_filters=NUM_UNITS_HIDDEN_LAYER[2], conv3_filter_size=(5, 5), conv3_nonlinearity=None,
+            pool2_pool_size=(2, 2),
+
+            conv3_num_filters=NUM_UNITS_HIDDEN_LAYER[2], conv3_filter_size=filter_3, conv3_nonlinearity=None,
             # conv3_border_mode="same",
             conv3_pad="same",
             unpool1_ds=(2, 2),
-            conv4_num_filters=NUM_UNITS_HIDDEN_LAYER[3], conv4_filter_size=(5, 5), conv4_nonlinearity=None,
+
+            conv4_num_filters=NUM_UNITS_HIDDEN_LAYER[3], conv4_filter_size=filter_4, conv4_nonlinearity=None,
             # conv4_border_mode="same",
             conv4_pad="same",
+            unpool2_ds=(2, 2),
+
+            conv5_num_filters=NUM_UNITS_HIDDEN_LAYER[4], conv5_filter_size=filter_5, conv5_nonlinearity=None,
+            # conv5_border_mode="same",
+            conv5_pad="same",
+
+            conv6_num_filters=1, conv6_filter_size=filter_6, conv6_nonlinearity=None,
+            # conv6_border_mode="same",
+            conv6_pad="same",
+
             output_layer_shape=(([0], -1)),
 
             update_learning_rate=LEARNING_RATE, 
             update_momentum=UPDATE_MOMENTUM,
             update=nesterov_momentum, 
             train_split=TrainSplit(eval_size=TRAIN_VALIDATION_SPLIT), 
-            # batch_iterator_train=BatchIterator(batch_size=BATCH_SIZE),
-            batch_iterator_train=FlipBatchIterator(batch_size=BATCH_SIZE),
+            batch_iterator_train= FlipBatchIterator(batch_size=BATCH_SIZE) if FlipBatch else BatchIterator(batch_size=BATCH_SIZE),
             regression=True, 
             max_epochs=NUM_OF_EPOCH, 
             verbose=1,
-            hiddenLayer_to_output=-2)
+            hiddenLayer_to_output=-3)
         
         cnn.fit(X_train, X_out)
 
@@ -233,21 +259,26 @@ def run(loadedData=None,FOLDER_NAME="defualt", LEARNING_RATE=0.04, UPDATE_MOMENT
             new_size = (original_image.size[0] * 3, original_image.size[1])
             new_im = Image.new('L', new_size)
             new_im.paste(original_image, (0, 0))
-            rec_image = Image.fromarray(get_picture_array(X_pred, index))
-            # rec_image.save(FOLDER_PREFIX + 'pred' + str(index) + '.png', format="PNG")
-            new_im.paste(rec_image, (original_image.size[0], 0))
+            pred_image = Image.fromarray(get_picture_array(X_pred, index))
+            # pred_image.save(FOLDER_PREFIX + 'pred' + str(index) + '.png', format="PNG")
+            new_im.paste(pred_image, (original_image.size[0], 0))
 
-            rec_image = Image.fromarray(get_picture_array(X_train, index))
-            new_im.paste(rec_image, (original_image.size[0]*2, 0))
+            noise_image = Image.fromarray(get_picture_array(X_train, index))
+            new_im.paste(noise_image, (original_image.size[0]*2, 0))
             new_im.save(FOLDER_PREFIX+'origin_prediction_noise-'+str(index)+'.png', format="PNG")
+
+            diff = ImageChops.difference(original_image, pred_image)
+            diff = diff.convert('L')
+            diff.save(FOLDER_PREFIX + 'diff' + str(index) + '.png', format="PNG")
+
             # plt.imshow(new_im)
 
             # new_size = (original_image.size[0] * 2, original_image.size[1])
             # new_im = Image.new('L', new_size)
             # new_im.paste(original_image, (0, 0))
-            # rec_image = Image.fromarray(get_picture_array(X_train, index))
-            # # rec_image.save(FOLDER_PREFIX + 'noisyInput' + str(index) + '.png', format="PNG")
-            # new_im.paste(rec_image, (original_image.size[0], 0))
+            # pred_image = Image.fromarray(get_picture_array(X_train, index))
+            # # pred_image.save(FOLDER_PREFIX + 'noisyInput' + str(index) + '.png', format="PNG")
+            # new_im.paste(pred_image, (original_image.size[0], 0))
             # new_im.save(FOLDER_PREFIX+'origin_VS_noise-'+str(index)+'.png', format="PNG")
             # plt.imshow(new_im)
 
@@ -255,6 +286,9 @@ def run(loadedData=None,FOLDER_NAME="defualt", LEARNING_RATE=0.04, UPDATE_MOMENT
         # test_last_hiddenLayer = cnn.output_hiddenLayer(test_x)
 
         return cnn
+
+        # trian_last_hiddenLayer = cnn.output_hiddenLayer(X_train).astype(np.float32)
+        # print trian_last_hiddenLayer.shape
 
     def createSAE(input_height, input_width, X_train, X_out):
         encode_size = 200   
@@ -541,13 +575,12 @@ def run(loadedData=None,FOLDER_NAME="defualt", LEARNING_RATE=0.04, UPDATE_MOMENT
 
     def writeOutputFile(outputFile, train_history, layer_info):
         # save the network's parameters
-        outputFile.write("Validation set Prediction rate is: "+str((1-train_history[-1]['valid_accuracy'])*100) + "%\n")
-        outputFile.write("Run time[minutes] is: "+str(run_time) + "\n\n")
-        
+        outputFile.write("Validation set error: "+str(train_history[-1]['valid_accuracy']) + "\n\n")
+
         outputFile.write("Training NN on: " + ("20 Top Categorys\n" if USE_NUM_CAT==20 else "Article Categories\n"))
         outputFile.write("Learning rate: " + str(LEARNING_RATE) + "\n")
         outputFile.write(("Momentum: " + str(UPDATE_MOMENTUM)+ "\n") if (UPDATE_RHO == None) else ("Decay Factor: " + str(UPDATE_RHO)+ "\n") )
-        outputFile.write("Batch size: " + str(BATCH_SIZE) + "\n")
+        outputFile.write(("FlipBatcherIterater" if FlipBatch else "BatchIterator") + " with batch: " + str(BATCH_SIZE) + "\n")
         outputFile.write("Num epochs: " + str(NUM_OF_EPOCH) + "\n")
         outputFile.write("Num units hidden layers: " + str(NUM_UNITS_HIDDEN_LAYER) + "\n\n")
 #         outputFile.write("activation func: " + str(activation) + "\n")
@@ -557,10 +590,18 @@ def run(loadedData=None,FOLDER_NAME="defualt", LEARNING_RATE=0.04, UPDATE_MOMENT
         outputFile.write("Train/validation split: " + str(TRAIN_VALIDATION_SPLIT) + "\n")
         outputFile.write("toShuffleInput: " + str(toShuffleInput) + "\n")
         outputFile.write("withZeroMeaning: " + str(withZeroMeaning) + "\n\n")
-        
+
         outputFile.write("history: " + str(train_history) + "\n\n")
         outputFile.write("layer_info:\n" + str(layer_info) + "\n")
-        
+        outputFile.write("filters_info:\n" + str(filter_1) + "\n")
+        outputFile.write(str(filter_2) + "\n")
+        outputFile.write(str(filter_3) + "\n")
+        outputFile.write(str(filter_4) + "\n")
+        outputFile.write(str(filter_5) + "\n")
+        outputFile.write(str(filter_6) + "\n\n")
+        outputFile.write("Run time[minutes] is: "+str(run_time) + "\n")
+
+
         outputFile.flush()
 
     def outputLastLayer_CNN(cnn, X, y, test_x, test_y):
@@ -853,24 +894,24 @@ def run_all():
     folder_name = "CSAE_1000_FlipB-"+str(time.time())
 
     num_labels = 15
-    end_index = 1000
+    end_index = 3000
     input_noise_rate = 0.2
     zero_meaning = False
     data = load2d(num_labels=num_labels, end_index=end_index)
 
     ac1, ac2, ac3, ac4 = 1, 1, 1, 1
-    for i in range(1, 9, 1):
+    for i in range(1, 33, 2):
         print("Run #", i)
         try:
             if np.isfinite(ac1):
-                ac1 = run(NUM_UNITS_HIDDEN_LAYER=[16, 32, 64, 1], NUM_OF_EPOCH=15, LEARNING_RATE=0.04*i, UPDATE_MOMENTUM=0.9,
-                          dropout_percent=0.0, loadedData=data, FOLDER_NAME=folder_name, withZeroMeaning=zero_meaning)
-            if np.isfinite(ac2):
-                ac2 = run(NUM_UNITS_HIDDEN_LAYER=[16, 32, 64, 1], NUM_OF_EPOCH=15, LEARNING_RATE=0.04*i, UPDATE_MOMENTUM=0.9,
-                          dropout_percent=input_noise_rate, loadedData=data, FOLDER_NAME=folder_name, withZeroMeaning=zero_meaning)
-            if np.isfinite(ac3):
-                ac3 = run(NUM_UNITS_HIDDEN_LAYER=[32, 32, 64, 1], NUM_OF_EPOCH=20, LEARNING_RATE=0.04*i, UPDATE_MOMENTUM=0.9,
-                          dropout_percent=input_noise_rate, loadedData=data, FOLDER_NAME=folder_name, withZeroMeaning=zero_meaning)
+                ac1 = run(NUM_UNITS_HIDDEN_LAYER=[16, 32, 64, 32, 16], NUM_OF_EPOCH=33, LEARNING_RATE=0.01*i, UPDATE_MOMENTUM=0.9,
+                          dropout_percent=input_noise_rate, loadedData=data, FOLDER_NAME=folder_name, withZeroMeaning=zero_meaning, end_index=end_index)
+            if np.isfinite(ac2) and i%3==0:
+                ac2 = run(NUM_UNITS_HIDDEN_LAYER=[32, 32, 32, 32, 32], NUM_OF_EPOCH=33, LEARNING_RATE=0.01*i, UPDATE_MOMENTUM=0.9,
+                          dropout_percent=input_noise_rate, loadedData=data, FOLDER_NAME=folder_name, withZeroMeaning=zero_meaning, end_index=end_index)
+            if np.isfinite(ac3)and i%5==1:
+                ac3 = run(NUM_UNITS_HIDDEN_LAYER=[16, 32, 64, 32, 16], NUM_OF_EPOCH=33, LEARNING_RATE=0.01*i, UPDATE_MOMENTUM=0.9,
+                          dropout_percent=input_noise_rate, loadedData=data, FOLDER_NAME=folder_name, withZeroMeaning=zero_meaning, FlipBatch=False, end_index=end_index)
         except:
             print "failed to run- ", i
 
