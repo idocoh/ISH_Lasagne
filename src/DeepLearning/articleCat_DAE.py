@@ -136,7 +136,7 @@ class FlipBatchIterator(BatchIterator):
 def run(loadedData=None,FOLDER_NAME="defualt", LEARNING_RATE=0.04, UPDATE_MOMENTUM=0.9, UPDATE_RHO=None, NUM_OF_EPOCH=15,
         input_width=300, input_height=140, dataset='withOutDataSet', TRAIN_VALIDATION_SPLIT=0.2, MULTI_POSITIVES=20,
         dropout_percent=0.1, USE_NUM_CAT=20,end_index=16351, #activation=lasagne.nonlinearities.tanh, #rectify
-        NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=128, toShuffleInput = False ,
+        NUM_UNITS_HIDDEN_LAYER=[5, 10, 20, 40], BATCH_SIZE=64, toShuffleInput = False ,
         withZeroMeaning = False, input_noise_rate=0.3, pre_train_epochs=1, softmax_train_epochs=2, fine_tune_epochs=2):
     
     global counter
@@ -170,10 +170,10 @@ def run(loadedData=None,FOLDER_NAME="defualt", LEARNING_RATE=0.04, UPDATE_MOMENT
         cnn = NeuralNet(layers=[
                 ('input', layers.InputLayer), 
                 ('conv1', layers.Conv2DLayer),
-                # ('pool1', layers.MaxPool2DLayer),
                 ('conv2', layers.Conv2DLayer),
+                ('pool1', layers.MaxPool2DLayer),
                 ('conv3', layers.Conv2DLayer),
-                # ('unpool1', Unpool2DLayer),
+                ('unpool1', Unpool2DLayer),
                 ('conv4', layers.Conv2DLayer),
                 ('output_layer', ReshapeLayer),
                 ], 
@@ -182,14 +182,14 @@ def run(loadedData=None,FOLDER_NAME="defualt", LEARNING_RATE=0.04, UPDATE_MOMENT
             conv1_num_filters=NUM_UNITS_HIDDEN_LAYER[0], conv1_filter_size=(5, 5), conv1_nonlinearity=None,
             # conv1_border_mode="same",
             conv1_pad="same",
-            # pool1_pool_size=(2, 2),
+            pool1_pool_size=(2, 2),
             conv2_num_filters=NUM_UNITS_HIDDEN_LAYER[1], conv2_filter_size=(5, 5), conv2_nonlinearity=None,
             # conv2_border_mode="same",
             conv2_pad="same",
             conv3_num_filters=NUM_UNITS_HIDDEN_LAYER[2], conv3_filter_size=(5, 5), conv3_nonlinearity=None,
             # conv3_border_mode="same",
             conv3_pad="same",
-            # unpool1_ds=(2, 2),
+            unpool1_ds=(2, 2),
             conv4_num_filters=NUM_UNITS_HIDDEN_LAYER[3], conv4_filter_size=(5, 5), conv4_nonlinearity=None,
             # conv4_border_mode="same",
             conv4_pad="same",
@@ -853,32 +853,30 @@ def run_all():
     folder_name = "CSAE_1000_FlipB-"+str(time.time())
 
     num_labels = 15
-    end_index = 3000
+    end_index = 1000
     input_noise_rate = 0.2
     zero_meaning = False
     data = load2d(num_labels=num_labels, end_index=end_index)
 
     ac1, ac2, ac3, ac4 = 1, 1, 1, 1
     for i in range(1, 9, 1):
-        print "Run #", i
-        if np.isfinite(ac1):
-            ac1 = run(NUM_UNITS_HIDDEN_LAYER=[16, 32, 64, 1], NUM_OF_EPOCH=30, LEARNING_RATE=0.04*i, UPDATE_MOMENTUM=0.9,
-                      dropout_percent=0.0, loadedData=data, FOLDER_NAME=folder_name, withZeroMeaning=zero_meaning)
-        if np.isfinite(ac2):
-            ac2 = run(NUM_UNITS_HIDDEN_LAYER=[16, 32, 64, 1], NUM_OF_EPOCH=30, LEARNING_RATE=0.04*i, UPDATE_MOMENTUM=0.98,
-                      dropout_percent=input_noise_rate, loadedData=data, FOLDER_NAME=folder_name, withZeroMeaning=zero_meaning)
-        if np.isfinite(ac3):
-            ac3 = run(NUM_UNITS_HIDDEN_LAYER=[16, 32, 64, 1], NUM_OF_EPOCH=30, LEARNING_RATE=0.04*i, UPDATE_MOMENTUM=0.9,
-                      dropout_percent=input_noise_rate, loadedData=data, FOLDER_NAME=folder_name, withZeroMeaning=zero_meaning)
-        if np.isfinite(ac4):
-            ac4 = run(NUM_UNITS_HIDDEN_LAYER=[32, 64, 128, 1], NUM_OF_EPOCH=30, LEARNING_RATE=0.03 * i, UPDATE_MOMENTUM=0.95,
-                      dropout_percent=input_noise_rate, loadedData=data, FOLDER_NAME=folder_name, withZeroMeaning=zero_meaning)
-
+        print("Run #", i)
+        try:
+            if np.isfinite(ac1):
+                ac1 = run(NUM_UNITS_HIDDEN_LAYER=[16, 32, 64, 1], NUM_OF_EPOCH=15, LEARNING_RATE=0.04*i, UPDATE_MOMENTUM=0.9,
+                          dropout_percent=0.0, loadedData=data, FOLDER_NAME=folder_name, withZeroMeaning=zero_meaning)
+            if np.isfinite(ac2):
+                ac2 = run(NUM_UNITS_HIDDEN_LAYER=[16, 32, 64, 1], NUM_OF_EPOCH=15, LEARNING_RATE=0.04*i, UPDATE_MOMENTUM=0.9,
+                          dropout_percent=input_noise_rate, loadedData=data, FOLDER_NAME=folder_name, withZeroMeaning=zero_meaning)
+            if np.isfinite(ac3):
+                ac3 = run(NUM_UNITS_HIDDEN_LAYER=[32, 32, 64, 1], NUM_OF_EPOCH=20, LEARNING_RATE=0.04*i, UPDATE_MOMENTUM=0.9,
+                          dropout_percent=input_noise_rate, loadedData=data, FOLDER_NAME=folder_name, withZeroMeaning=zero_meaning)
+        except:
+            print "failed to run- ", i
 
 if __name__ == "__main__":
     import os
     os.environ["DISPLAY"] = ":99"
-
     # import pydevd
     # pydevd.settrace('132.71.84.233', port=57869, stdoutToServer=True, stderrToServer=True)
     run_all()
