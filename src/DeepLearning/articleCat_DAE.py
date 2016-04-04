@@ -179,12 +179,12 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
             ('pool1', layers.MaxPool2DLayer),
             ('conv2', layers.Conv2DLayer),
             ('conv21', layers.Conv2DLayer),
-            # ('pool2', layers.MaxPool2DLayer),
-            # ('conv3', layers.Conv2DLayer),
-            # ('conv31', layers.Conv2DLayer),
-            # ('unpool1', Unpool2DLayer),
-            # ('conv4', layers.Conv2DLayer),
-            # ('conv41', layers.Conv2DLayer),
+            ('pool2', layers.MaxPool2DLayer),
+            ('conv3', layers.Conv2DLayer),
+            ('conv31', layers.Conv2DLayer),
+            ('unpool1', Unpool2DLayer),
+            ('conv4', layers.Conv2DLayer),
+            ('conv41', layers.Conv2DLayer),
             ('unpool2', Unpool2DLayer),
             ('conv5', layers.Conv2DLayer),
             ('conv51', layers.Conv2DLayer),
@@ -209,22 +209,22 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
             conv21_num_filters=layers_size[1], conv21_filter_size=filter_2, conv21_nonlinearity=activation,
             # conv21_border_mode="same",
             conv21_pad="same",
-            # pool2_pool_size=(2, 2),
-            #
-            # conv3_num_filters=layers_size[2], conv3_filter_size=filter_3, conv3_nonlinearity=activation,
-            # # conv3_border_mode="same",
-            # conv3_pad="same",
-            # conv31_num_filters=layers_size[2], conv31_filter_size=filter_3, conv31_nonlinearity=activation,
-            # # conv31_border_mode="same",
-            # conv31_pad="same",
-            # unpool1_ds=(2, 2),
-            #
-            # conv4_num_filters=layers_size[3], conv4_filter_size=filter_4, conv4_nonlinearity=activation,
-            # # conv4_border_mode="same",
-            # conv4_pad="same",
-            # conv41_num_filters=layers_size[3], conv41_filter_size=filter_4, conv41_nonlinearity=activation,
-            # # conv41_border_mode="same",
-            # conv41_pad="same",
+            pool2_pool_size=(2, 2),
+
+            conv3_num_filters=layers_size[2], conv3_filter_size=filter_3, conv3_nonlinearity=activation,
+            # conv3_border_mode="same",
+            conv3_pad="same",
+            conv31_num_filters=layers_size[2], conv31_filter_size=filter_3, conv31_nonlinearity=activation,
+            # conv31_border_mode="same",
+            conv31_pad="same",
+            unpool1_ds=(2, 2),
+
+            conv4_num_filters=layers_size[3], conv4_filter_size=filter_4, conv4_nonlinearity=activation,
+            # conv4_border_mode="same",
+            conv4_pad="same",
+            conv41_num_filters=layers_size[3], conv41_filter_size=filter_4, conv41_nonlinearity=activation,
+            # conv41_border_mode="same",
+            conv41_pad="same",
             unpool2_ds=(2, 2),
 
             conv5_num_filters=layers_size[4], conv5_filter_size=filter_5, conv5_nonlinearity=activation,
@@ -601,8 +601,8 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         output_file.write(("FlipBatcherIterater" if flip_batch else "BatchIterator") + " with batch: " + str(batch_size) + "\n")
         output_file.write("Num epochs: " + str(epochs) + "\n")
         output_file.write("Layers size: " + str(layers_size) + "\n\n")
-        output_file.write("Activation func: " + str(activation) + "\n")
-        output_file.write("Last layer activation func: " + str(last_layer_activation) + "\n")
+        output_file.write("Activation func: " + ("Rectify" if activation is None else str(activation)) + "\n")
+        output_file.write("Last layer activation func: " + ("Rectify" if activation is None else str(last_layer_activation)) + "\n")
         #         output_file.write("Multiple Positives by: " + str(multiple_positives) + "\n")
         output_file.write("Number of images: " + str(end_index) + "\n")
         output_file.write("Dropout noise precent: " + str(dropout_percent * 100) + "%\n")
@@ -928,25 +928,25 @@ def run_all():
     data = load2d(num_labels=num_labels, end_index=end_index, TRAIN_PRECENT=1)
 
     ac1, ac2, ac3, ac4, ac5, ac6 = 1, 1, 1, 1, 1, 1
-    for i in range(1, 50, 2):
+    for i in range(1, 200, 5):
         print("Run #", i)
         # try:
         if np.isfinite(ac1):
-            ac1 = run(layers_size=[16, 32, 64, 32, 16], epochs=epochs, learning_rate=0.004 * i, update_momentum=0.9,
+            ac1 = run(layers_size=[16, 32, 64, 32, 16], epochs=epochs, learning_rate=0.001 * i, update_momentum=0.9,
                       dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name, end_index=end_index,
                       zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh)
         else:
             ac1 = 1
 
-        if np.isfinite(ac2) and i % 5 == 0:
-            ac2 = run(layers_size=[32, 32, 32, 32, 32], epochs=epochs, learning_rate=0.004 * i, update_momentum=0.9,
+        if np.isfinite(ac2) and i % 15 == 1:
+            ac2 = run(layers_size=[32, 32, 32, 32, 32], epochs=epochs, learning_rate=0.001 * i, update_momentum=0.9,
                       dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name, end_index=end_index,
                       zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh)
         else:
             ac2 = 1
 
-        if np.isfinite(ac3)and i % 3 != 1:
-            ac3 = run(layers_size=[16, 32, 64, 32, 16], epochs=epochs, learning_rate=0.004 * i, update_momentum=0.9,
+        if np.isfinite(ac3)and i % 30 == 1:
+            ac3 = run(layers_size=[16, 32, 64, 32, 16], epochs=epochs, learning_rate=0.001 * i, update_momentum=0.9,
                       dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name, end_index=end_index,
                       zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, flip_batch=False)
         else:
