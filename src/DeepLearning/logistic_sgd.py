@@ -197,7 +197,7 @@ class LogisticRegression(object):
         return T.mean( T.sqrt( T.sum( (self.p_y_given_x - y) * (self.p_y_given_x - y) ,axis=1) ) )
 
 
-def load_data(dataset, toShuffleInput = True , withZeroMeaning = True, labelset=None,start_index=0,end_index=16351,MULTI_POSITIVES=20,dropout_percent=0.1,TRAIN_DATA_PRECENT=0.8,VALIDATION_DATA_PRECENT=0.8):
+def load_data(dataset, toShuffleInput = False , withZeroMeaning = False, labelset=None,start_index=0,end_index=16351,MULTI_POSITIVES=20,dropout_percent=0.1,TRAIN_DATA_PRECENT=0.8,VALIDATION_DATA_PRECENT=0.8):
     ''' Loads the dataset
 
     :type dataset: string
@@ -262,6 +262,9 @@ def load_data(dataset, toShuffleInput = True , withZeroMeaning = True, labelset=
                     f.close()
         
         # Divided data set into 3 parts.
+
+
+        VALIDATION_DATA_PRECENT = TRAIN_DATA_PRECENT # validation no used
         data_amount = pData.shape[0]    # end_index-start_index
         train_index = numpy.floor(data_amount*TRAIN_DATA_PRECENT)
         validation_index = numpy.floor(data_amount*VALIDATION_DATA_PRECENT)
@@ -290,23 +293,25 @@ def load_data(dataset, toShuffleInput = True , withZeroMeaning = True, labelset=
         valid_x, valid_y = valid_set
         test_x, test_y = test_set
         
-        all_data = numpy.concatenate((train_x , valid_x , test_x), axis=0)
+        all_data = numpy.concatenate((train_x, valid_x, test_x), axis=0)
 #         print all_data
         data_mean = numpy.mean(all_data)
         print "mean-" 
         print data_mean
-        data_var = numpy.var(all_data, ddof=1)
-        print "var-" 
-        print data_var
+        data_std = numpy.std(all_data, ddof=1)
+        print "std-"
+        print data_std
         
         def updateData(data):
             data -= data_mean
-            data = numpy.divide(data,data_var)
-        
-        updateData(train_x)
-        updateData(valid_x)
-        updateData(test_x)
-    
+            return numpy.divide(data, data_std)
+
+        train_x = updateData(train_x)
+        valid_x = updateData(valid_x)
+        test_x = updateData(test_x)
+
+        return (train_x, train_y), (valid_x, valid_y), (test_x, test_y)
+
     def shared_dataset(data_xy, borrow=True, toShuffleInput=False ):
         """ Function that loads the dataset into shared variables
 
@@ -340,8 +345,8 @@ def load_data(dataset, toShuffleInput = True , withZeroMeaning = True, labelset=
 #         return shared_x, shared_y   # T.cast(shared_y, 'int32')
         return numpy.array(data_x), numpy.array(data_y)
 
-    if withZeroMeaning:
-        zero_meaning(train_set, valid_set, test_set)
+    # if withZeroMeaning:
+    #     train_set, valid_set, test_set = zero_meaning(train_set, valid_set, test_set)
 
     test_set_x, test_set_y = shared_dataset(test_set)
     valid_set_x, valid_set_y = shared_dataset(valid_set)
