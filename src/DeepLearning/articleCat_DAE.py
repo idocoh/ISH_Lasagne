@@ -163,12 +163,12 @@ def run(loadedData=None,FOLDER_NAME="defualt", LEARNING_RATE=0.04, UPDATE_MOMENT
 
     outputFile = open(PARAMS_FILE_NAME, "w")
 
-    filter_1 = (5, 5)
-    filter_2 = (5, 5)
-    filter_3 = (5, 5)
-    filter_4 = (5, 5)
-    filter_5 = (5, 5)
-    filter_6 = (5, 5)
+    filter_1 = (3, 3)
+    filter_2 = (3, 3)
+    filter_3 = (3, 3)
+    filter_4 = (3, 3)
+    filter_5 = (3, 3)
+    filter_6 = (3, 3)
     
     def createCSAE(input_height, input_width, X_train, X_out):
         
@@ -177,14 +177,19 @@ def run(loadedData=None,FOLDER_NAME="defualt", LEARNING_RATE=0.04, UPDATE_MOMENT
         cnn = NeuralNet(layers=[
                 ('input', layers.InputLayer), 
                 ('conv1', layers.Conv2DLayer),
+                ('conv11', layers.Conv2DLayer),
                 ('pool1', layers.MaxPool2DLayer),
                 ('conv2', layers.Conv2DLayer),
+                ('conv21', layers.Conv2DLayer),
                 ('pool2', layers.MaxPool2DLayer),
                 ('conv3', layers.Conv2DLayer),
+                ('conv31', layers.Conv2DLayer),
                 ('unpool1', Unpool2DLayer),
+                ('conv4', layers.Conv2DLayer),
                 ('conv4', layers.Conv2DLayer),
                 ('unpool2', Unpool2DLayer),
                 ('conv5', layers.Conv2DLayer),
+                ('conv51', layers.Conv2DLayer),
                 ('conv6', layers.Conv2DLayer),
                 ('output_layer', ReshapeLayer),
                 ],
@@ -195,26 +200,41 @@ def run(loadedData=None,FOLDER_NAME="defualt", LEARNING_RATE=0.04, UPDATE_MOMENT
             conv1_num_filters=NUM_UNITS_HIDDEN_LAYER[0], conv1_filter_size=filter_1, conv1_nonlinearity=None,
             # conv1_border_mode="same",
             conv1_pad="same",
+            conv11_num_filters=NUM_UNITS_HIDDEN_LAYER[0], conv11_filter_size=filter_1, conv11_nonlinearity=None,
+            # conv11_border_mode="same",
+            conv11_pad="same",
             pool1_pool_size=(2, 2),
 
             conv2_num_filters=NUM_UNITS_HIDDEN_LAYER[1], conv2_filter_size=filter_2, conv2_nonlinearity=None,
             # conv2_border_mode="same",
             conv2_pad="same",
+            conv21_num_filters=NUM_UNITS_HIDDEN_LAYER[1], conv21_filter_size=filter_2, conv21_nonlinearity=None,
+            # conv21_border_mode="same",
+            conv21_pad="same",
             pool2_pool_size=(2, 2),
 
             conv3_num_filters=NUM_UNITS_HIDDEN_LAYER[2], conv3_filter_size=filter_3, conv3_nonlinearity=None,
             # conv3_border_mode="same",
             conv3_pad="same",
+            conv31_num_filters=NUM_UNITS_HIDDEN_LAYER[2], conv31_filter_size=filter_3, conv31_nonlinearity=None,
+            # conv31_border_mode="same",
+            conv31_pad="same",
             unpool1_ds=(2, 2),
 
             conv4_num_filters=NUM_UNITS_HIDDEN_LAYER[3], conv4_filter_size=filter_4, conv4_nonlinearity=None,
             # conv4_border_mode="same",
             conv4_pad="same",
+            conv41_num_filters=NUM_UNITS_HIDDEN_LAYER[3], conv41_filter_size=filter_4, conv41_nonlinearity=None,
+            # conv41_border_mode="same",
+            conv41_pad="same",
             unpool2_ds=(2, 2),
 
             conv5_num_filters=NUM_UNITS_HIDDEN_LAYER[4], conv5_filter_size=filter_5, conv5_nonlinearity=None,
             # conv5_border_mode="same",
             conv5_pad="same",
+            conv51_num_filters=NUM_UNITS_HIDDEN_LAYER[4], conv51_filter_size=filter_5, conv51_nonlinearity=None,
+            # conv5_border_mode="same",
+            conv51_pad="same",
 
             conv6_num_filters=1, conv6_filter_size=filter_6, conv6_nonlinearity=None,
             # conv6_border_mode="same",
@@ -904,13 +924,13 @@ def run_all():
         print("Run #", i)
         try:
             if np.isfinite(ac1):
-                ac1 = run(NUM_UNITS_HIDDEN_LAYER=[16, 32, 64, 32, 16], NUM_OF_EPOCH=33, LEARNING_RATE=0.01*i, UPDATE_MOMENTUM=0.9,
+                ac1 = run(NUM_UNITS_HIDDEN_LAYER=[16, 32, 64, 32, 16], NUM_OF_EPOCH=40, LEARNING_RATE=0.01*i, UPDATE_MOMENTUM=0.9,
                           dropout_percent=input_noise_rate, loadedData=data, FOLDER_NAME=folder_name, withZeroMeaning=zero_meaning, end_index=end_index)
-            if np.isfinite(ac2) and i%3==0:
-                ac2 = run(NUM_UNITS_HIDDEN_LAYER=[32, 32, 32, 32, 32], NUM_OF_EPOCH=33, LEARNING_RATE=0.01*i, UPDATE_MOMENTUM=0.9,
+            if np.isfinite(ac2) and i%5==0:
+                ac2 = run(NUM_UNITS_HIDDEN_LAYER=[32, 32, 32, 32, 32], NUM_OF_EPOCH=40, LEARNING_RATE=0.01*i, UPDATE_MOMENTUM=0.9,
                           dropout_percent=input_noise_rate, loadedData=data, FOLDER_NAME=folder_name, withZeroMeaning=zero_meaning, end_index=end_index)
-            if np.isfinite(ac3)and i%5==1:
-                ac3 = run(NUM_UNITS_HIDDEN_LAYER=[16, 32, 64, 32, 16], NUM_OF_EPOCH=33, LEARNING_RATE=0.01*i, UPDATE_MOMENTUM=0.9,
+            if np.isfinite(ac3)and i%3!=1:
+                ac3 = run(NUM_UNITS_HIDDEN_LAYER=[16, 32, 64, 32, 16], NUM_OF_EPOCH=40, LEARNING_RATE=0.01*i, UPDATE_MOMENTUM=0.9,
                           dropout_percent=input_noise_rate, loadedData=data, FOLDER_NAME=folder_name, withZeroMeaning=zero_meaning, FlipBatch=False, end_index=end_index)
         except:
             print "failed to run- ", i
