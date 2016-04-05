@@ -161,12 +161,12 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
 
     output_file = open(PARAMS_FILE_NAME, "w")
 
-    filter_1 = (3, 3)
-    filter_2 = (3, 3)
+    filter_1 = (5, 5)
+    filter_2 = (5, 5)
     filter_3 = (3, 3)
     filter_4 = (3, 3)
-    filter_5 = (3, 3)
-    filter_6 = (3, 3)
+    filter_5 = (5, 5)
+    filter_6 = (5, 5)
 
     def createCSAE(input_height, input_width, X_train, X_out):
 
@@ -179,12 +179,12 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
             ('pool1', layers.MaxPool2DLayer),
             ('conv2', layers.Conv2DLayer),
             ('conv21', layers.Conv2DLayer),
-            # ('pool2', layers.MaxPool2DLayer),
-            # ('conv3', layers.Conv2DLayer),
-            # ('conv31', layers.Conv2DLayer),
-            # ('unpool1', Unpool2DLayer),
-            # ('conv4', layers.Conv2DLayer),
-            # ('conv41', layers.Conv2DLayer),
+            ('pool2', layers.MaxPool2DLayer),
+            ('conv3', layers.Conv2DLayer),
+            ('conv31', layers.Conv2DLayer),
+            ('unpool1', Unpool2DLayer),
+            ('conv4', layers.Conv2DLayer),
+            ('conv41', layers.Conv2DLayer),
             ('unpool2', Unpool2DLayer),
             ('conv5', layers.Conv2DLayer),
             ('conv51', layers.Conv2DLayer),
@@ -209,22 +209,22 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
             conv21_num_filters=layers_size[1], conv21_filter_size=filter_2, conv21_nonlinearity=activation,
             # conv21_border_mode="same",
             conv21_pad="same",
-            # pool2_pool_size=(2, 2),
+            pool2_pool_size=(2, 2),
 
-            # conv3_num_filters=layers_size[2], conv3_filter_size=filter_3, conv3_nonlinearity=activation,
-            # # conv3_border_mode="same",
-            # conv3_pad="same",
-            # conv31_num_filters=layers_size[2], conv31_filter_size=filter_3, conv31_nonlinearity=activation,
-            # # conv31_border_mode="same",
-            # conv31_pad="same",
-            # unpool1_ds=(2, 2),
+            conv3_num_filters=layers_size[2], conv3_filter_size=filter_3, conv3_nonlinearity=activation,
+            # conv3_border_mode="same",
+            conv3_pad="same",
+            conv31_num_filters=layers_size[2], conv31_filter_size=filter_3, conv31_nonlinearity=activation,
+            # conv31_border_mode="same",
+            conv31_pad="same",
+            unpool1_ds=(2, 2),
 
-            # conv4_num_filters=layers_size[3], conv4_filter_size=filter_4, conv4_nonlinearity=activation,
-            # # conv4_border_mode="same",
-            # conv4_pad="same",
-            # conv41_num_filters=layers_size[3], conv41_filter_size=filter_4, conv41_nonlinearity=activation,
-            # # conv41_border_mode="same",
-            # conv41_pad="same",
+            conv4_num_filters=layers_size[3], conv4_filter_size=filter_4, conv4_nonlinearity=activation,
+            # conv4_border_mode="same",
+            conv4_pad="same",
+            conv41_num_filters=layers_size[3], conv41_filter_size=filter_4, conv41_nonlinearity=activation,
+            # conv41_border_mode="same",
+            conv41_pad="same",
             unpool2_ds=(2, 2),
 
             conv5_num_filters=layers_size[4], conv5_filter_size=filter_5, conv5_nonlinearity=activation,
@@ -918,7 +918,7 @@ def run_all():
         print "Running in Ubuntu"
     else:
         print "Running in Windows"
-    folder_name = "CAE_3000_2Conv1Pool-"+str(time.time())
+    folder_name = "CAE_3000_2Conv2Pool-"+str(time.time())
 
     num_labels = 15
     end_index = 3000
@@ -962,6 +962,3 @@ if __name__ == "__main__":
     # import pydevd
     # pydevd.settrace('132.71.84.233', port=57869, stdoutToServer=True, stderrToServer=True)
     run_all()
-    
-#IMPORTANT: I have put in comment line number 625 in /home/ido_local/theano-env/lib/python2.7/site-packages/theano/tensor/nnet/conv.py
-#IMPORTANT: I have changed line 534 in /home/ido_local/theano-env/lib/python2.7/site-packages/theano/compile/function module.py  to- "allow_downcast=True"
