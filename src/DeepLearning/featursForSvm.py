@@ -35,17 +35,16 @@ def images_svm(pickled_file, num_labels=15, TRAIN_SPLIT=0.8):
     return features, labels
 
 
-def checkLabelPredict(features, labels):
+def checkLabelPredict(features, labels, cross_validation_parts=5):
 
     positive_data = features[labels == 1, :]
-    positive_data = positive_data.reshape((-1, 150*70))
+    positive_data = positive_data.reshape((-1, features.shape[-2]*features.shape[-1]))
     negative_data = features[labels == 0, :]
-    negative_data = negative_data.reshape((-1, 150*70))
+    negative_data = negative_data.reshape((-1, features.shape[-2]*features.shape[-1]))
 
-    if positive_data.shape[0] < 5 or negative_data.shape[0] < 5:
+    if positive_data.shape[0] < cross_validation_parts or negative_data.shape[0] < cross_validation_parts:
         return 0
 
-    cross_validation_parts = 5
     negative_data_chunks = np.array_split(negative_data, cross_validation_parts)
     positive_data_chunks = np.array_split(positive_data, cross_validation_parts)
 
