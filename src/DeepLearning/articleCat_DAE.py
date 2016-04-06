@@ -161,12 +161,12 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
 
     output_file = open(PARAMS_FILE_NAME, "w")
 
-    filter_1 = (5, 5)
-    filter_2 = (5, 5)
+    filter_1 = (3, 3)
+    filter_2 = (3, 3)
     filter_3 = (3, 3)
     filter_4 = (3, 3)
-    filter_5 = (5, 5)
-    filter_6 = (5, 5)
+    filter_5 = (3, 3)
+    filter_6 = (3, 3)
 
     def createCSAE(input_height, input_width, X_train, X_out):
 
@@ -175,19 +175,19 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         cnn = NeuralNet(layers=[
             ('input', layers.InputLayer),
             ('conv1', layers.Conv2DLayer),
-            ('conv11', layers.Conv2DLayer),
+            # ('conv11', layers.Conv2DLayer),
             ('pool1', layers.MaxPool2DLayer),
             ('conv2', layers.Conv2DLayer),
-            ('conv21', layers.Conv2DLayer),
+            # ('conv21', layers.Conv2DLayer),
             ('pool2', layers.MaxPool2DLayer),
             ('conv3', layers.Conv2DLayer),
             ('conv31', layers.Conv2DLayer),
             ('unpool1', Unpool2DLayer),
             ('conv4', layers.Conv2DLayer),
-            ('conv41', layers.Conv2DLayer),
+            # ('conv41', layers.Conv2DLayer),
             ('unpool2', Unpool2DLayer),
             ('conv5', layers.Conv2DLayer),
-            ('conv51', layers.Conv2DLayer),
+            # ('conv51', layers.Conv2DLayer),
             ('conv6', layers.Conv2DLayer),
             ('output_layer', ReshapeLayer),
         ],
@@ -196,47 +196,48 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
             # Layer current size - 1x300x140
 
             conv1_num_filters=layers_size[0], conv1_filter_size=filter_1, conv1_nonlinearity=activation,
-            # conv1_border_mode="same",
-            conv1_pad="same",
-            conv11_num_filters=layers_size[0], conv11_filter_size=filter_1, conv11_nonlinearity=activation,
-            # conv11_border_mode="same",
-            conv11_pad="same",
+            conv1_border_mode="same",
+            # conv1_pad="same",
+            # conv11_num_filters=layers_size[0], conv11_filter_size=filter_1, conv11_nonlinearity=activation,
+            # # conv11_border_mode="same",
+            # conv11_pad="same",
             pool1_pool_size=(2, 2),
 
             conv2_num_filters=layers_size[1], conv2_filter_size=filter_2, conv2_nonlinearity=activation,
-            # conv2_border_mode="same",
-            conv2_pad="same",
-            conv21_num_filters=layers_size[1], conv21_filter_size=filter_2, conv21_nonlinearity=activation,
-            # conv21_border_mode="same",
-            conv21_pad="same",
+            conv2_border_mode="same",
+            # conv2_pad="same",
+            # conv21_num_filters=layers_size[1], conv21_filter_size=filter_2, conv21_nonlinearity=activation,
+            # # conv21_border_mode="same",
+            # conv21_pad="same",
+
             pool2_pool_size=(2, 2),
 
             conv3_num_filters=layers_size[2], conv3_filter_size=filter_3, conv3_nonlinearity=activation,
-            # conv3_border_mode="same",
-            conv3_pad="same",
-            conv31_num_filters=layers_size[2], conv31_filter_size=filter_3, conv31_nonlinearity=activation,
-            # conv31_border_mode="same",
-            conv31_pad="same",
+            conv3_border_mode="same",
+            # conv3_pad="same",
+            conv31_num_filters=1, conv31_filter_size=filter_3, conv31_nonlinearity=activation,
+            conv31_border_mode="same",
+            # conv31_pad="same",
             unpool1_ds=(2, 2),
-
+            #
             conv4_num_filters=layers_size[3], conv4_filter_size=filter_4, conv4_nonlinearity=activation,
-            # conv4_border_mode="same",
-            conv4_pad="same",
-            conv41_num_filters=layers_size[3], conv41_filter_size=filter_4, conv41_nonlinearity=activation,
-            # conv41_border_mode="same",
-            conv41_pad="same",
+            conv4_border_mode="same",
+            # conv4_pad="same",
+            # conv41_num_filters=layers_size[3], conv41_filter_size=filter_4, conv41_nonlinearity=activation,
+            # # conv41_border_mode="same",
+            # conv41_pad="same",
             unpool2_ds=(2, 2),
 
             conv5_num_filters=layers_size[4], conv5_filter_size=filter_5, conv5_nonlinearity=activation,
-            # conv5_border_mode="same",
-            conv5_pad="same",
-            conv51_num_filters=layers_size[4], conv51_filter_size=filter_5, conv51_nonlinearity=activation,
-            # conv51_border_mode="same",
-            conv51_pad="same",
+            conv5_border_mode="same",
+            # conv5_pad="same",
+            # conv51_num_filters=layers_size[4], conv51_filter_size=filter_5, conv51_nonlinearity=activation,
+            # # conv51_border_mode="same",
+            # conv51_pad="same",
 
             conv6_num_filters=1, conv6_filter_size=filter_6, conv6_nonlinearity=last_layer_activation,
-            # conv6_border_mode="same",
-            conv6_pad="same",
+            conv6_border_mode="same",
+            # conv6_pad="same",
 
             output_layer_shape=(([0], -1)),
 
@@ -248,11 +249,11 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
             regression=True,
             max_epochs=epochs,
             verbose=1,
-            hiddenLayer_to_output=-3)
+            hiddenLayer_to_output=-7)
 
         cnn.fit(X_train, X_out)
 
-        # pickle.dump(cnn, open(folder_path + 'conv_ae.pkl', 'w'))
+        pickle.dump(cnn, open(folder_path + 'conv_ae.pkl', 'w'))
         # cnn = pickle.load(open(folder_path + 'conv_ae.pkl','r'))
         # cnn.save_weights_to(folder_path + 'conv_ae.np')
 
@@ -260,6 +261,13 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         # X_pred = np.rint(X_pred).astype(int)
         # X_pred = np.clip(X_pred, a_min=0, a_max=255)
         # X_pred = X_pred.astype('uint8')
+
+        try:
+            trian_last_hiddenLayer = cnn.output_hiddenLayer(X_train)
+            # test_last_hiddenLayer = cnn.output_hiddenLayer(test_x)
+            pickle.dump(trian_last_hiddenLayer, open(folder_path + 'encode.pkl', 'w'))
+        except:
+            print "Could not save encoded images"
 
         print "Saving some images...."
         for i in range(10):
@@ -273,6 +281,11 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
 
             original_image = Image.fromarray(get_picture_array(X_out, index))
             # original_image.save(folder_path + 'original' + str(index) + '.png', format="PNG")
+            #
+            # array = np.rint(trian_last_hiddenLayer[index] * 256).astype(np.int).reshape(input_height/2, input_width/2)
+            # array = np.clip(array, a_min=0, a_max=255)
+            # encode_image = Image.fromarray(array.repeat(4, axis=0).repeat(4, axis=1).astype(np.uint8()))
+            # encode_image.save(folder_path + 'encode' + str(index) + '.png', format="PNG")
 
             new_size = (original_image.size[0] * 3, original_image.size[1])
             new_im = Image.new('L', new_size)
@@ -290,7 +303,6 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
             diff.save(folder_path + 'diff' + str(index) + '.png', format="PNG")
 
             # plt.imshow(new_im)
-
             # new_size = (original_image.size[0] * 2, original_image.size[1])
             # new_im = Image.new('L', new_size)
             # new_im.paste(original_image, (0, 0))
@@ -300,13 +312,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
             # new_im.save(folder_path+'origin_VS_noise-'+str(index)+'.png', format="PNG")
             # plt.imshow(new_im)
 
-        # trian_last_hiddenLayer = cnn.output_hiddenLayer(X_train)
-        # test_last_hiddenLayer = cnn.output_hiddenLayer(test_x)
-
         return cnn
-
-        # trian_last_hiddenLayer = cnn.output_hiddenLayer(X_train).astype(np.float32)
-        # print trian_last_hiddenLayer.shape
 
     def createSAE(input_height, input_width, X_train, X_out):
         encode_size = 200
@@ -918,16 +924,23 @@ def run_all():
         print "Running in Ubuntu"
     else:
         print "Running in Windows"
-    folder_name = "CAE_3000_2Conv2Pool-"+str(time.time())
+    folder_name = "CAE_3000_1Conv2Pool-"+str(time.time())
 
     num_labels = 15
-    end_index = 3000
+    end_index = 16400
     input_noise_rate = 0.2
     zero_meaning = False
-    epochs = 35
+    epochs = 25
     data = load2d(num_labels=num_labels, end_index=end_index, TRAIN_PRECENT=1)
 
     ac1, ac2, ac3, ac4, ac5, ac6 = 1, 1, 1, 1, 1, 1
+
+    run(layers_size=[3, 3, 3, 3, 3], epochs=epochs, learning_rate=0.01, update_momentum=0.9,
+              dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name, end_index=end_index,
+              zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh)
+
+    return
+
     for i in range(1, 200, 5):
         print("Run #", i)
         # try:
