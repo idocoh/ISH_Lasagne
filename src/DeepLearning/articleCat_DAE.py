@@ -134,7 +134,7 @@ class FlipBatchIterator(BatchIterator):
 
 def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=None, epochs=15,
         input_width=300, input_height=140, train_valid_split=0.2, multiple_positives=20, flip_batch=True,
-        dropout_percent=0.1, end_index=16351, activation=None, last_layer_activation=None, batch_size=64,
+        dropout_percent=0.1, end_index=16351, activation=None, last_layer_activation=None, batch_size=32,
         layers_size=[5, 10, 20, 40], shuffle_input=False, zero_meaning = False,
         input_noise_rate=0.3, pre_train_epochs=1, softmax_train_epochs=2, fine_tune_epochs=2,
         categories=15, folder_name="default", dataset='withOutDataSet'):
@@ -196,16 +196,16 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
             # Layer current size - 1x300x140
 
             conv1_num_filters=layers_size[0], conv1_filter_size=filter_1, conv1_nonlinearity=activation,
-            conv1_border_mode="same",
-            # conv1_pad="same",
+            # conv1_border_mode="same",
+            conv1_pad="same",
             # conv11_num_filters=layers_size[0], conv11_filter_size=filter_1, conv11_nonlinearity=activation,
             # # conv11_border_mode="same",
             # conv11_pad="same",
             pool1_pool_size=(2, 2),
 
             conv2_num_filters=layers_size[1], conv2_filter_size=filter_2, conv2_nonlinearity=activation,
-            conv2_border_mode="same",
-            # conv2_pad="same",
+            # conv2_border_mode="same",
+            conv2_pad="same",
             # conv21_num_filters=layers_size[1], conv21_filter_size=filter_2, conv21_nonlinearity=activation,
             # # conv21_border_mode="same",
             # conv21_pad="same",
@@ -213,31 +213,31 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
             pool2_pool_size=(2, 2),
 
             conv3_num_filters=layers_size[2], conv3_filter_size=filter_3, conv3_nonlinearity=activation,
-            conv3_border_mode="same",
-            # conv3_pad="same",
+            # conv3_border_mode="same",
+            conv3_pad="same",
             conv31_num_filters=1, conv31_filter_size=filter_3, conv31_nonlinearity=activation,
-            conv31_border_mode="same",
-            # conv31_pad="same",
+            # conv31_border_mode="same",
+            conv31_pad="same",
             unpool1_ds=(2, 2),
             #
             conv4_num_filters=layers_size[3], conv4_filter_size=filter_4, conv4_nonlinearity=activation,
-            conv4_border_mode="same",
-            # conv4_pad="same",
+            # conv4_border_mode="same",
+            conv4_pad="same",
             # conv41_num_filters=layers_size[3], conv41_filter_size=filter_4, conv41_nonlinearity=activation,
             # # conv41_border_mode="same",
             # conv41_pad="same",
             unpool2_ds=(2, 2),
 
             conv5_num_filters=layers_size[4], conv5_filter_size=filter_5, conv5_nonlinearity=activation,
-            conv5_border_mode="same",
-            # conv5_pad="same",
+            # conv5_border_mode="same",
+            conv5_pad="same",
             # conv51_num_filters=layers_size[4], conv51_filter_size=filter_5, conv51_nonlinearity=activation,
             # # conv51_border_mode="same",
             # conv51_pad="same",
 
             conv6_num_filters=1, conv6_filter_size=filter_6, conv6_nonlinearity=last_layer_activation,
-            conv6_border_mode="same",
-            # conv6_pad="same",
+            # conv6_border_mode="same",
+            conv6_pad="same",
 
             output_layer_shape=(([0], -1)),
 
@@ -298,9 +298,9 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
             new_im.paste(noise_image, (original_image.size[0]*2, 0))
             new_im.save(folder_path+'origin_prediction_noise-'+str(index)+'.png', format="PNG")
 
-            diff = ImageChops.difference(original_image, pred_image)
-            diff = diff.convert('L')
-            diff.save(folder_path + 'diff' + str(index) + '.png', format="PNG")
+            # diff = ImageChops.difference(original_image, pred_image)
+            # diff = diff.convert('L')
+            # diff.save(folder_path + 'diff' + str(index) + '.png', format="PNG")
 
             # plt.imshow(new_im)
             # new_size = (original_image.size[0] * 2, original_image.size[1])
@@ -927,47 +927,40 @@ def run_all():
     folder_name = "CAE_3000_1Conv2Pool-"+str(time.time())
 
     num_labels = 15
-    end_index = 16400
+    end_index = 3000
     input_noise_rate = 0.2
     zero_meaning = False
-    epochs = 25
+    epochs = 35
     data = load2d(num_labels=num_labels, end_index=end_index, TRAIN_PRECENT=1)
 
     ac1, ac2, ac3, ac4, ac5, ac6 = 1, 1, 1, 1, 1, 1
-
-    run(layers_size=[3, 3, 3, 3, 3], epochs=epochs, learning_rate=0.01, update_momentum=0.9,
-              dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name, end_index=end_index,
-              zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh)
-
-    return
-
     for i in range(1, 200, 5):
         print("Run #", i)
-        # try:
-        if np.isfinite(ac1):
-            ac1 = run(layers_size=[16, 32, 64, 32, 16], epochs=epochs, learning_rate=0.001 * i, update_momentum=0.9,
-                      dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name, end_index=end_index,
-                      zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh)
-        else:
-            ac1 = 1
+        try:
+            if np.isfinite(ac1):
+                ac1 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.001 * i, update_momentum=0.9,
+                          dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name, end_index=end_index,
+                          zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh)
+            else:
+                ac1 = 1
 
-        if np.isfinite(ac2) and i % 15 == 1:
-            ac2 = run(layers_size=[32, 32, 32, 32, 32], epochs=epochs, learning_rate=0.001 * i, update_momentum=0.9,
-                      dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name, end_index=end_index,
-                      zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh)
-        else:
-            ac2 = 1
+            if np.isfinite(ac2) and i % 60 == 1:
+                ac2 = run(layers_size=[32, 64, 128, 64, 32], epochs=epochs, learning_rate=0.001 * i, update_momentum=0.9,
+                          dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name, end_index=end_index,
+                          zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh)
+            else:
+                ac2 = 1
 
-        if np.isfinite(ac3)and i % 30 == 1:
-            ac3 = run(layers_size=[16, 32, 64, 32, 16], epochs=epochs, learning_rate=0.001 * i, update_momentum=0.9,
-                      dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name, end_index=end_index,
-                      zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, flip_batch=False)
-        else:
-            ac3 = 1
+            if np.isfinite(ac3)and i % 90 == 1:
+                ac3 = run(layers_size=[16, 32, 64, 32, 16], epochs=epochs, learning_rate=0.001 * i, update_momentum=0.9,
+                          dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name, end_index=end_index,
+                          zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, flip_batch=False)
+            else:
+                ac3 = 1
 
-
-        # except:
-        #     print "failed to run- ", i
+        except Exception, e:
+            print "failed to run- ", i
+            print e
 
 if __name__ == "__main__":
     import os
