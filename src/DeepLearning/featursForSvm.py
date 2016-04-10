@@ -3,18 +3,28 @@ import gzip
 import numpy as np
 from sklearn import svm
 from sklearn.metrics import roc_auc_score
+from pickleForArticleCat import pickleAllImages
 
 
 def images_svm(pickled_file, num_labels=15, TRAIN_SPLIT=0.8):
 
     FILE_SEPARATOR="/"
+    if isinstance(pickled_file, str):
+        try:
+            features = pickle.load(open(pickled_file, 'r'))
+        except:
+            f = gzip.open(pickled_file, 'rb')
+            features = pickle.load(f)
+            f.close()
+    else:
+        cnn = pickled_file
+        pLabel, train_x = pickleAllImages(num_labels=15)
+        input_height, input_width, dropout_percent = 300, 140, 0.2
+        X_train = train_x.astype(np.float32).reshape((-1, 1, input_height, input_width))
+        X_train = np.random.binomial(1, 1-dropout_percent, size=X_train.shape) * X_train
+        features = cnn.output_hiddenLayer(X_train)
 
-    try:
-        features = pickle.load(open(pickled_file, 'r'))
-    except:
-        f = gzip.open(pickled_file, 'rb')
-        features = pickle.load(f)
-        f.close()
+
 
     if num_labels==15:
         labels_file = "pickled_images"+FILE_SEPARATOR+"articleCat.pkl.gz"
@@ -104,4 +114,8 @@ def run_svm(pickName):
 
 if __name__ == '__main__':
     pickName = "C:/devl/python/ISH_Lasagne/src/DeepLearning/results_dae/learn/run_0/encode.pkl"
+    # pickled_file = "C:/devl/python/ISH_Lasagne/src/DeepLearning/results_dae/CAE_3000_2Conv2Pool-1460319214/run_0/conv_ae.pkl"
+    # net = pickle.load(open(pickled_file, 'r'))
+    # pickName.load_weights_from(net)
+
     run_svm(pickName)
