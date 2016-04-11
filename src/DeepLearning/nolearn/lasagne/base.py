@@ -514,6 +514,9 @@ class NeuralNet(BaseEstimator):
             except StopIteration:
                 break
 
+            if not (np.isfinite(train_losses) or np.isfinite(valid_losses)):
+                break
+
         for func in on_training_finished:
             func(self, self.train_history_)
             

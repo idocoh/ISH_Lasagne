@@ -165,12 +165,12 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
     output_file = open(PARAMS_FILE_NAME, "w")
     results_file = open(All_Results_FIle, "a")
 
-    filter_1 = (3, 3)
-    filter_2 = (3, 3)
-    filter_3 = (3, 3)
-    filter_4 = (3, 3)
-    filter_5 = (3, 3)
-    filter_6 = (3, 3)
+    filter_1 = (5, 5)
+    filter_2 = (5, 5)
+    filter_3 = (5, 5)
+    filter_4 = (5, 5)
+    filter_5 = (5, 5)
+    filter_6 = (5, 5)
 
     def createCSAE(input_height, input_width, X_train, X_out):
 
@@ -991,7 +991,7 @@ def run_all():
             else:
                 ac1 = 1
 
-            if np.isfinite(ac2)
+            if np.isfinite(ac2) and i % 12 == 1:
                 ac2 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.01 * i, update_momentum=0.9,
                           dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name, end_index=end_index,
                           zero_meaning=zero_meaning, activation=None, last_layer_activation=None)

@@ -53,7 +53,7 @@ def checkLabelPredict(features, labels, cross_validation_parts=5):
     negative_data = negative_data.reshape((-1, features.shape[-2]*features.shape[-1]))
 
     if positive_data.shape[0] < cross_validation_parts or negative_data.shape[0] < cross_validation_parts:
-        return 0
+        return 1
 
     negative_data_chunks = np.array_split(negative_data, cross_validation_parts)
     positive_data_chunks = np.array_split(positive_data, cross_validation_parts)
