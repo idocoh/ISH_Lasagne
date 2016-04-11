@@ -165,12 +165,12 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
     output_file = open(PARAMS_FILE_NAME, "w")
     results_file = open(All_Results_FIle, "a")
 
-    filter_1 = (5, 5)
+    filter_1 = (7, 7)
     filter_2 = (5, 5)
-    filter_3 = (5, 5)
+    filter_3 = (3, 3)
     filter_4 = (5, 5)
-    filter_5 = (5, 5)
-    filter_6 = (5, 5)
+    filter_5 = (7, 7)
+    filter_6 = (3, 3)
 
     def createCSAE(input_height, input_width, X_train, X_out):
 
