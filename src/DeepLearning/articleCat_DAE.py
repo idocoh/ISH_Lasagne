@@ -165,11 +165,11 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
     output_file = open(PARAMS_FILE_NAME, "w")
     results_file = open(All_Results_FIle, "a")
 
-    filter_1 = (7, 7)
-    filter_2 = (5, 5)
+    filter_1 = (3, 3)
+    filter_2 = (3, 3)
     filter_3 = (3, 3)
-    filter_4 = (5, 5)
-    filter_5 = (7, 7)
+    filter_4 = (3, 3)
+    filter_5 = (3, 3)
     filter_6 = (3, 3)
 
     def createCSAE(input_height, input_width, X_train, X_out):
@@ -179,24 +179,24 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         cnn = NeuralNet(layers=[
             ('input', layers.InputLayer),
             ('conv1', layers.Conv2DLayer),
-            ('conv11', layers.Conv2DLayer),
-            ('conv12', layers.Conv2DLayer),
+            # ('conv11', layers.Conv2DLayer),
+            # ('conv12', layers.Conv2DLayer),
             ('pool1', layers.MaxPool2DLayer),
             ('conv2', layers.Conv2DLayer),
-            ('conv21', layers.Conv2DLayer),
-            ('conv22', layers.Conv2DLayer),
+            # ('conv21', layers.Conv2DLayer),
+            # ('conv22', layers.Conv2DLayer),
             ('pool2', layers.MaxPool2DLayer),
             ('conv3', layers.Conv2DLayer),
-            ('conv31', layers.Conv2DLayer),
+            # ('conv31', layers.Conv2DLayer),
             ('conv32', layers.Conv2DLayer),
             ('unpool1', Unpool2DLayer),
             ('conv4', layers.Conv2DLayer),
-            ('conv41', layers.Conv2DLayer),
-            ('conv42', layers.Conv2DLayer),
+            # ('conv41', layers.Conv2DLayer),
+            # ('conv42', layers.Conv2DLayer),
             ('unpool2', Unpool2DLayer),
             ('conv5', layers.Conv2DLayer),
-            ('conv51', layers.Conv2DLayer),
-            ('conv52', layers.Conv2DLayer),
+            # ('conv51', layers.Conv2DLayer),
+            # ('conv52', layers.Conv2DLayer),
             ('conv6', layers.Conv2DLayer),
             ('output_layer', ReshapeLayer),
         ],
@@ -205,63 +205,66 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
             # Layer current size - 1x300x140
 
             conv1_num_filters=layers_size[0], conv1_filter_size=filter_1, conv1_nonlinearity=activation,
-            # conv1_border_mode="same",
-            conv1_pad="same",
-            conv11_num_filters=layers_size[0], conv11_filter_size=filter_1, conv11_nonlinearity=activation,
-            # conv11_border_mode="same",
-            conv11_pad="same",
-            conv12_num_filters=layers_size[0], conv12_filter_size=filter_1, conv12_nonlinearity=activation,
-            # conv12_border_mode="same",
-            conv12_pad="same",
+            conv1_border_mode="same",
+            # conv1_pad="same",
+            # conv11_num_filters=layers_size[0], conv11_filter_size=filter_1, conv11_nonlinearity=activation,
+            # # conv11_border_mode="same",
+            # conv11_pad="same",
+            # conv12_num_filters=layers_size[0], conv12_filter_size=filter_1, conv12_nonlinearity=activation,
+            # # conv12_border_mode="same",
+            # conv12_pad="same",
+
             pool1_pool_size=(2, 2),
 
             conv2_num_filters=layers_size[1], conv2_filter_size=filter_2, conv2_nonlinearity=activation,
-            # conv2_border_mode="same",
-            conv2_pad="same",
-            conv21_num_filters=layers_size[1], conv21_filter_size=filter_2, conv21_nonlinearity=activation,
-            # conv21_border_mode="same",
-            conv21_pad="same",
-            conv22_num_filters=layers_size[1], conv22_filter_size=filter_2, conv22_nonlinearity=activation,
-            # conv22_border_mode="same",
-            conv22_pad="same",
+            conv2_border_mode="same",
+            # conv2_pad="same",
+            # conv21_num_filters=layers_size[1], conv21_filter_size=filter_2, conv21_nonlinearity=activation,
+            # # conv21_border_mode="same",
+            # conv21_pad="same",
+            # conv22_num_filters=layers_size[1], conv22_filter_size=filter_2, conv22_nonlinearity=activation,
+            # # conv22_border_mode="same",
+            # conv22_pad="same",
 
             pool2_pool_size=(2, 2),
 
             conv3_num_filters=layers_size[2], conv3_filter_size=filter_3, conv3_nonlinearity=activation,
-            # conv3_border_mode="same",
-            conv3_pad="same",
-            conv31_num_filters=layers_size[2], conv31_filter_size=filter_3, conv31_nonlinearity=activation,
-            # conv31_border_mode="same",
-            conv31_pad="same",
+            conv3_border_mode="same",
+            # conv3_pad="same",
+            # conv31_num_filters=layers_size[2], conv31_filter_size=filter_3, conv31_nonlinearity=activation,
+            # # conv31_border_mode="same",
+            # conv31_pad="same",
             conv32_num_filters=1, conv32_filter_size=filter_3, conv32_nonlinearity=activation,
-            # conv32_border_mode="same",
-            conv32_pad="same",
+            conv32_border_mode="same",
+            # conv32_pad="same",
+
             unpool1_ds=(2, 2),
-            #
+
             conv4_num_filters=layers_size[3], conv4_filter_size=filter_4, conv4_nonlinearity=activation,
-            # conv4_border_mode="same",
-            conv4_pad="same",
-            conv41_num_filters=layers_size[3], conv41_filter_size=filter_4, conv41_nonlinearity=activation,
-            # conv41_border_mode="same",
-            conv41_pad="same",
-            conv42_num_filters=layers_size[3], conv42_filter_size=filter_4, conv42_nonlinearity=activation,
-            # conv42_border_mode="same",
-            conv42_pad="same",
+            conv4_border_mode="same",
+            # conv4_pad="same",
+            # conv41_num_filters=layers_size[3], conv41_filter_size=filter_4, conv41_nonlinearity=activation,
+            # # conv41_border_mode="same",
+            # conv41_pad="same",
+            # conv42_num_filters=layers_size[3], conv42_filter_size=filter_4, conv42_nonlinearity=activation,
+            # # conv42_border_mode="same",
+            # conv42_pad="same",
+
             unpool2_ds=(2, 2),
 
             conv5_num_filters=layers_size[4], conv5_filter_size=filter_5, conv5_nonlinearity=activation,
-            # conv5_border_mode="same",
-            conv5_pad="same",
-            conv51_num_filters=layers_size[4], conv51_filter_size=filter_5, conv51_nonlinearity=activation,
-            # conv51_border_mode="same",
-            conv51_pad="same",
-            conv52_num_filters=layers_size[4], conv52_filter_size=filter_5, conv52_nonlinearity=activation,
-            # conv52_border_mode="same",
-            conv52_pad="same",
+            conv5_border_mode="same",
+            # conv5_pad="same",
+            # conv51_num_filters=layers_size[4], conv51_filter_size=filter_5, conv51_nonlinearity=activation,
+            # # conv51_border_mode="same",
+            # conv51_pad="same",
+            # conv52_num_filters=layers_size[4], conv52_filter_size=filter_5, conv52_nonlinearity=activation,
+            # # conv52_border_mode="same",
+            # conv52_pad="same",
 
             conv6_num_filters=1, conv6_filter_size=filter_6, conv6_nonlinearity=last_layer_activation,
-            # conv6_border_mode="same",
-            conv6_pad="same",
+            conv6_border_mode="same",
+            # conv6_pad="same",
 
             output_layer_shape=(([0], -1)),
 
@@ -273,13 +276,17 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
             regression=True,
             max_epochs=epochs,
             verbose=1,
-            hiddenLayer_to_output=-1)
+            hiddenLayer_to_output=-11)
 
         cnn.fit(X_train, X_out)
 
-        # pickle.dump(cnn, open(folder_path + 'conv_ae.pkl', 'w'))
-        # cnn = pickle.load(open(folder_path + 'conv_ae.pkl','r'))
-        # cnn.save_weights_to(folder_path + 'conv_ae.np')
+        try:
+            pickle.dump(cnn, open(folder_path + 'conv_ae.pkl', 'w'))
+            # cnn = pickle.load(open(folder_path + 'conv_ae.pkl','r'))
+            cnn.save_weights_to(folder_path + 'conv_ae.np')
+        except:
+            print "Could not pickle cnn"
+
 
         X_pred = cnn.predict(X_train).reshape(-1, input_height, input_width) # * sigma + mu
         # # X_pred = np.rint(X_pred).astype(int)
@@ -744,11 +751,12 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         print("Std- ", sigma)
         train_x = (train_x - mu) / sigma
 
-    x_train = train_x.astype(np.float32).reshape((-1, 1, input_width, input_height))
+    x_train = train_x[:end_index].astype(np.float32).reshape((-1, 1, input_width, input_height))
     x_out = x_train.reshape((x_train.shape[0], -1))
     # test_x = test_x.astype(np.float32).reshape((-1, 1, input_width, input_height))
 
     cnn = createCSAE(input_height, input_width, x_train, x_out)
+
 
     ''' Denoising Autoencoder
     dae = DenoisingAutoencoder(n_hidden=10)
@@ -794,7 +802,18 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
 
     writeOutputFile(output_file, cnn.train_history_, PrintLayerInfo._get_layer_info_plain(cnn))
 
-    print "learning took (min)- ", run_time
+    print "Learning took (min)- ", run_time
+
+    try:
+        train_x = np.random.binomial(1, 1 - dropout_percent, size=train_x.shape) * train_x
+        trian_last_hiddenLayer = cnn.output_hiddenLayer(train_x)
+        print "Pickling all encoded images:"
+        pickle.dump(trian_last_hiddenLayer, open(folder_path + 'encode.pkl', 'w'))
+    except:
+        print "Could not save encoded images"
+
+    print "Runing SVM:"
+    run_svm(trian_last_hiddenLayer)
 
     sys.setrecursionlimit(10000)
     # pickle.dump(cnn, open(folder_path+'conv_ae.pkl', 'w'))
@@ -974,14 +993,14 @@ def run_all():
     folder_name = "CAE_3000_2Conv2Pool-"+str(time.time())
 
     num_labels = 15
-    end_index = 3000
+    end_index = 2500
     input_noise_rate = 0.2
     zero_meaning = False
-    epochs = 30
+    epochs = 5
     data = load2d(num_labels=num_labels, end_index=end_index, TRAIN_PRECENT=1)
 
     ac1, ac2, ac3, ac4, ac5, ac6 = 1, 1, 1, 1, 1, 1
-    for i in range(1, 28, 3):
+    for i in range(9, 28, 3):
         print("Run #", i)
         try:
             if np.isfinite(ac1):

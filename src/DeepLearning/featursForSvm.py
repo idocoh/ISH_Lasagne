@@ -17,12 +17,14 @@ def images_svm(pickled_file, num_labels=15, TRAIN_SPLIT=0.8):
             features = pickle.load(f)
             f.close()
     else:
-        cnn = pickled_file
-        pLabel, train_x = pickleAllImages(num_labels=15)
-        input_height, input_width, dropout_percent = 300, 140, 0.2
-        X_train = train_x.astype(np.float32).reshape((-1, 1, input_height, input_width))
-        X_train = np.random.binomial(1, 1-dropout_percent, size=X_train.shape) * X_train
-        features = cnn.output_hiddenLayer(X_train)
+        # cnn = pickled_file
+        # pLabel, train_x = pickleAllImages(num_labels=15)
+        # input_height, input_width, dropout_percent = 300, 140, 0.2
+        # X_train = train_x.astype(np.float32).reshape((-1, 1, input_height, input_width))
+        # X_train = np.random.binomial(1, 1-dropout_percent, size=X_train.shape) * X_train
+        # features = cnn.output_hiddenLayer(X_train)
+
+        features = pickled_file
 
 
 
