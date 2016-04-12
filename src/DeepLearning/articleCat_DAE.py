@@ -136,7 +136,7 @@ class FlipBatchIterator(BatchIterator):
 def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=None, epochs=15,
         input_width=300, input_height=140, train_valid_split=0.2, multiple_positives=20, flip_batch=True,
         dropout_percent=0.1, end_index=16351, activation=None, last_layer_activation=None, batch_size=32,
-        layers_size=[5, 10, 20, 40], shuffle_input=False, zero_meaning = False,
+        layers_size=[5, 10, 20, 40], shuffle_input=False, zero_meaning=False, filters_type=3,
         input_noise_rate=0.3, pre_train_epochs=1, softmax_train_epochs=2, fine_tune_epochs=2,
         categories=15, folder_name="default", dataset='withOutDataSet'):
 
@@ -165,12 +165,34 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
     output_file = open(PARAMS_FILE_NAME, "w")
     results_file = open(All_Results_FIle, "a")
 
-    filter_1 = (3, 3)
-    filter_2 = (3, 3)
-    filter_3 = (3, 3)
-    filter_4 = (3, 3)
-    filter_5 = (3, 3)
-    filter_6 = (3, 3)
+    if filters_type == 3:
+        filter_1 = (3, 3)
+        filter_2 = (3, 3)
+        filter_3 = (3, 3)
+        filter_4 = (3, 3)
+        filter_5 = (3, 3)
+        filter_6 = (3, 3)
+    elif filters_type == 5:
+        filter_1 = (5, 5)
+        filter_2 = (5, 5)
+        filter_3 = (5, 5)
+        filter_4 = (5, 5)
+        filter_5 = (5, 5)
+        filter_6 = (5, 5)
+    elif filters_type == 7:
+        filter_1 = (7, 7)
+        filter_2 = (7, 7)
+        filter_3 = (5, 5)
+        filter_4 = (7, 7)
+        filter_5 = (7, 7)
+        filter_6 = (5, 5)
+    elif filters_type == 9:
+        filter_1 = (9, 9)
+        filter_2 = (7, 7)
+        filter_3 = (5, 5)
+        filter_4 = (7, 7)
+        filter_5 = (9, 9)
+        filter_6 = (5, 5)
 
     def createCSAE(input_height, input_width, X_train, X_out):
 
@@ -179,11 +201,11 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         cnn = NeuralNet(layers=[
             ('input', layers.InputLayer),
             ('conv1', layers.Conv2DLayer),
-            # ('conv11', layers.Conv2DLayer),
+            ('conv11', layers.Conv2DLayer),
             # ('conv12', layers.Conv2DLayer),
             ('pool1', layers.MaxPool2DLayer),
             ('conv2', layers.Conv2DLayer),
-            # ('conv21', layers.Conv2DLayer),
+            ('conv21', layers.Conv2DLayer),
             # ('conv22', layers.Conv2DLayer),
             ('pool2', layers.MaxPool2DLayer),
             ('conv3', layers.Conv2DLayer),
@@ -191,11 +213,11 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
             ('conv32', layers.Conv2DLayer),
             ('unpool1', Unpool2DLayer),
             ('conv4', layers.Conv2DLayer),
-            # ('conv41', layers.Conv2DLayer),
+            ('conv41', layers.Conv2DLayer),
             # ('conv42', layers.Conv2DLayer),
             ('unpool2', Unpool2DLayer),
             ('conv5', layers.Conv2DLayer),
-            # ('conv51', layers.Conv2DLayer),
+            ('conv51', layers.Conv2DLayer),
             # ('conv52', layers.Conv2DLayer),
             ('conv6', layers.Conv2DLayer),
             ('output_layer', ReshapeLayer),
@@ -205,11 +227,11 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
             # Layer current size - 1x300x140
 
             conv1_num_filters=layers_size[0], conv1_filter_size=filter_1, conv1_nonlinearity=activation,
-            conv1_border_mode="same",
-            # conv1_pad="same",
-            # conv11_num_filters=layers_size[0], conv11_filter_size=filter_1, conv11_nonlinearity=activation,
-            # # conv11_border_mode="same",
-            # conv11_pad="same",
+            # conv1_border_mode="same",
+            conv1_pad="same",
+            conv11_num_filters=layers_size[0], conv11_filter_size=filter_1, conv11_nonlinearity=activation,
+            # conv11_border_mode="same",
+            conv11_pad="same",
             # conv12_num_filters=layers_size[0], conv12_filter_size=filter_1, conv12_nonlinearity=activation,
             # # conv12_border_mode="same",
             # conv12_pad="same",
@@ -217,11 +239,11 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
             pool1_pool_size=(2, 2),
 
             conv2_num_filters=layers_size[1], conv2_filter_size=filter_2, conv2_nonlinearity=activation,
-            conv2_border_mode="same",
-            # conv2_pad="same",
-            # conv21_num_filters=layers_size[1], conv21_filter_size=filter_2, conv21_nonlinearity=activation,
-            # # conv21_border_mode="same",
-            # conv21_pad="same",
+            # conv2_border_mode="same",
+            conv2_pad="same",
+            conv21_num_filters=layers_size[1], conv21_filter_size=filter_2, conv21_nonlinearity=activation,
+            # conv21_border_mode="same",
+            conv21_pad="same",
             # conv22_num_filters=layers_size[1], conv22_filter_size=filter_2, conv22_nonlinearity=activation,
             # # conv22_border_mode="same",
             # conv22_pad="same",
@@ -229,23 +251,23 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
             pool2_pool_size=(2, 2),
 
             conv3_num_filters=layers_size[2], conv3_filter_size=filter_3, conv3_nonlinearity=activation,
-            conv3_border_mode="same",
-            # conv3_pad="same",
+            # conv3_border_mode="same",
+            conv3_pad="same",
             # conv31_num_filters=layers_size[2], conv31_filter_size=filter_3, conv31_nonlinearity=activation,
             # # conv31_border_mode="same",
             # conv31_pad="same",
             conv32_num_filters=1, conv32_filter_size=filter_3, conv32_nonlinearity=activation,
-            conv32_border_mode="same",
-            # conv32_pad="same",
+            # conv32_border_mode="same",
+            conv32_pad="same",
 
             unpool1_ds=(2, 2),
 
             conv4_num_filters=layers_size[3], conv4_filter_size=filter_4, conv4_nonlinearity=activation,
-            conv4_border_mode="same",
-            # conv4_pad="same",
-            # conv41_num_filters=layers_size[3], conv41_filter_size=filter_4, conv41_nonlinearity=activation,
-            # # conv41_border_mode="same",
-            # conv41_pad="same",
+            # conv4_border_mode="same",
+            conv4_pad="same",
+            conv41_num_filters=layers_size[3], conv41_filter_size=filter_4, conv41_nonlinearity=activation,
+            # conv41_border_mode="same",
+            conv41_pad="same",
             # conv42_num_filters=layers_size[3], conv42_filter_size=filter_4, conv42_nonlinearity=activation,
             # # conv42_border_mode="same",
             # conv42_pad="same",
@@ -253,18 +275,18 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
             unpool2_ds=(2, 2),
 
             conv5_num_filters=layers_size[4], conv5_filter_size=filter_5, conv5_nonlinearity=activation,
-            conv5_border_mode="same",
-            # conv5_pad="same",
-            # conv51_num_filters=layers_size[4], conv51_filter_size=filter_5, conv51_nonlinearity=activation,
-            # # conv51_border_mode="same",
-            # conv51_pad="same",
+            # conv5_border_mode="same",
+            conv5_pad="same",
+            conv51_num_filters=layers_size[4], conv51_filter_size=filter_5, conv51_nonlinearity=activation,
+            # conv51_border_mode="same",
+            conv51_pad="same",
             # conv52_num_filters=layers_size[4], conv52_filter_size=filter_5, conv52_nonlinearity=activation,
             # # conv52_border_mode="same",
             # conv52_pad="same",
 
             conv6_num_filters=1, conv6_filter_size=filter_6, conv6_nonlinearity=last_layer_activation,
-            conv6_border_mode="same",
-            # conv6_pad="same",
+            # conv6_border_mode="same",
+            conv6_pad="same",
 
             output_layer_shape=(([0], -1)),
 
@@ -649,7 +671,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         output_file.write("Activation func: " + ("Rectify" if activation is None else str(activation)) + "\n")
         results_file.write(("Rectify" if activation is None else str(activation)) + "\t")
         output_file.write(
-            "Last layer activation func: " + ("Rectify" if activation is None else str(last_layer_activation)) + "\n")
+            "Last layer activation func: " + ("Rectify" if last_layer_activation is None else str(last_layer_activation)) + "\n")
         results_file.write(("Rectify" if activation is None else str(last_layer_activation)) + "\t")
         #         output_file.write("Multiple Positives by: " + str(multiple_positives) + "\n")
         output_file.write("Number of images: " + str(end_index) + "\n")
@@ -990,33 +1012,101 @@ def run_all():
         print "Running in Ubuntu"
     else:
         print "Running in Windows"
-    folder_name = "CAE_3000_2Conv2Pool-"+str(time.time())
+    folder_name = "CAE_3000_3Conv2Pool_differentFilters-"+str(time.time())
 
     num_labels = 15
-    end_index = 2500
+    end_index = 3000
     input_noise_rate = 0.2
     zero_meaning = False
-    epochs = 5
+    epochs = 25
     data = load2d(num_labels=num_labels, end_index=end_index, TRAIN_PRECENT=1)
 
-    ac1, ac2, ac3, ac4, ac5, ac6 = 1, 1, 1, 1, 1, 1
-    for i in range(9, 28, 3):
+    ac1, ac2, ac3, ac4, ac5, ac6, ac7, ac8 = 1, 1, 1, 1, 1, 1, 1, 1
+    for i in range(1, 20, 1):
         print("Run #", i)
         try:
             if np.isfinite(ac1):
                 ac1 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.01 * i, update_momentum=0.9,
                           dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name, end_index=end_index,
-                          zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh)
+                          zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=3)
             else:
                 ac1 = 1
-
-            if np.isfinite(ac2) and i % 12 == 1:
-                ac2 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.01 * i, update_momentum=0.9,
+        except Exception, e:
+            print "failed to run- ", i
+            print e
+        try:
+            if np.isfinite(ac2) and i % 5 == 0:
+                ac2 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.001 * i, update_momentum=0.9,
                           dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name, end_index=end_index,
-                          zero_meaning=zero_meaning, activation=None, last_layer_activation=None)
+                          zero_meaning=zero_meaning, activation=None, last_layer_activation=None, filters_type=3)
+            # else:
+            #     ac2 = 1
+        except Exception, e:
+            print "failed to run- ", i
+            print e
+        try:
+            if np.isfinite(ac3):
+                ac3 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.01 * i, update_momentum=0.9,
+                          dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name,
+                          end_index=end_index,
+                          zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=5)
             else:
-                ac2 = 1
-
+                ac3 = 1
+        except Exception, e:
+            print "failed to run- ", i
+            print e
+        try:
+            if np.isfinite(ac4) and i % 5 == 1:
+                ac4 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.001 * i, update_momentum=0.9,
+                          dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name,
+                          end_index=end_index,
+                          zero_meaning=zero_meaning, activation=None, last_layer_activation=None, filters_type=5)
+            # else:
+            #     ac4 = 1
+        except Exception, e:
+            print "failed to run- ", i
+            print e
+        try:
+            if np.isfinite(ac5):
+                ac5 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.01 * i, update_momentum=0.9,
+                          dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name,
+                          end_index=end_index,
+                          zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=7)
+            else:
+                ac5 = 1
+        except Exception, e:
+            print "failed to run- ", i
+            print e
+        try:
+            if np.isfinite(ac6) and i % 5 == 2:
+                ac6 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.001 * i, update_momentum=0.9,
+                          dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name,
+                          end_index=end_index,
+                          zero_meaning=zero_meaning, activation=None, last_layer_activation=None, filters_type=7)
+            # else:
+            #     ac6 = 1
+        except Exception, e:
+            print "failed to run- ", i
+            print e
+        try:
+            if np.isfinite(ac7):
+                ac7 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.01 * i, update_momentum=0.9,
+                          dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name,
+                          end_index=end_index,
+                          zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=9)
+            else:
+                ac7 = 1
+        except Exception, e:
+            print "failed to run- ", i
+            print e
+        try:
+            if np.isfinite(ac8) and i % 5 == 3:
+                ac8 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.001 * i, update_momentum=0.9,
+                          dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name,
+                          end_index=end_index,
+                          zero_meaning=zero_meaning, activation=None, last_layer_activation=None, filters_type=9)
+            # else:
+            #     ac8 = 1
         except Exception, e:
             print "failed to run- ", i
             print e
