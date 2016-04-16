@@ -35,7 +35,6 @@ from nolearn.lasagne import NeuralNet
 from nolearn.lasagne import PrintLayerInfo
 from nolearn.lasagne import TrainSplit
 import numpy as np
-from articleCat_DAE_4 import run_all as run4
 from pickleImages import runPickleImages
 from runMySvm import runSvm
 from nnClassifier import runNNclassifier
@@ -56,7 +55,7 @@ isUbuntu = False
 
 def load2d(num_labels, outputFile=None, input_width=300, input_height=140, end_index=16351, MULTI_POSITIVES=20,
            dropout_percent=0.1, data_set='ISH.pkl.gz', toShuffleInput = False, withZeroMeaning = False, TRAIN_PRECENT=0.8):
-    print ('loading data...')
+    print 'loading data...'
 
     data_sets = load_data(data_set, toShuffleInput=toShuffleInput, withZeroMeaning=withZeroMeaning, end_index=end_index,
                           MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=dropout_percent, labelset=num_labels, TRAIN_DATA_PRECENT=TRAIN_PRECENT)
@@ -197,29 +196,29 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
 
     def createCSAE(input_height, input_width, X_train, X_out):
 
-        X_train *= np.random.binomial(1, 1-dropout_percent, size=X_train.shape)
+        X_train = np.random.binomial(1, 1-dropout_percent, size=X_train.shape) * X_train
 
         cnn = NeuralNet(layers=[
             ('input', layers.InputLayer),
             ('conv1', layers.Conv2DLayer),
             ('conv11', layers.Conv2DLayer),
-            ('conv12', layers.Conv2DLayer),
+            # ('conv12', layers.Conv2DLayer),
             ('pool1', layers.MaxPool2DLayer),
             ('conv2', layers.Conv2DLayer),
             ('conv21', layers.Conv2DLayer),
-            ('conv22', layers.Conv2DLayer),
+            # ('conv22', layers.Conv2DLayer),
             ('pool2', layers.MaxPool2DLayer),
             ('conv3', layers.Conv2DLayer),
-            ('conv31', layers.Conv2DLayer),
+            # ('conv31', layers.Conv2DLayer),
             ('conv32', layers.Conv2DLayer),
             ('unpool1', Unpool2DLayer),
             ('conv4', layers.Conv2DLayer),
             ('conv41', layers.Conv2DLayer),
-            ('conv42', layers.Conv2DLayer),
+            # ('conv42', layers.Conv2DLayer),
             ('unpool2', Unpool2DLayer),
             ('conv5', layers.Conv2DLayer),
             ('conv51', layers.Conv2DLayer),
-            ('conv52', layers.Conv2DLayer),
+            # ('conv52', layers.Conv2DLayer),
             ('conv6', layers.Conv2DLayer),
             ('output_layer', ReshapeLayer),
         ],
@@ -233,9 +232,9 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
             conv11_num_filters=layers_size[0], conv11_filter_size=filter_1, conv11_nonlinearity=activation,
             # conv11_border_mode="same",
             conv11_pad="same",
-            conv12_num_filters=layers_size[0], conv12_filter_size=filter_1, conv12_nonlinearity=activation,
-            # conv12_border_mode="same",
-            conv12_pad="same",
+            # conv12_num_filters=layers_size[0], conv12_filter_size=filter_1, conv12_nonlinearity=activation,
+            # # conv12_border_mode="same",
+            # conv12_pad="same",
 
             pool1_pool_size=(2, 2),
 
@@ -245,18 +244,18 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
             conv21_num_filters=layers_size[1], conv21_filter_size=filter_2, conv21_nonlinearity=activation,
             # conv21_border_mode="same",
             conv21_pad="same",
-            conv22_num_filters=layers_size[1], conv22_filter_size=filter_2, conv22_nonlinearity=activation,
-            # conv22_border_mode="same",
-            conv22_pad="same",
+            # conv22_num_filters=layers_size[1], conv22_filter_size=filter_2, conv22_nonlinearity=activation,
+            # # conv22_border_mode="same",
+            # conv22_pad="same",
 
             pool2_pool_size=(2, 2),
 
             conv3_num_filters=layers_size[2], conv3_filter_size=filter_3, conv3_nonlinearity=activation,
             # conv3_border_mode="same",
             conv3_pad="same",
-            conv31_num_filters=layers_size[2], conv31_filter_size=filter_3, conv31_nonlinearity=activation,
-            # conv31_border_mode="same",
-            conv31_pad="same",
+            # conv31_num_filters=layers_size[2], conv31_filter_size=filter_3, conv31_nonlinearity=activation,
+            # # conv31_border_mode="same",
+            # conv31_pad="same",
             conv32_num_filters=1, conv32_filter_size=filter_3, conv32_nonlinearity=activation,
             # conv32_border_mode="same",
             conv32_pad="same",
@@ -269,9 +268,9 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
             conv41_num_filters=layers_size[3], conv41_filter_size=filter_4, conv41_nonlinearity=activation,
             # conv41_border_mode="same",
             conv41_pad="same",
-            conv42_num_filters=layers_size[3], conv42_filter_size=filter_4, conv42_nonlinearity=activation,
-            # conv42_border_mode="same",
-            conv42_pad="same",
+            # conv42_num_filters=layers_size[3], conv42_filter_size=filter_4, conv42_nonlinearity=activation,
+            # # conv42_border_mode="same",
+            # conv42_pad="same",
 
             unpool2_ds=(2, 2),
 
@@ -281,9 +280,9 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
             conv51_num_filters=layers_size[4], conv51_filter_size=filter_5, conv51_nonlinearity=activation,
             # conv51_border_mode="same",
             conv51_pad="same",
-            conv52_num_filters=layers_size[4], conv52_filter_size=filter_5, conv52_nonlinearity=activation,
-            # conv52_border_mode="same",
-            conv52_pad="same",
+            # conv52_num_filters=layers_size[4], conv52_filter_size=filter_5, conv52_nonlinearity=activation,
+            # # conv52_border_mode="same",
+            # conv52_pad="same",
 
             conv6_num_filters=1, conv6_filter_size=filter_6, conv6_nonlinearity=last_layer_activation,
             # conv6_border_mode="same",
@@ -299,7 +298,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
             regression=True,
             max_epochs=epochs,
             verbose=1,
-            hiddenLayer_to_output=-11)
+            hiddenLayer_to_output=-9)
 
         cnn.fit(X_train, X_out)
 
@@ -310,7 +309,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         except:
             print ("Could not pickle cnn")
 
-        X_pred = cnn.predict(X_train).reshape(-1, input_height, input_width)  # * sigma + mu
+        X_pred = cnn.predict(X_train).reshape(-1, input_height, input_width) # * sigma + mu
         # # X_pred = np.rint(X_pred).astype(int)
         # # X_pred = np.clip(X_pred, a_min=0, a_max=255)
         # # X_pred = X_pred.astype('uint8')
@@ -324,7 +323,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
 
         print ("Saving some images....")
         for i in range(10):
-            index = np.random.randint(X_train.shape[0])
+            index = np.random.randint(train_x.shape[0])
             print (index)
 
             def get_picture_array(X, index):
@@ -638,8 +637,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
 
     def last_hidden_layer(s, h):
 
-        print (s.output_last_hidden_layer_(train_x))
-
+        print s.output_last_hidden_layer_(train_x)
     #         input_layer = s.get_all_layers()[0]
     #         last_h_layer = s.get_all_layers()[-2]
     #         f = theano.function(s.X_inputs, last_h_layer.get_output(last_h_layer),allow_input_downcast=True)
@@ -703,40 +701,21 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         results_file.write(folder_name + "\n")
         results_file.flush()
 
-    def outputLastLayer_CNN(cnn, X, y=None, test_x=None, test_y=None):
-        print ("outputing last hidden layer")  # train_last_hiddenLayer = cnn.output_hiddenLayer(train_x)
+    def outputLastLayer_CNN(cnn, X, y, test_x, test_y):
+        print "outputing last hidden layer" #     train_last_hiddenLayer = cnn.output_hiddenLayer(train_x)
         quarter_x = np.floor(X.shape[0] / 4)
-
-        train_last_hiddenLayer1 = cnn.output_hiddenLayer(
-            (np.random.binomial(1, 1 - dropout_percent, size=X[:quarter_x].shape) * X[:quarter_x]).astype(
-                np.float32).reshape((-1, 1, input_width, input_height)))
-        pickle.dump(train_last_hiddenLayer1, open(folder_path + 'encode1.pkl', 'w'))
-
-        print ("after first quarter train output")
-        train_last_hiddenLayer2 = cnn.output_hiddenLayer(
-            (np.random.binomial(1, 1 - dropout_percent, size=X[quarter_x:2 * quarter_x].shape) * X[quarter_x:2 * quarter_x]).astype(
-                np.float32).reshape((-1, 1, input_width, input_height)))
-        pickle.dump(train_last_hiddenLayer2, open(folder_path + 'encode2.pkl', 'w'))
-
-        print ("after seconed quarter train output")
-        train_last_hiddenLayer3 = cnn.output_hiddenLayer(
-            (np.random.binomial(1, 1 - dropout_percent, size=X[2 * quarter_x: 3 * quarter_x].shape) * X[2 * quarter_x:3 * quarter_x]).astype(
-                np.float32).reshape((-1, 1, input_width, input_height)))
-        pickle.dump(train_last_hiddenLayer3, open(folder_path + 'encode3.pkl', 'w'))
-
-        print ("after third quarter train output")
-        train_last_hiddenLayer4 = cnn.output_hiddenLayer(
-            (np.random.binomial(1, 1 - dropout_percent, size=X[3 * quarter_x:].shape) * X[3 * quarter_x:]).astype(
-                np.float32).reshape((-1, 1, input_width, input_height)))
-        pickle.dump(train_last_hiddenLayer4, open(folder_path + 'encode4.pkl', 'w'))
-
-        print ("after all train output")
-        if test_x is not None:
-            test_last_hiddenLayer = cnn.output_hiddenLayer(test_x)
-            print ("after test output")  # lastLayerOutputs = (train_last_hiddenLayer,train_y,test_last_hiddenLayer,test_y)
-
-        # lastLayerOutputs = np.concatenate((train_last_hiddenLayer1, train_last_hiddenLayer2, train_last_hiddenLayer3, train_last_hiddenLayer4), axis=0), y, test_last_hiddenLayer, test_y
-        return np.concatenate((train_last_hiddenLayer1, train_last_hiddenLayer2, train_last_hiddenLayer3, train_last_hiddenLayer4), axis=0)
+        train_last_hiddenLayer1 = cnn.output_hiddenLayer(X[:quarter_x])
+        print "after first quarter train output"
+        train_last_hiddenLayer2 = cnn.output_hiddenLayer(X[quarter_x:2 * quarter_x])
+        print "after seconed quarter train output"
+        train_last_hiddenLayer3 = cnn.output_hiddenLayer(X[2 * quarter_x:3 * quarter_x])
+        print "after third quarter train output"
+        train_last_hiddenLayer4 = cnn.output_hiddenLayer(X[3 * quarter_x:])
+        print "after all train output"
+        test_last_hiddenLayer = cnn.output_hiddenLayer(test_x)
+        print "after test output" #     lastLayerOutputs = (train_last_hiddenLayer,train_y,test_last_hiddenLayer,test_y)
+        lastLayerOutputs = np.concatenate((train_last_hiddenLayer1, train_last_hiddenLayer2, train_last_hiddenLayer3, train_last_hiddenLayer4), axis=0), y, test_last_hiddenLayer, test_y
+        return lastLayerOutputs
 
     def outputLastLayer_DAE(train_x, train_y, test_x, test_y):
 
@@ -771,7 +750,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
                 t += 1
 
         # printing the result, this structure should result in 80% accuracy
-        print ("DAE accuracy: %2.2f%%" % (100 * e / t))
+        print "DAE accuracy: %2.2f%%"%(100*e/t)
         output_file.write("DAE predict rate:  "+str(100*e/t) + "%\n")
 
         lastLayerOutputs = (sDA.predict(train_x), train_y, testRepresentation, test_y)
@@ -844,30 +823,18 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
     writeOutputFile(output_file, cnn.train_history_, PrintLayerInfo._get_layer_info_plain(cnn))
 
     print ("Learning took (min)- ", run_time)
+    try:
+        train_x = np.random.binomial(1, 1 - dropout_percent, size=train_x.shape) * train_x
+        trian_last_hiddenLayer = cnn.output_hiddenLayer(train_x)
+        print ("Pickling all encoded images:")
+        pickle.dump(trian_last_hiddenLayer, open(folder_path + 'encode.pkl', 'w'))
+    except:
+        print ("Could not save encoded images")
 
+    print ("Runing SVM:")
+    run_svm(trian_last_hiddenLayer)
 
-    # train_x = np.random.binomial(1, 1 - dropout_percent, size=train_x.shape) * train_x
-    # trian_last_hiddenLayer_1 = cnn.output_hiddenLayer(train_x[:5000])
-    # trian_last_hiddenLayer_2 = cnn.output_hiddenLayer(train_x[5000:10000])
-    # trian_last_hiddenLayer_3 = cnn.output_hiddenLayer(train_x[10000:])
-    # print ("Pickling all encoded images:")
-    # try:
-    #     trian_last_hiddenLayer = outputLastLayer_CNN(cnn, train_x)
-    #
-    #     # pickle.dump(trian_last_hiddenLayer_1, open(folder_path + 'encode1.pkl', 'w'))
-    #     # pickle.dump(trian_last_hiddenLayer_2, open(folder_path + 'encode2.pkl', 'w'))
-    #     # pickle.dump(trian_last_hiddenLayer_3, open(folder_path + 'encode3.pkl', 'w'))
-    # except:
-    #     print ("Could not save encoded images")
-    #
-    # print ("Runing SVM:")
-    # error_rates = run_svm(trian_last_hiddenLayer)
-    # results_file.write(str(error_rates) + "\t" + str(np.average(error_rates)))
-    # output_file.write(
-    #     "SVM Error rates- " + str(error_rates) + "\n Average error- " + str(np.average(error_rates)) + "\n")
-    #
-    #
-    # sys.setrecursionlimit(10000)
+    sys.setrecursionlimit(10000)
     # pickle.dump(cnn, open(folder_path+'conv_ae.pkl', 'w'))
     # ae = pickle.load(open('mnist/conv_ae.pkl','r'))
     # cnn.save_weights_to(folder_path+'conv_ae.np')
@@ -1052,31 +1019,37 @@ def run_all():
     data = load2d(num_labels=num_labels, end_index=end_index, TRAIN_PRECENT=1)
 
     ac1, ac2, ac3, ac4, ac5, ac6, ac7, ac8 = 1, 1, 1, 1, 1, 1, 1, 1
-
-    for i in range(6, 20, 1):
+    try:
+        run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.005, update_momentum=0.9,
+                  dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name, end_index=end_index,
+                  zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=3)
+    except Exception as e:
+        print("failed to run- ", 0.005)
+        print(e)
+    for i in range(1, 20, 1):
         print("Run #", i)
-        # try:
-        #     if np.isfinite(ac1):
-        #         ac1 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.01 * i, update_momentum=0.9,
-        #                   dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name, end_index=end_index,
-        #                   zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=3)
-        #     else:
-        #         ac1 = 1
-        # except Exception as e:
-        #     print("failed to run- ", i)
-        #     print(e)
         try:
-            if np.isfinite(ac2) and i % 5 == 4:
-                ac2 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.01 * i, update_momentum=0.9,
+            if np.isfinite(ac1):
+                ac1 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.01 * i, update_momentum=0.9,
                           dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name, end_index=end_index,
                           zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=3)
+            else:
+                ac1 = 1
+        except Exception as e:
+            print("failed to run- ", i)
+            print(e)
+        try:
+            if np.isfinite(ac2) and i % 5 == 0:
+                ac2 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.01 * i, update_momentum=0.9,
+                          dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name, end_index=end_index,
+                          zero_meaning=zero_meaning, activation=None, last_layer_activation=None, filters_type=3)
             # else:
             #     ac2 = 1
         except Exception as e:
             print("failed to run- ", i)
             print(e)
         try:
-            if np.isfinite(ac3) and i % 2 == 0:
+            if np.isfinite(ac3):
                 ac3 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.01 * i, update_momentum=0.9,
                           dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name,
                           end_index=end_index,
@@ -1086,39 +1059,39 @@ def run_all():
         except Exception as e:
             print("failed to run- ", i)
             print(e)
-        # try:
-        #     if np.isfinite(ac4) and i % 5 == 1:
-        #         ac4 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.01 * i, update_momentum=0.9,
-        #                   dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name,
-        #                   end_index=end_index,
-        #                   zero_meaning=zero_meaning, activation=None, last_layer_activation=None, filters_type=5)
-        #     # else:
-        #     #     ac4 = 1
-        # except Exception as e:
-        #     print("failed to run- ", i)
-        #     print(e)
-        # try:
-        #     if np.isfinite(ac5):
-        #         ac5 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.01 * i, update_momentum=0.9,
-        #                   dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name,
-        #                   end_index=end_index,
-        #                   zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=7)
-        #     else:
-        #         ac5 = 1
-        # except Exception as e:
-        #     print("failed to run- ", i)
-        #     print(e)
-        # try:
-        #     if np.isfinite(ac6) and i % 5 == 2:
-        #         ac6 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.01 * i, update_momentum=0.9,
-        #                   dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name,
-        #                   end_index=end_index,
-        #                   zero_meaning=zero_meaning, activation=None, last_layer_activation=None, filters_type=7)
-        #     # else:
-        #     #     ac6 = 1
-        # except Exception as e:
-        #     print("failed to run- ", i)
-        #     print(e)
+        try:
+            if np.isfinite(ac4) and i % 5 == 1:
+                ac4 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.001 * i, update_momentum=0.9,
+                          dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name,
+                          end_index=end_index,
+                          zero_meaning=zero_meaning, activation=None, last_layer_activation=None, filters_type=5)
+            # else:
+            #     ac4 = 1
+        except Exception as e:
+            print("failed to run- ", i)
+            print(e)
+        try:
+            if np.isfinite(ac5):
+                ac5 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.01 * i, update_momentum=0.9,
+                          dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name,
+                          end_index=end_index,
+                          zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=7)
+            else:
+                ac5 = 1
+        except Exception as e:
+            print("failed to run- ", i)
+            print(e)
+        try:
+            if np.isfinite(ac6) and i % 5 == 2:
+                ac6 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.01 * i, update_momentum=0.9,
+                          dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name,
+                          end_index=end_index,
+                          zero_meaning=zero_meaning, activation=None, last_layer_activation=None, filters_type=7)
+            # else:
+            #     ac6 = 1
+        except Exception as e:
+            print("failed to run- ", i)
+            print(e)
         try:
             if np.isfinite(ac7):
                 ac7 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.01 * i, update_momentum=0.9,
@@ -1141,8 +1114,6 @@ def run_all():
         except Exception as e:
             print("failed to run- ", i)
             print(e)
-
-        run4()
 
 if __name__ == "__main__":
     import os

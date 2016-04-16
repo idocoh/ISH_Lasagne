@@ -254,15 +254,14 @@ def load_data(dataset, toShuffleInput = False , withZeroMeaning = False, labelse
             f.close()
         except:
             pLabel, pData = pickleAllImages(num_labels=labelset, TRAIN_SPLIT=TRAIN_DATA_PRECENT, end_index=end_index,MULTI=MULTI_POSITIVES,dropout_percent=dropout_percent)
-            if end_index < 20001:
+            if end_index < 10001:
                 f = gzip.open("pickled_temp/" + file_name + ".pkl.gz", 'wb')
                 try:
-                    cPickle.dump((pLabel, pData), f, protocol=2)
+                    cPickle.dump((pLabel[:end_index], pData[:end_index]), f, protocol=2)
                 except:
                     f.close()
         
         # Divided data set into 3 parts.
-
 
         VALIDATION_DATA_PRECENT = TRAIN_DATA_PRECENT # validation no used
         data_amount = pData.shape[0]    # end_index-start_index
