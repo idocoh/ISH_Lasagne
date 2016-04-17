@@ -10,6 +10,15 @@ from nolearn.lasagne import BatchIterator
 from lasagne import layers
 from theano import config
 
+from nolearn.lasagne import NeuralNet
+from shape import ReshapeLayer
+from lasagne.nonlinearities import tanh
+from lasagne.updates import nesterov_momentum
+from nolearn.lasagne import TrainSplit
+
+CONV_AE_PARAMS_PKL = 'conv_ae_params.pkl'
+CONV_AE_NP = 'conv_ae.np'
+CONV_AE_PKL = 'conv_ae.pkl'
 
 class Unpool2DLayer(layers.Layer):
     """
@@ -84,20 +93,24 @@ def images_svm(pickled_file, x=None, all_labels=None, num_labels=15, TRAIN_SPLIT
         cnn = pickled_file
         if x is None:
             all_labels, train_x = pickleAllImages(num_labels=15)
-            input_height, input_width, dropout_percent = 300, 140, 0.2
-            x = train_x.astype(np.float32).reshape((-1, 1, input_height, input_width))
+            input_width, input_height, dropout_percent = 300, 140, 0.2
+            x = train_x.astype(np.float32).reshape((-1, 1, input_width, input_height))
             x *= np.random.binomial(1, 1 - dropout_percent, size=x.shape)
         # features = cnn.output_hiddenLayer(x)
 
         quarter_x = np.floor(x.shape[0] / 4)
 
         train_last_hidden_layer_1 = cnn.output_hiddenLayer(x[:quarter_x])
+        train_last_hidden_layer_1 = train_last_hidden_layer_1.reshape((train_last_hidden_layer_1.shape[0], -1))
         print("after first quarter train output")
         train_last_hidden_layer_2 = cnn.output_hiddenLayer(x[quarter_x:2 * quarter_x])
+        train_last_hidden_layer_2 = train_last_hidden_layer_2.reshape((train_last_hidden_layer_2.shape[0], -1))
         print("after second quarter train output")
         train_last_hidden_layer_3 = cnn.output_hiddenLayer(x[2 * quarter_x: 3 * quarter_x])
+        train_last_hidden_layer_3 = train_last_hidden_layer_3.reshape((train_last_hidden_layer_3.shape[0], -1))
         print("after third quarter train output")
         train_last_hidden_layer_4 = cnn.output_hiddenLayer(x[3 * quarter_x:])
+        train_last_hidden_layer_4 = train_last_hidden_layer_4.reshape((train_last_hidden_layer_4.shape[0], -1))
 
         features = np.concatenate((train_last_hidden_layer_1, train_last_hidden_layer_2, train_last_hidden_layer_3, train_last_hidden_layer_4), axis=0)
         print('Features size: ', features.shape)
@@ -125,19 +138,174 @@ def images_svm(pickled_file, x=None, all_labels=None, num_labels=15, TRAIN_SPLIT
     return features, all_labels
 
 
+def recunstruct_cae(folder_path):
+    cnn = NeuralNet()
+    cnn.load_params_from(folder_path + CONV_AE_PARAMS_PKL)
+    cnn.load_weights_from(folder_path + CONV_AE_NP)
+    return cnn
+
+
+def create_cae(folder_path, learning_rate, input_width=300, input_height=140, layers_size=[32, 32, 64, 32, 32],
+               update_momentum=0.9, activation=None, last_layer_activation=tanh, filters_type=9, batch_size=32,
+               epochs=25, train_valid_split=0.2, flip_batch=True):
+
+    if filters_type == 3:
+        filter_1 = (3, 3)
+        filter_2 = (3, 3)
+        filter_3 = (3, 3)
+        filter_4 = (3, 3)
+        filter_5 = (3, 3)
+        filter_6 = (3, 3)
+    elif filters_type == 5:
+        filter_1 = (5, 5)
+        filter_2 = (5, 5)
+        filter_3 = (5, 5)
+        filter_4 = (5, 5)
+        filter_5 = (5, 5)
+        filter_6 = (5, 5)
+    elif filters_type == 7:
+        filter_1 = (7, 7)
+        filter_2 = (7, 7)
+        filter_3 = (5, 5)
+        filter_4 = (7, 7)
+        filter_5 = (7, 7)
+        filter_6 = (5, 5)
+    elif filters_type == 9:
+        filter_1 = (9, 9)
+        filter_2 = (7, 7)
+        filter_3 = (5, 5)
+        filter_4 = (7, 7)
+        filter_5 = (9, 9)
+        filter_6 = (5, 5)
+
+    cnn = NeuralNet(layers=[
+        ('input', layers.InputLayer),
+        ('conv1', layers.Conv2DLayer),
+        ('conv11', layers.Conv2DLayer),
+        ('conv12', layers.Conv2DLayer),
+        ('pool1', layers.MaxPool2DLayer),
+        ('conv2', layers.Conv2DLayer),
+        ('conv21', layers.Conv2DLayer),
+        ('conv22', layers.Conv2DLayer),
+        ('pool2', layers.MaxPool2DLayer),
+        ('conv3', layers.Conv2DLayer),
+        ('conv31', layers.Conv2DLayer),
+        ('conv32', layers.Conv2DLayer),
+        ('unpool1', Unpool2DLayer),
+        ('conv4', layers.Conv2DLayer),
+        ('conv41', layers.Conv2DLayer),
+        ('conv42', layers.Conv2DLayer),
+        ('unpool2', Unpool2DLayer),
+        ('conv5', layers.Conv2DLayer),
+        ('conv51', layers.Conv2DLayer),
+        ('conv52', layers.Conv2DLayer),
+        ('conv6', layers.Conv2DLayer),
+        ('output_layer', ReshapeLayer),
+    ],
+
+        input_shape=(None, 1, input_width, input_height),
+        # Layer current size - 1x300x140
+
+        conv1_num_filters=layers_size[0], conv1_filter_size=filter_1, conv1_nonlinearity=activation,
+        # conv1_border_mode="same",
+        conv1_pad="same",
+        conv11_num_filters=layers_size[0], conv11_filter_size=filter_1, conv11_nonlinearity=activation,
+        # conv11_border_mode="same",
+        conv11_pad="same",
+        conv12_num_filters=layers_size[0], conv12_filter_size=filter_1, conv12_nonlinearity=activation,
+        # conv12_border_mode="same",
+        conv12_pad="same",
+
+        pool1_pool_size=(2, 2),
+
+        conv2_num_filters=layers_size[1], conv2_filter_size=filter_2, conv2_nonlinearity=activation,
+        # conv2_border_mode="same",
+        conv2_pad="same",
+        conv21_num_filters=layers_size[1], conv21_filter_size=filter_2, conv21_nonlinearity=activation,
+        # conv21_border_mode="same",
+        conv21_pad="same",
+        conv22_num_filters=layers_size[1], conv22_filter_size=filter_2, conv22_nonlinearity=activation,
+        # conv22_border_mode="same",
+        conv22_pad="same",
+
+        pool2_pool_size=(2, 2),
+
+        conv3_num_filters=layers_size[2], conv3_filter_size=filter_3, conv3_nonlinearity=activation,
+        # conv3_border_mode="same",
+        conv3_pad="same",
+        conv31_num_filters=layers_size[2], conv31_filter_size=filter_3, conv31_nonlinearity=activation,
+        # conv31_border_mode="same",
+        conv31_pad="same",
+        conv32_num_filters=1, conv32_filter_size=filter_3, conv32_nonlinearity=activation,
+        # conv32_border_mode="same",
+        conv32_pad="same",
+
+        unpool1_ds=(2, 2),
+
+        conv4_num_filters=layers_size[3], conv4_filter_size=filter_4, conv4_nonlinearity=activation,
+        # conv4_border_mode="same",
+        conv4_pad="same",
+        conv41_num_filters=layers_size[3], conv41_filter_size=filter_4, conv41_nonlinearity=activation,
+        # conv41_border_mode="same",
+        conv41_pad="same",
+        conv42_num_filters=layers_size[3], conv42_filter_size=filter_4, conv42_nonlinearity=activation,
+        # conv42_border_mode="same",
+        conv42_pad="same",
+
+        unpool2_ds=(2, 2),
+
+        conv5_num_filters=layers_size[4], conv5_filter_size=filter_5, conv5_nonlinearity=activation,
+        # conv5_border_mode="same",
+        conv5_pad="same",
+        conv51_num_filters=layers_size[4], conv51_filter_size=filter_5, conv51_nonlinearity=activation,
+        # conv51_border_mode="same",
+        conv51_pad="same",
+        conv52_num_filters=layers_size[4], conv52_filter_size=filter_5, conv52_nonlinearity=activation,
+        # conv52_border_mode="same",
+        conv52_pad="same",
+
+        conv6_num_filters=1, conv6_filter_size=filter_6, conv6_nonlinearity=last_layer_activation,
+        # conv6_border_mode="same",
+        conv6_pad="same",
+
+        output_layer_shape=(([0], -1)),
+
+        update_learning_rate=learning_rate,
+        update_momentum=update_momentum,
+        update=nesterov_momentum,
+        train_split=TrainSplit(eval_size=train_valid_split),
+        batch_iterator_train=FlipBatchIterator(batch_size=batch_size) if flip_batch else BatchIterator(
+            batch_size=batch_size),
+        regression=True,
+        max_epochs=epochs,
+        verbose=1,
+        hiddenLayer_to_output=-11)
+
+    # try:
+    #     pickle.dump(cnn, open(folder_path + 'conv_ae.pkl', 'w'))
+    #     # cnn = pickle.load(open(folder_path + 'conv_ae.pkl','r'))
+    #     cnn.save_weights_to(folder_path + 'conv_ae.np')
+    # except:
+    #     print("Could not pickle cnn")
+
+    cnn.load_params_from(folder_path + CONV_AE_NP)
+    # cnn.load_weights_from(folder_path + CONV_AE_NP)
+    return cnn
+
+
 def checkLabelPredict(features, labels, cross_validation_parts=5):
     try:
         print('Inside check label:')
         print (features.shape)
         print (labels.shape)
-        print((labels==1).shape)
+        print((labels == 1).shape)
         print ((features[labels == 1, :]).shape)
     except:
         pass
     positive_data = features[labels == 1, :]
-    positive_data = positive_data.reshape((-1, features.shape[-2]*features.shape[-1]))
+    # positive_data = positive_data.reshape((-1, features.shape[-2]*features.shape[-1]))
     negative_data = features[labels == 0, :]
-    negative_data = negative_data.reshape((-1, features.shape[-2]*features.shape[-1]))
+    # negative_data = negative_data.reshape((-1, features.shape[-2]*features.shape[-1]))
 
     if positive_data.shape[0] < cross_validation_parts or negative_data.shape[0] < cross_validation_parts:
         return 1
@@ -208,32 +376,47 @@ if __name__ == '__main__':
     net = pickle.load(open(pickled_file, 'r'))
     run_svm(net)
 
+##########
+    # num_labels = 15
+    # end_index = 3000
+    # input_noise_rate = 0.2
+    # zero_meaning = False
+    # epochs = 25
+
+    # learning_rate = 0.6
+    # pickled_file = "C:/devl/python/ISH_Lasagne/src/DeepLearning/pklCNN/CAE_3000_3Conv2Pool_differentFilters-1460839270.89/run_1/"
+    # cnn = create_cae(pickled_file, learning_rate=learning_rate, layers_size=[32, 32, 64, 32, 32], activation=None,
+    #                  last_layer_activation=tanh, filters_type=9)
+    #
     # pLabel, train_x = pickleAllImages(num_labels=15)
-    # input_height, input_width, dropout_percent = 300, 140, 0.2
-    # X_train = train_x.astype(np.float32).reshape((-1, 1, input_height, input_width))
+    # input_width, input_height, dropout_percent = 300, 140, 0.2
+    # X_train = train_x.astype(np.float32).reshape((-1, 1, input_width, input_height))
     # X_train *= np.random.binomial(1, 1 - dropout_percent, size=X_train.shape)
+    #
+    # run_svm(cnn, X_train, pLabel)
 
-    config.experimental.unpickle_gpu_on_cpu = True
-
-    pkl_cnn_folder = "C:/devl/python/ISH_Lasagne/src/DeepLearning/pklCNN/"
-
-    for dirname, dirnames, filenames in os.walk(pkl_cnn_folder):
-        # print path to all subdirectories first.
-        print("Running in folder: ", dirname)
-        # for subdirname in dirnames:
-        #     print('hello', os.path.join(dirname, subdirname))
-
-        # print path to all filenames.
-        for filename in filenames:
-            if 'conv_ae.pkl' in filename:
-                try:
-                    file_name = os.path.join(dirname, filename).replace('\\', '/')
-                    print('SVM for: ', file_name)
-                    cnn = pickle.load(open(file_name, 'r'))
-                    # run_svm(cnn, X_train, pLabel)
-                    print('Success')
-                except Exception as e:
-                    print(e)
+#######
+    # config.experimental.unpickle_gpu_on_cpu = True
+    #
+    # pkl_cnn_folder = "C:/devl/python/ISH_Lasagne/src/DeepLearning/pklCNN/"
+    #
+    # for dirname, dirnames, filenames in os.walk(pkl_cnn_folder):
+    #     # print path to all subdirectories first.
+    #     print("Running in folder: ", dirname)
+    #     # for subdirname in dirnames:
+    #     #     print('hello', os.path.join(dirname, subdirname))
+    #
+    #     # print path to all filenames.
+    #     for filename in filenames:
+    #         if 'conv_ae.pkl' in filename:
+    #             try:
+    #                 file_name = os.path.join(dirname, filename).replace('\\', '/')
+    #                 print('SVM for: ', file_name)
+    #                 cnn = pickle.load(open(file_name, 'r'))
+    #                 # run_svm(cnn, X_train, pLabel)
+    #                 print('Success')
+    #             except Exception as e:
+    #                 print(e)
                 # # Advanced usage:
                 # # editing the 'dirnames' list will stop os.walk() from recursing into there.
                 # if '.git' in dirnames:

@@ -35,7 +35,7 @@ from nolearn.lasagne import NeuralNet
 from nolearn.lasagne import PrintLayerInfo
 from nolearn.lasagne import TrainSplit
 import numpy as np
-from articleCat_DAE_4 import run_all as run4
+from articleCat_DAE_5 import run_all as run5
 from pickleImages import runPickleImages
 from runMySvm import runSvm
 from nnClassifier import runNNclassifier
@@ -49,6 +49,10 @@ from runLibSvm import runLibSvm
 ### so had to manually copy the file I wanted to this folder
 from shape import ReshapeLayer
 from theano.tensor.shared_randomstreams import RandomStreams
+
+CONV_AE_PARAMS_PKL = 'conv_ae.np'
+# CONV_AE_NP = 'conv_ae.np'
+CONV_AE_PKL = 'conv_ae.pkl'
 
 FILE_SEPARATOR = "/"
 counter = 0
@@ -304,9 +308,10 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         cnn.fit(X_train, X_out)
 
         try:
-            pickle.dump(cnn, open(folder_path + 'conv_ae.pkl', 'w'))
-            # cnn = pickle.load(open(folder_path + 'conv_ae.pkl','r'))
-            cnn.save_weights_to(folder_path + 'conv_ae.np')
+            pickle.dump(cnn, open(folder_path + CONV_AE_PKL, 'w'))
+            # cnn = pickle.load(open(folder_path + CONV_AE_PKL,'r'))
+            # cnn.save_weights_to(folder_path + CONV_AE_NP)
+            cnn.save_params_to(folder_path + CONV_AE_PARAMS_PKL)
         except:
             print ("Could not pickle cnn")
 
@@ -872,7 +877,16 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
     # ae = pickle.load(open('mnist/conv_ae.pkl','r'))
     # cnn.save_weights_to(folder_path+'conv_ae.np')
 
-    # run_svm(cnn)
+    try:
+        errors = run_svm(cnn)
+        output_file.write("SVM: " + errors)
+        results_file.write(str(errors) + "\n")
+
+        output_file.flush()
+        results_file.flush()
+    except Exception as e:
+        print(e)
+        print(e.message)
 
     return cnn.train_history_[-1]['valid_accuracy']
 
@@ -1053,7 +1067,7 @@ def run_all():
 
     ac1, ac2, ac3, ac4, ac5, ac6, ac7, ac8 = 1, 1, 1, 1, 1, 1, 1, 1
 
-    for i in range(6, 20, 1):
+    for i in range(1, 5, 1):
         print("Run #", i)
         # try:
         #     if np.isfinite(ac1):
@@ -1066,21 +1080,21 @@ def run_all():
         #     print("failed to run- ", i)
         #     print(e)
         try:
-            if np.isfinite(ac2) and i % 5 == 4:
-                ac2 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.01 * i, update_momentum=0.9,
+            if np.isfinite(ac2):
+                ac2 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.06 + 0.002 * i, update_momentum=0.9,
                           dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name, end_index=end_index,
-                          zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=3)
+                          zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=9)
             # else:
             #     ac2 = 1
         except Exception as e:
             print("failed to run- ", i)
             print(e)
         try:
-            if np.isfinite(ac3) and i % 2 == 0:
-                ac3 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.01 * i, update_momentum=0.9,
+            if np.isfinite(ac3) and i % 3 == 0:
+                ac3 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.06 + 0.002 * i, update_momentum=0.9,
                           dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name,
                           end_index=end_index,
-                          zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=5)
+                          zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=7)
             else:
                 ac3 = 1
         except Exception as e:
@@ -1119,20 +1133,20 @@ def run_all():
         # except Exception as e:
         #     print("failed to run- ", i)
         #     print(e)
+        # try:
+        #     if np.isfinite(ac7):
+        #         ac7 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.01 * i, update_momentum=0.9,
+        #                   dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name,
+        #                   end_index=end_index,
+        #                   zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=5)
+        #     else:
+        #         ac7 = 1
+        # except Exception as e:
+        #     print("failed to run- ", i)
+        #     print(e)
         try:
-            if np.isfinite(ac7):
-                ac7 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.01 * i, update_momentum=0.9,
-                          dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name,
-                          end_index=end_index,
-                          zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=9)
-            else:
-                ac7 = 1
-        except Exception as e:
-            print("failed to run- ", i)
-            print(e)
-        try:
-            if np.isfinite(ac8) and i % 5 == 3:
-                ac8 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.01 * i, update_momentum=0.9,
+            if np.isfinite(ac8) and i % 3 == 0:
+                ac8 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.06 + 0.002 * i, update_momentum=0.9,
                           dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name,
                           end_index=end_index,
                           zero_meaning=zero_meaning, activation=None, last_layer_activation=None, filters_type=9)
@@ -1142,7 +1156,7 @@ def run_all():
             print("failed to run- ", i)
             print(e)
 
-        run4()
+        run5()
 
 if __name__ == "__main__":
     import os
