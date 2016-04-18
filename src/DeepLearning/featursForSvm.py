@@ -92,7 +92,7 @@ def images_svm(pickled_file, x=None, all_labels=None, num_labels=15, TRAIN_SPLIT
     else:
         cnn = pickled_file
         if x is None:
-            all_labels, train_x = pickleAllImages(num_labels=15)
+            all_labels, train_x = pickleAllImages(num_labels=15, pos=True)
             input_width, input_height, dropout_percent = 300, 140, 0.2
             x = train_x.astype(np.float32).reshape((-1, 1, input_width, input_height))
             x *= np.random.binomial(1, 1 - dropout_percent, size=x.shape)
@@ -207,66 +207,66 @@ def create_cae(folder_path, learning_rate, input_width=300, input_height=140, la
         # Layer current size - 1x300x140
 
         conv1_num_filters=layers_size[0], conv1_filter_size=filter_1, conv1_nonlinearity=activation,
-        # conv1_border_mode="same",
-        conv1_pad="same",
+        conv1_border_mode="same",
+        # conv1_pad="same",
         conv11_num_filters=layers_size[0], conv11_filter_size=filter_1, conv11_nonlinearity=activation,
-        # conv11_border_mode="same",
-        conv11_pad="same",
+        conv11_border_mode="same",
+        # conv11_pad="same",
         conv12_num_filters=layers_size[0], conv12_filter_size=filter_1, conv12_nonlinearity=activation,
-        # conv12_border_mode="same",
-        conv12_pad="same",
+        conv12_border_mode="same",
+        # conv12_pad="same",
 
         pool1_pool_size=(2, 2),
 
         conv2_num_filters=layers_size[1], conv2_filter_size=filter_2, conv2_nonlinearity=activation,
-        # conv2_border_mode="same",
-        conv2_pad="same",
+        conv2_border_mode="same",
+        # conv2_pad="same",
         conv21_num_filters=layers_size[1], conv21_filter_size=filter_2, conv21_nonlinearity=activation,
-        # conv21_border_mode="same",
-        conv21_pad="same",
+        conv21_border_mode="same",
+        # conv21_pad="same",
         conv22_num_filters=layers_size[1], conv22_filter_size=filter_2, conv22_nonlinearity=activation,
-        # conv22_border_mode="same",
-        conv22_pad="same",
+        conv22_border_mode="same",
+        # conv22_pad="same",
 
         pool2_pool_size=(2, 2),
 
         conv3_num_filters=layers_size[2], conv3_filter_size=filter_3, conv3_nonlinearity=activation,
-        # conv3_border_mode="same",
-        conv3_pad="same",
+        conv3_border_mode="same",
+        # conv3_pad="same",
         conv31_num_filters=layers_size[2], conv31_filter_size=filter_3, conv31_nonlinearity=activation,
-        # conv31_border_mode="same",
-        conv31_pad="same",
+        conv31_border_mode="same",
+        # conv31_pad="same",
         conv32_num_filters=1, conv32_filter_size=filter_3, conv32_nonlinearity=activation,
-        # conv32_border_mode="same",
-        conv32_pad="same",
+        conv32_border_mode="same",
+        # conv32_pad="same",
 
         unpool1_ds=(2, 2),
 
         conv4_num_filters=layers_size[3], conv4_filter_size=filter_4, conv4_nonlinearity=activation,
-        # conv4_border_mode="same",
-        conv4_pad="same",
+        conv4_border_mode="same",
+        # conv4_pad="same",
         conv41_num_filters=layers_size[3], conv41_filter_size=filter_4, conv41_nonlinearity=activation,
-        # conv41_border_mode="same",
-        conv41_pad="same",
+        conv41_border_mode="same",
+        # conv41_pad="same",
         conv42_num_filters=layers_size[3], conv42_filter_size=filter_4, conv42_nonlinearity=activation,
-        # conv42_border_mode="same",
-        conv42_pad="same",
+        conv42_border_mode="same",
+        # conv42_pad="same",
 
         unpool2_ds=(2, 2),
 
         conv5_num_filters=layers_size[4], conv5_filter_size=filter_5, conv5_nonlinearity=activation,
-        # conv5_border_mode="same",
-        conv5_pad="same",
+        conv5_border_mode="same",
+        # conv5_pad="same",
         conv51_num_filters=layers_size[4], conv51_filter_size=filter_5, conv51_nonlinearity=activation,
-        # conv51_border_mode="same",
-        conv51_pad="same",
+        conv51_border_mode="same",
+        # conv51_pad="same",
         conv52_num_filters=layers_size[4], conv52_filter_size=filter_5, conv52_nonlinearity=activation,
-        # conv52_border_mode="same",
-        conv52_pad="same",
+        conv52_border_mode="same",
+        # conv52_pad="same",
 
         conv6_num_filters=1, conv6_filter_size=filter_6, conv6_nonlinearity=last_layer_activation,
-        # conv6_border_mode="same",
-        conv6_pad="same",
+        conv6_border_mode="same",
+        # conv6_pad="same",
 
         output_layer_shape=(([0], -1)),
 
@@ -330,12 +330,21 @@ def checkLabelPredict(features, labels, cross_validation_parts=5):
         clf = svm.SVC(kernel='linear', C=1).fit(np.concatenate((pos_train, neg_train), axis=0),
                                                 np.concatenate((np.ones(pos_train.shape[0]),
                                                                 np.zeros(neg_train.shape[0])), axis=0))
-        score = clf.score(np.concatenate((pos_test, neg_test), axis=0),
-                          np.concatenate((np.ones(pos_test.shape[0]), np.zeros(neg_test.shape[0])), axis=0))
+
+        test_params = np.concatenate((pos_test, neg_test), axis=0)
+        test_y = np.concatenate((np.ones(pos_test.shape[0]), np.zeros(neg_test.shape[0])), axis=0)
+        score = clf.score(test_params, test_y)
         # auc_score = roc_auc_score(test_y, test_predict)
 
         scores[cross_validation_index] = score
         print(score)
+
+        try:
+            test_predict = clf.predict(test_params)
+            auc_score = roc_auc_score(test_y, test_predict)
+            print("AUC cross-", auc_score)
+        except:
+            pass
 
     return np.average(scores)
 
@@ -352,6 +361,10 @@ def generate_positives(positives, num_negatives):
 def run_svm(pickle_name, X_train=None, labels=None):
     num_labels = 15
     features, labels = images_svm(pickle_name, X_train, labels,  num_labels=num_labels)
+    try:
+        pickle.dump((features, labels), open('svm.pkl', 'w'))
+    except:
+        pass
     errorRates = np.zeros(num_labels)
     # aucScores = np.zeros(num_labels)
 
@@ -383,12 +396,12 @@ if __name__ == '__main__':
     # zero_meaning = False
     # epochs = 25
 
-    # learning_rate = 0.6
-    # pickled_file = "C:/devl/python/ISH_Lasagne/src/DeepLearning/pklCNN/CAE_3000_3Conv2Pool_differentFilters-1460839270.89/run_1/"
-    # cnn = create_cae(pickled_file, learning_rate=learning_rate, layers_size=[32, 32, 64, 32, 32], activation=None,
-    #                  last_layer_activation=tanh, filters_type=9)
+    learning_rate = 0.6
+    pickled_file = "C:/devl/python/ISH_Lasagne/src/DeepLearning/pklCNN/CAE_3000_3Conv2Pool_differentFilters-1460839270.89/run_1/"
+    cnn = create_cae(pickled_file, learning_rate=learning_rate, layers_size=[32, 32, 64, 32, 32], activation=None,
+                     last_layer_activation=tanh, filters_type=9)
     #
-    # pLabel, train_x = pickleAllImages(num_labels=15)
+    # pLabel, train_x = pickleAllImages(num_labels=15, pos=True)
     # input_width, input_height, dropout_percent = 300, 140, 0.2
     # X_train = train_x.astype(np.float32).reshape((-1, 1, input_width, input_height))
     # X_train *= np.random.binomial(1, 1 - dropout_percent, size=X_train.shape)

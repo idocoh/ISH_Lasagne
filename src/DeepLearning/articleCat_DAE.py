@@ -1081,7 +1081,7 @@ def run_all():
         #     print(e)
         try:
             if np.isfinite(ac2):
-                ac2 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.06 + 0.002 * i, update_momentum=0.9,
+                ac2 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.06 + 0.0005 * i, update_momentum=0.9,
                           dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name, end_index=end_index,
                           zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=9)
             # else:
@@ -1091,7 +1091,7 @@ def run_all():
             print(e)
         try:
             if np.isfinite(ac3) and i % 3 == 0:
-                ac3 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.06 + 0.002 * i, update_momentum=0.9,
+                ac3 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.06 + 0.0005 * i, update_momentum=0.9,
                           dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name,
                           end_index=end_index,
                           zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=7)
@@ -1146,7 +1146,7 @@ def run_all():
         #     print(e)
         try:
             if np.isfinite(ac8) and i % 3 == 0:
-                ac8 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.06 + 0.002 * i, update_momentum=0.9,
+                ac8 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.06 + 0.0005 * i, update_momentum=0.9,
                           dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name,
                           end_index=end_index,
                           zero_meaning=zero_meaning, activation=None, last_layer_activation=None, filters_type=9)
