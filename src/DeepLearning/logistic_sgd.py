@@ -197,7 +197,7 @@ class LogisticRegression(object):
         return T.mean( T.sqrt( T.sum( (self.p_y_given_x - y) * (self.p_y_given_x - y) ,axis=1) ) )
 
 
-def load_data(dataset, toShuffleInput = False , withZeroMeaning = False, labelset=None,start_index=0,end_index=16351,MULTI_POSITIVES=20,dropout_percent=0.1,TRAIN_DATA_PRECENT=0.8,VALIDATION_DATA_PRECENT=0.8):
+def load_data(dataset, withSVM = False, toShuffleInput = False , withZeroMeaning = False, labelset=None,start_index=0,end_index=16351,MULTI_POSITIVES=20,dropout_percent=0.1,TRAIN_DATA_PRECENT=0.8,VALIDATION_DATA_PRECENT=0.8):
     ''' Loads the dataset
 
     :type dataset: string
@@ -247,19 +247,26 @@ def load_data(dataset, toShuffleInput = False , withZeroMeaning = False, labelse
 # #         pData= cPickle.load(f)
 # #         f.close()
 
-        file_name = "piclked_articleCat_" + str(end_index) # + "_" + str(dropout_percent)
+        file_name = "piclked_articleCat__" + str(end_index)  # + "_" + str(dropout_percent)
         try:
             f = gzip.open("pickled_temp/" + file_name + ".pkl.gz", 'rb')
             pLabel, pData = cPickle.load(f)
             f.close()
+            f = gzip.open("pickled_temp/" + file_name + "-SVM.pkl.gz", 'rb')
+            svm_data, svm_label = cPickle.load(f)
+            f.close()
         except:
-            pLabel, pData = pickleAllImages(num_labels=labelset, TRAIN_SPLIT=TRAIN_DATA_PRECENT, end_index=end_index,MULTI=MULTI_POSITIVES,dropout_percent=dropout_percent)
+            pLabel, pData, svm_data, svm_label = pickleAllImages(withSvm=withSVM, num_labels=labelset, TRAIN_SPLIT=TRAIN_DATA_PRECENT, end_index=end_index,MULTI=MULTI_POSITIVES,dropout_percent=dropout_percent)
             if end_index < 10001:
                 f = gzip.open("pickled_temp/" + file_name + ".pkl.gz", 'wb')
                 try:
                     cPickle.dump((pLabel[:end_index], pData[:end_index]), f, protocol=2)
                 except:
                     f.close()
+                try:
+                    cPickle.dump((svm_data, svm_label), open("pickled_temp/" + file_name + "-SVM1.pkl.gz", 'wb'))
+                except:
+                    pass
         
         # Divided data set into 3 parts.
 
@@ -353,7 +360,7 @@ def load_data(dataset, toShuffleInput = False , withZeroMeaning = False, labelse
 
     rval = [(train_set_x, train_set_y), (valid_set_x, valid_set_y),
             (test_set_x, test_set_y)]
-    return rval
+    return rval, svm_data, svm_label
 
 
 def sgd_optimization_mnist(learning_rate=0.13, n_epochs=1000,

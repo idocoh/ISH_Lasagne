@@ -62,7 +62,7 @@ def load2d(num_labels, outputFile=None, input_width=300, input_height=140, end_i
            dropout_percent=0.1, data_set='ISH.pkl.gz', toShuffleInput = False, withZeroMeaning = False, TRAIN_PRECENT=0.8):
     print ('loading data...')
 
-    data_sets = load_data(data_set, toShuffleInput=toShuffleInput, withZeroMeaning=withZeroMeaning, end_index=end_index,
+    data_sets, svm_data, svm_label = load_data(data_set, withSVM=True, toShuffleInput=toShuffleInput, withZeroMeaning=withZeroMeaning, end_index=end_index,
                           MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=dropout_percent, labelset=num_labels, TRAIN_DATA_PRECENT=TRAIN_PRECENT)
 
     train_set_x, train_set_y = data_sets[0]
@@ -76,7 +76,7 @@ def load2d(num_labels, outputFile=None, input_width=300, input_height=140, end_i
     print(train_set_x.shape[0], 'train samples')
     # if outputFile is not None:
     #     outputFile.write("Number of training examples: "+str(train_set_x.shape[0]) + "\n\n")
-    return train_set_x, train_set_y, test_set_x, test_set_y
+    return (train_set_x, train_set_y, test_set_x, test_set_y), svm_data, svm_label
 
 # <codecell>
 
@@ -786,9 +786,10 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
     print ("Start time: ", time.ctime())
 
     if loadedData is None:
-        train_x, train_y, test_x, test_y = load2d(categories, output_file, input_width, input_height, end_index, multiple_positives, dropout_percent)  # load 2-d data
+        train_x, train_y, test_x, test_y, svm_data, svm_label = load2d(categories, output_file, input_width, input_height, end_index, multiple_positives, dropout_percent)  # load 2-d data
     else:
-        train_x, train_y, test_x, test_y = loadedData
+        data, svm_data, svm_label = loadedData
+        train_x, train_y, test_x, test_y = data
 
     if zero_meaning:
         train_x = train_x.astype(np.float64)
@@ -878,9 +879,13 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
     # cnn.save_weights_to(folder_path+'conv_ae.np')
 
     try:
-        errors = run_svm(cnn)
-        output_file.write("SVM: " + errors)
-        results_file.write(str(errors) + "\n")
+        print("Running SVM")
+        errors, aucs = run_svm(cnn, X_train=svm_data, labels=svm_label)
+        print("Errors", errors)
+        print("AUC", aucs)
+        output_file.write("SVM errors: " + errors)
+        output_file.write("SVM auc: " + aucs)
+        results_file.write(str(errors) + "\t" + str(aucs) + "\n")
 
         output_file.flush()
         results_file.flush()
@@ -1063,7 +1068,7 @@ def run_all():
     input_noise_rate = 0.2
     zero_meaning = False
     epochs = 25
-    data = load2d(num_labels=num_labels, end_index=end_index, TRAIN_PRECENT=1)
+    data, svm_data, svm_label = load2d(num_labels=num_labels, end_index=end_index, TRAIN_PRECENT=1)
 
     ac1, ac2, ac3, ac4, ac5, ac6, ac7, ac8 = 1, 1, 1, 1, 1, 1, 1, 1
 
@@ -1081,82 +1086,82 @@ def run_all():
         #     print(e)
         try:
             if np.isfinite(ac2):
-                ac2 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.06 + 0.0005 * i, update_momentum=0.9,
-                          dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name, end_index=end_index,
+                ac2 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.05 + 0.005 * i, update_momentum=0.9,
+                          dropout_percent=input_noise_rate, loadedData=(data, svm_data, svm_label), folder_name=folder_name, end_index=end_index,
                           zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=9)
             # else:
             #     ac2 = 1
         except Exception as e:
             print("failed to run- ", i)
             print(e)
-        try:
-            if np.isfinite(ac3) and i % 3 == 0:
-                ac3 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.06 + 0.0005 * i, update_momentum=0.9,
-                          dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name,
-                          end_index=end_index,
-                          zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=7)
-            else:
-                ac3 = 1
-        except Exception as e:
-            print("failed to run- ", i)
-            print(e)
         # try:
-        #     if np.isfinite(ac4) and i % 5 == 1:
-        #         ac4 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.01 * i, update_momentum=0.9,
-        #                   dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name,
-        #                   end_index=end_index,
-        #                   zero_meaning=zero_meaning, activation=None, last_layer_activation=None, filters_type=5)
-        #     # else:
-        #     #     ac4 = 1
-        # except Exception as e:
-        #     print("failed to run- ", i)
-        #     print(e)
-        # try:
-        #     if np.isfinite(ac5):
-        #         ac5 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.01 * i, update_momentum=0.9,
+        #     if np.isfinite(ac3) and i % 3 == 0:
+        #         ac3 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.05 + 0.005 * i, update_momentum=0.9,
         #                   dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name,
         #                   end_index=end_index,
         #                   zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=7)
         #     else:
-        #         ac5 = 1
+        #         ac3 = 1
         # except Exception as e:
         #     print("failed to run- ", i)
         #     print(e)
+        # # try:
+        # #     if np.isfinite(ac4) and i % 5 == 1:
+        # #         ac4 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.01 * i, update_momentum=0.9,
+        # #                   dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name,
+        # #                   end_index=end_index,
+        # #                   zero_meaning=zero_meaning, activation=None, last_layer_activation=None, filters_type=5)
+        # #     # else:
+        # #     #     ac4 = 1
+        # # except Exception as e:
+        # #     print("failed to run- ", i)
+        # #     print(e)
+        # # try:
+        # #     if np.isfinite(ac5):
+        # #         ac5 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.01 * i, update_momentum=0.9,
+        # #                   dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name,
+        # #                   end_index=end_index,
+        # #                   zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=7)
+        # #     else:
+        # #         ac5 = 1
+        # # except Exception as e:
+        # #     print("failed to run- ", i)
+        # #     print(e)
+        # # try:
+        # #     if np.isfinite(ac6) and i % 5 == 2:
+        # #         ac6 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.01 * i, update_momentum=0.9,
+        # #                   dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name,
+        # #                   end_index=end_index,
+        # #                   zero_meaning=zero_meaning, activation=None, last_layer_activation=None, filters_type=7)
+        # #     # else:
+        # #     #     ac6 = 1
+        # # except Exception as e:
+        # #     print("failed to run- ", i)
+        # #     print(e)
+        # # try:
+        # #     if np.isfinite(ac7):
+        # #         ac7 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.01 * i, update_momentum=0.9,
+        # #                   dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name,
+        # #                   end_index=end_index,
+        # #                   zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=5)
+        # #     else:
+        # #         ac7 = 1
+        # # except Exception as e:
+        # #     print("failed to run- ", i)
+        # #     print(e)
         # try:
-        #     if np.isfinite(ac6) and i % 5 == 2:
-        #         ac6 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.01 * i, update_momentum=0.9,
+        #     if np.isfinite(ac8) and i % 3 == 0:
+        #         ac8 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.05 + 0.005 * i, update_momentum=0.9,
         #                   dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name,
         #                   end_index=end_index,
-        #                   zero_meaning=zero_meaning, activation=None, last_layer_activation=None, filters_type=7)
+        #                   zero_meaning=zero_meaning, activation=None, last_layer_activation=None, filters_type=9)
         #     # else:
-        #     #     ac6 = 1
+        #     #     ac8 = 1
         # except Exception as e:
         #     print("failed to run- ", i)
         #     print(e)
-        # try:
-        #     if np.isfinite(ac7):
-        #         ac7 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.01 * i, update_momentum=0.9,
-        #                   dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name,
-        #                   end_index=end_index,
-        #                   zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=5)
-        #     else:
-        #         ac7 = 1
-        # except Exception as e:
-        #     print("failed to run- ", i)
-        #     print(e)
-        try:
-            if np.isfinite(ac8) and i % 3 == 0:
-                ac8 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.06 + 0.0005 * i, update_momentum=0.9,
-                          dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name,
-                          end_index=end_index,
-                          zero_meaning=zero_meaning, activation=None, last_layer_activation=None, filters_type=9)
-            # else:
-            #     ac8 = 1
-        except Exception as e:
-            print("failed to run- ", i)
-            print(e)
 
-        run5()
+    run5()
 
 if __name__ == "__main__":
     import os

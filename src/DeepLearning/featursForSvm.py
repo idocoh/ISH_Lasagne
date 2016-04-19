@@ -15,6 +15,7 @@ from shape import ReshapeLayer
 from lasagne.nonlinearities import tanh
 from lasagne.updates import nesterov_momentum
 from nolearn.lasagne import TrainSplit
+import time
 
 CONV_AE_PARAMS_PKL = 'conv_ae_params.pkl'
 CONV_AE_NP = 'conv_ae.np'
@@ -92,14 +93,16 @@ def images_svm(pickled_file, x=None, all_labels=None, num_labels=15, TRAIN_SPLIT
     else:
         cnn = pickled_file
         if x is None:
-            all_labels, train_x = pickleAllImages(num_labels=15, pos=True)
-            input_width, input_height, dropout_percent = 300, 140, 0.2
-            x = train_x.astype(np.float32).reshape((-1, 1, input_width, input_height))
-            x *= np.random.binomial(1, 1 - dropout_percent, size=x.shape)
+            print ("Reading images...")
+            all_labels, x = pickleAllImages(num_labels=15, pos=True)
+        print("Processing images...")
+        input_width, input_height, dropout_percent = 300, 140, 0.2
+        x = x.astype(np.float32).reshape((-1, 1, input_width, input_height))
+        x *= np.random.binomial(1, 1 - dropout_percent, size=x.shape)
         # features = cnn.output_hiddenLayer(x)
 
         quarter_x = np.floor(x.shape[0] / 4)
-
+        print("Starting cnn process...")
         train_last_hidden_layer_1 = cnn.output_hiddenLayer(x[:quarter_x])
         train_last_hidden_layer_1 = train_last_hidden_layer_1.reshape((train_last_hidden_layer_1.shape[0], -1))
         print("after first quarter train output")
@@ -314,6 +317,8 @@ def checkLabelPredict(features, labels, cross_validation_parts=5):
     positive_data_chunks = np.array_split(positive_data, cross_validation_parts)
 
     scores = np.zeros(cross_validation_parts)
+    auc_scores = np.zeros(cross_validation_parts)
+
     for cross_validation_index in range(0, cross_validation_parts):
         neg_test = negative_data_chunks[cross_validation_index]
         neg_train = np.copy(negative_data_chunks)
@@ -327,26 +332,40 @@ def checkLabelPredict(features, labels, cross_validation_parts=5):
         pos_train = np.concatenate(pos_train)
         pos_train = generate_positives(pos_train, neg_train.shape[0])
 
+        start_time = time.clock()
         clf = svm.SVC(kernel='linear', C=1).fit(np.concatenate((pos_train, neg_train), axis=0),
                                                 np.concatenate((np.ones(pos_train.shape[0]),
                                                                 np.zeros(neg_train.shape[0])), axis=0))
+        run_time = (time.clock() - start_time) / 60.
+        print("SVM took(min)- ", run_time)
 
+        start_time = time.clock()
         test_params = np.concatenate((pos_test, neg_test), axis=0)
         test_y = np.concatenate((np.ones(pos_test.shape[0]), np.zeros(neg_test.shape[0])), axis=0)
         score = clf.score(test_params, test_y)
+        run_time = (time.clock() - start_time) / 60.
+        print("SVM score took(min)- ", run_time)
         # auc_score = roc_auc_score(test_y, test_predict)
 
         scores[cross_validation_index] = score
         print(score)
 
         try:
+            start_time = time.clock()
             test_predict = clf.predict(test_params)
             auc_score = roc_auc_score(test_y, test_predict)
             print("AUC cross-", auc_score)
-        except:
-            pass
+            auc_scores[cross_validation_index] = auc_score
+            run_time = (time.clock() - start_time) / 60.
+            print("SVM auc took(min)- ", run_time)
+        except Exception as e:
+            print(e)
+            print(e.message)
 
-    return np.average(scores)
+    try:
+        return np.average(scores), np.average(auc_scores)
+    except:
+        return np.average(scores), 999
 
 
 def generate_positives(positives, num_negatives):
@@ -361,27 +380,27 @@ def generate_positives(positives, num_negatives):
 def run_svm(pickle_name, X_train=None, labels=None):
     num_labels = 15
     features, labels = images_svm(pickle_name, X_train, labels,  num_labels=num_labels)
-    try:
-        pickle.dump((features, labels), open('svm.pkl', 'w'))
-    except:
-        pass
+    # try:
+    #     pickle.dump((features, labels), open('svm.pkl', 'w'))
+    # except:
+    #     pass
     errorRates = np.zeros(num_labels)
-    # aucScores = np.zeros(num_labels)
+    aucScores = np.zeros(num_labels)
 
     for label in range(0, num_labels):
         print("Svm for category- ", label)
-        labelPredRate = checkLabelPredict(features, labels[:, label])
+        labelPredRate, labelAucScore = checkLabelPredict(features, labels[:, label])
         errorRates[label] = labelPredRate
-        # aucScores[label] = labelAucScore
+        aucScores[label] = labelAucScore
 
     errorRate = np.average(errorRates)
-    # aucAverageScore = np.average(aucScores)
+    aucAverageScore = np.average(aucScores)
     print("Average error- ", errorRate, "%")
     print("Prediction rate- ", 100 - errorRate, "%")
-    # print "Average Auc Score- ", aucAverageScore
+    print("Average Auc Score- ", aucAverageScore)
 
-    # return (errorRates, aucScores)
-    return errorRates
+    return (errorRates, aucScores)
+    # return errorRates
 
 if __name__ == '__main__':
     # pickName = "C:/devl/python/ISH_Lasagne/src/DeepLearning/results_dae/learn/run_0/encode.pkl"
