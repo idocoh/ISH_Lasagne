@@ -883,8 +883,8 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         errors, aucs = run_svm(cnn, X_train=svm_data, labels=svm_label)
         print("Errors", errors)
         print("AUC", aucs)
-        output_file.write("SVM errors: " + errors)
-        output_file.write("SVM auc: " + aucs)
+        output_file.write("SVM errors: " + str(errors))
+        output_file.write("SVM auc: " + str(aucs))
         results_file.write(str(errors) + "\t" + str(aucs) + "\n")
 
         output_file.flush()
@@ -1086,7 +1086,7 @@ def run_all():
         #     print(e)
         try:
             if np.isfinite(ac2):
-                ac2 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.055 + 0.005 * i, update_momentum=0.9,
+                ac2 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.06 + 0.003 * i, update_momentum=0.9,
                           dropout_percent=input_noise_rate, loadedData=(data, svm_data, svm_label), folder_name=folder_name, end_index=end_index,
                           zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=9)
             # else:

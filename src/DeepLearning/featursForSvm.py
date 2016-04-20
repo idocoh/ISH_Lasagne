@@ -321,13 +321,17 @@ def checkLabelPredict(features, labels, cross_validation_parts=5):
         neg_train = np.copy(negative_data_chunks)
         np.delete(neg_train, cross_validation_index)
         neg_train = np.concatenate(neg_train)
+        print("     Number of negative train- ", neg_train.shape[0], " test- ", neg_test.shape[0])
 
         pos_test = positive_data_chunks[cross_validation_index]
         pos_test = generate_positives(pos_test, neg_test.shape[0])
         pos_train = np.copy(positive_data_chunks)
         np.delete(pos_train, cross_validation_index)
         pos_train = np.concatenate(pos_train)
+        print("     Number of positive train- ", pos_train.shape[0], " test- ", pos_test.shape[0])
         pos_train = generate_positives(pos_train, neg_train.shape[0])
+        print("         Number of generated positive train- ", pos_train.shape[0])
+
 
         start_time = time.clock()
         clf = svm.SVC(kernel='linear', C=1).fit(np.concatenate((pos_train, neg_train), axis=0),
