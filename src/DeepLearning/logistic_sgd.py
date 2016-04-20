@@ -256,7 +256,7 @@ def load_data(dataset, withSVM = False, toShuffleInput = False , withZeroMeaning
             svm_data, svm_label = cPickle.load(f)
             f.close()
         except:
-            pLabel, pData, svm_data, svm_label = pickleAllImages(withSvm=withSVM, num_labels=labelset, TRAIN_SPLIT=TRAIN_DATA_PRECENT, end_index=end_index,MULTI=MULTI_POSITIVES,dropout_percent=dropout_percent)
+            pLabel, pData, svm_data, svm_label = pickleAllImages(svm_size=withSVM, num_labels=labelset, TRAIN_SPLIT=TRAIN_DATA_PRECENT, end_index=end_index, MULTI=MULTI_POSITIVES, dropout_percent=dropout_percent)
             if end_index < 10001:
                 f = gzip.open("pickled_temp/" + file_name + ".pkl.gz", 'wb')
                 try:

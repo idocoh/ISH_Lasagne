@@ -298,11 +298,8 @@ def create_cae(folder_path, learning_rate, input_width=300, input_height=140, la
 
 def checkLabelPredict(features, labels, cross_validation_parts=5):
     try:
-        print('Inside check label:')
-        print (features.shape)
-        print (labels.shape)
-        print((labels == 1).shape)
-        print ((features[labels == 1, :]).shape)
+        print ("Features size- ", features.shape)
+        print ("Size of positive samples- ", (features[labels == 1, :]).shape)
     except:
         pass
     positive_data = features[labels == 1, :]
@@ -337,14 +334,14 @@ def checkLabelPredict(features, labels, cross_validation_parts=5):
                                                 np.concatenate((np.ones(pos_train.shape[0]),
                                                                 np.zeros(neg_train.shape[0])), axis=0))
         run_time = (time.clock() - start_time) / 60.
-        print("SVM took(min)- ", run_time)
+        # print("SVM took(min)- ", run_time)
 
         start_time = time.clock()
         test_params = np.concatenate((pos_test, neg_test), axis=0)
         test_y = np.concatenate((np.ones(pos_test.shape[0]), np.zeros(neg_test.shape[0])), axis=0)
         score = clf.score(test_params, test_y)
         run_time = (time.clock() - start_time) / 60.
-        print("SVM score took(min)- ", run_time)
+        print("SVM score- ", score)
         # auc_score = roc_auc_score(test_y, test_predict)
 
         scores[cross_validation_index] = score
@@ -357,7 +354,7 @@ def checkLabelPredict(features, labels, cross_validation_parts=5):
             print("AUC cross-", auc_score)
             auc_scores[cross_validation_index] = auc_score
             run_time = (time.clock() - start_time) / 60.
-            print("SVM auc took(min)- ", run_time)
+            # print("SVM auc took(min)- ", run_time)
         except Exception as e:
             print(e)
             print(e.message)
@@ -392,11 +389,13 @@ def run_svm(pickle_name, X_train=None, labels=None):
         labelPredRate, labelAucScore = checkLabelPredict(features, labels[:, label])
         errorRates[label] = labelPredRate
         aucScores[label] = labelAucScore
+        print("Average category error- ", labelPredRate, "%")
+        print("Average category Auc Score- ", labelAucScore)
 
     errorRate = np.average(errorRates)
     aucAverageScore = np.average(aucScores)
     print("Average error- ", errorRate, "%")
-    print("Prediction rate- ", 100 - errorRate, "%")
+    # print("Prediction rate- ", 100 - errorRate, "%")
     print("Average Auc Score- ", aucAverageScore)
 
     return (errorRates, aucScores)

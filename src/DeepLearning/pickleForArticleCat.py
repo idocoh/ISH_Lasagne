@@ -5,7 +5,7 @@ import platform
 
 
 
-def pickleAllImages(num_labels, TRAIN_SPLIT=0.8,end_index=16351,dropout_percent=0.1,MULTI=20, toSplitPositives = True, withSvm=False):
+def pickleAllImages(num_labels, TRAIN_SPLIT=0.8, end_index=16351, dropout_percent=0.1, MULTI=20, toSplitPositives = True, svm_size=600):
 #     if platform.dist()[0]:
 # #         FILE_SEPARATOR = "\\"
 #     else :
@@ -54,15 +54,17 @@ def pickleAllImages(num_labels, TRAIN_SPLIT=0.8,end_index=16351,dropout_percent=
            
     pData = np.concatenate((train_set1[0], test_set1[0], train_set2[0], test_set2[0], train_set3[0], test_set3[0]), axis = 0)
 
-    if withSvm:
+    if svm_size > 0:
         posRows = (pLabel != 0).sum(1) > 0
         posData = pData[posRows, :]
         posLabel = pLabel[posRows, :]
-        negData = pData[~posRows, :]
-        negLabel = pLabel[~posRows, :]
+        negData = pData[~posRows[:svm_size+posRows.shape[0]], :]
+        negLabel = pLabel[~posRows[:svm_size+posRows.shape[0]], :]
 
-        svm_data = np.concatenate((posData, negData[:500-posData.shape[0]]), axis=0)
-        svm_label = np.concatenate((posLabel, negLabel[:500-posData.shape[0]]), axis=0)
+        # svm_data = np.concatenate((posData, negData[:svm_size-posData.shape[0]]), axis=0)
+        # svm_label = np.concatenate((posLabel, negLabel[:svm_size-posData.shape[0]]), axis=0)
+        svm_data = np.concatenate((posData, negData), axis=0)
+        svm_label = np.concatenate((posLabel, negLabel), axis=0)
         return pLabel, pData, svm_data, svm_label
     else:
         return pLabel[:end_index], pData[:end_index]

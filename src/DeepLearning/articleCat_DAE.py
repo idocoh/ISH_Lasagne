@@ -1086,7 +1086,7 @@ def run_all():
         #     print(e)
         try:
             if np.isfinite(ac2):
-                ac2 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.05 + 0.005 * i, update_momentum=0.9,
+                ac2 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.055 + 0.005 * i, update_momentum=0.9,
                           dropout_percent=input_noise_rate, loadedData=(data, svm_data, svm_label), folder_name=folder_name, end_index=end_index,
                           zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=9)
             # else:
