@@ -35,7 +35,6 @@ from nolearn.lasagne import NeuralNet
 from nolearn.lasagne import PrintLayerInfo
 from nolearn.lasagne import TrainSplit
 import numpy as np
-from articleCat_DAE_4 import run_all as run4
 from pickleImages import runPickleImages
 from runMySvm import runSvm
 from nnClassifier import runNNclassifier
@@ -58,7 +57,7 @@ def load2d(num_labels, outputFile=None, input_width=300, input_height=140, end_i
            dropout_percent=0.1, data_set='ISH.pkl.gz', toShuffleInput = False, withZeroMeaning = False, TRAIN_PRECENT=0.8):
     print ('loading data...')
 
-    data_sets, svm_data, svm_label = load_data(data_set, withSVM=True, toShuffleInput=toShuffleInput,
+    data_sets, svm_data, svm_label = load_data(data_set, withSVM=400, toShuffleInput=toShuffleInput,
                                                withZeroMeaning=withZeroMeaning, end_index=end_index,
                                                MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=dropout_percent,
                                                labelset=num_labels, TRAIN_DATA_PRECENT=TRAIN_PRECENT)
@@ -160,7 +159,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
 
     #     old_stdout = sys.stdout
     #     print "less",LOG_FILE_NAME
-    log_file = open(LOG_FILE_NAME, "w")
+    log_file = False  #open(LOG_FILE_NAME, "w")
     #     sys.stdout = log_file
 
     counter += 1
@@ -1111,9 +1110,9 @@ def run_all():
         #     print(e)
         try:
             if np.isfinite(ac2) and i % 2 == 1:
-                ac2 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.06 + 0.005 * i, update_momentum=0.9,
+                ac2 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.065 + 0.002 * i, update_momentum=0.9,
                           dropout_percent=input_noise_rate, loadedData=(data, svm_data, svm_label), folder_name=folder_name, end_index=end_index,
-                          zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=11)
+                          zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=9)
             # else:
             #     ac2 = 1
         except Exception as e:
@@ -1143,10 +1142,10 @@ def run_all():
         #     print(e)
         try:
             if np.isfinite(ac5) and i % 2 == 0:
-                ac5 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.05 + 0.005 * i, update_momentum=0.9,
+                ac5 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.064 + 0.003 * i, update_momentum=0.9,
                           dropout_percent=input_noise_rate, loadedData=(data, svm_data, svm_label), folder_name=folder_name,
-                          end_index=end_index,
-                          zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=8)
+                          end_index=end_index, batch_size=256,
+                          zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=11)
             else:
                 ac5 = 1
         except Exception as e:

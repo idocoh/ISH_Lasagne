@@ -62,7 +62,7 @@ def load2d(num_labels, outputFile=None, input_width=300, input_height=140, end_i
            dropout_percent=0.1, data_set='ISH.pkl.gz', toShuffleInput = False, withZeroMeaning = False, TRAIN_PRECENT=0.8):
     print ('loading data...')
 
-    data_sets, svm_data, svm_label = load_data(data_set, withSVM=True, toShuffleInput=toShuffleInput, withZeroMeaning=withZeroMeaning, end_index=end_index,
+    data_sets, svm_data, svm_label = load_data(data_set, withSVM=400, toShuffleInput=toShuffleInput, withZeroMeaning=withZeroMeaning, end_index=end_index,
                           MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=dropout_percent, labelset=num_labels, TRAIN_DATA_PRECENT=TRAIN_PRECENT)
 
     train_set_x, train_set_y = data_sets[0]
@@ -162,7 +162,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
 
     #     old_stdout = sys.stdout
     #     print "less",LOG_FILE_NAME
-    log_file = open(LOG_FILE_NAME, "w")
+    log_file = False #open(LOG_FILE_NAME, "w")
     #     sys.stdout = log_file
 
     counter += 1
@@ -198,6 +198,13 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         filter_4 = (7, 7)
         filter_5 = (9, 9)
         filter_6 = (5, 5)
+    elif filters_type == 11:
+        filter_1 = (11, 11)
+        filter_2 = (9, 9)
+        filter_3 = (7, 7)
+        filter_4 = (9, 9)
+        filter_5 = (11, 11)
+        filter_6 = (7, 7)
 
     def createCSAE(input_height, input_width, X_train, X_out):
 
@@ -749,7 +756,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         sDA = StackedDA(layers_size)
 
         # pre-trainning the SDA
-        sDA.pre_train(train_x, noise_rate=input_noise_rate, epochs=pre_train_epochs,LOG=log_file)
+        sDA.pre_train(train_x, noise_rate=input_noise_rate, epochs=pre_train_epochs, LOG=log_file)
 
         # saving a PNG representation of the first layer
         W = sDA.Layers[0].W.T[:, 1:]
@@ -1067,44 +1074,47 @@ def run_all():
     end_index = 3000
     input_noise_rate = 0.2
     zero_meaning = False
-    epochs = 25
+    epochs = 30
     data, svm_data, svm_label = load2d(num_labels=num_labels, end_index=end_index, TRAIN_PRECENT=1)
 
     ac1, ac2, ac3, ac4, ac5, ac6, ac7, ac8 = 1, 1, 1, 1, 1, 1, 1, 1
 
     for i in range(1, 5, 1):
         print("Run #", i)
-        # try:
-        #     if np.isfinite(ac1):
-        #         ac1 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.01 * i, update_momentum=0.9,
-        #                   dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name, end_index=end_index,
-        #                   zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=3)
-        #     else:
-        #         ac1 = 1
-        # except Exception as e:
-        #     print("failed to run- ", i)
-        #     print(e)
+        try:
+            if np.isfinite(ac1):
+                ac1 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.068 + 0.001 * i,
+                          update_momentum=0.95,
+                          dropout_percent=input_noise_rate, loadedData=(data, svm_data, svm_label),
+                          folder_name=folder_name, end_index=end_index,
+                          zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=9)
+            else:
+                ac1 = 1
+        except Exception as e:
+            print("failed to run- ", i)
+            print(e)
         try:
             if np.isfinite(ac2):
-                ac2 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.06 + 0.003 * i, update_momentum=0.9,
+                ac2 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.068 + 0.001 * i, update_momentum=0.9,
                           dropout_percent=input_noise_rate, loadedData=(data, svm_data, svm_label), folder_name=folder_name, end_index=end_index,
-                          zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=9)
+                          zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=11)
             # else:
             #     ac2 = 1
         except Exception as e:
             print("failed to run- ", i)
             print(e)
-        # try:
-        #     if np.isfinite(ac3) and i % 3 == 0:
-        #         ac3 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.05 + 0.005 * i, update_momentum=0.9,
-        #                   dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name,
-        #                   end_index=end_index,
-        #                   zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=7)
-        #     else:
-        #         ac3 = 1
-        # except Exception as e:
-        #     print("failed to run- ", i)
-        #     print(e)
+        try:
+            if np.isfinite(ac3) and i % 2 == 0:
+                ac3 = run(layers_size=[64, 64, 64, 64, 64], epochs=epochs, learning_rate=0.068 + 0.001 * i,
+                          update_momentum=0.95,
+                          dropout_percent=input_noise_rate, loadedData=(data, svm_data, svm_label),
+                          folder_name=folder_name, end_index=end_index,
+                          zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=9)
+            else:
+                ac3 = 1
+        except Exception as e:
+            print("failed to run- ", i)
+            print(e)
         # # try:
         # #     if np.isfinite(ac4) and i % 5 == 1:
         # #         ac4 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.01 * i, update_momentum=0.9,
