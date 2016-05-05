@@ -249,23 +249,29 @@ def load_data(dataset, withSVM = False, toShuffleInput = False , withZeroMeaning
 
         file_name = "piclked_articleCat__" + str(end_index)  # + "_" + str(dropout_percent)
         try:
+            print("     from pickled file- ", file_name)
             f = gzip.open("pickled_temp/" + file_name + ".pkl.gz", 'rb')
             pLabel, pData = cPickle.load(f)
             f.close()
-            f = gzip.open("pickled_temp/" + file_name + "-SVM.pkl.gz", 'rb')
-            svm_data, svm_label = cPickle.load(f)
-            f.close()
-        except:
+            print("     SVM from pickled file- ", file_name + "-SVM11.pkl.gz")
+            # f = gzip.open("pickled_temp/" + file_name + "-SVM11.pkl.gz", 'rb')
+            svm_data, svm_label = cPickle.load(open("pickled_temp/" + file_name + "-SVM11.pkl.gz"))
+            # f.close()
+        except Exception as e:
+            print e.message
+            print("     from images")
             pLabel, pData, svm_data, svm_label = pickleAllImages(svm_size=withSVM, num_labels=labelset, TRAIN_SPLIT=TRAIN_DATA_PRECENT, end_index=end_index, MULTI=MULTI_POSITIVES, dropout_percent=dropout_percent)
             if end_index < 10001:
                 f = gzip.open("pickled_temp/" + file_name + ".pkl.gz", 'wb')
                 try:
                     cPickle.dump((pLabel[:end_index], pData[:end_index]), f, protocol=2)
-                except:
+                except Exception as e:
+                    print e.message
                     f.close()
                 try:
                     cPickle.dump((svm_data, svm_label), open("pickled_temp/" + file_name + "-SVM1.pkl.gz", 'wb'))
-                except:
+                except Exception as e:
+                    print e.message
                     pass
         
         # Divided data set into 3 parts.
