@@ -32,6 +32,7 @@ References:
                  Christopher M. Bishop, section 4.3.2
 
 """
+from __future__ import print_function
 __docformat__ = 'restructedtext en'
 
 import cPickle
@@ -197,7 +198,7 @@ class LogisticRegression(object):
         return T.mean( T.sqrt( T.sum( (self.p_y_given_x - y) * (self.p_y_given_x - y) ,axis=1) ) )
 
 
-def load_data(dataset, withSVM = False, toShuffleInput = False , withZeroMeaning = False, labelset=None,start_index=0,end_index=16351,MULTI_POSITIVES=20,dropout_percent=0.1,TRAIN_DATA_PRECENT=0.8,VALIDATION_DATA_PRECENT=0.8):
+def load_data(dataset, batch_index = 1, withSVM = False, toShuffleInput = False , withZeroMeaning = False, labelset=None,start_index=0,end_index=16351,MULTI_POSITIVES=20,dropout_percent=0.1,TRAIN_DATA_PRECENT=0.8,VALIDATION_DATA_PRECENT=0.8):
     ''' Loads the dataset
 
     :type dataset: string
@@ -247,31 +248,31 @@ def load_data(dataset, withSVM = False, toShuffleInput = False , withZeroMeaning
 # #         pData= cPickle.load(f)
 # #         f.close()
 
-        file_name = "piclked_articleCat__" + str(end_index)  # + "_" + str(dropout_percent)
+        file_name = "pickled_articleCat_" + str(end_index) + "_" + str(batch_index)  # + str(dropout_percent)
         try:
-            print("     from pickled file- ", file_name)
+            print("     trying from pickled file- ", file_name)
             f = gzip.open("pickled_temp/" + file_name + ".pkl.gz", 'rb')
             pLabel, pData = cPickle.load(f)
             f.close()
-            print("     SVM from pickled file- ", file_name + "-SVM11.pkl.gz")
+            print("     trying SVM from pickled file- ", file_name + "-SVM.pkl.gz")
             # f = gzip.open("pickled_temp/" + file_name + "-SVM11.pkl.gz", 'rb')
-            svm_data, svm_label = cPickle.load(open("pickled_temp/" + file_name + "-SVM11.pkl.gz"))
+            svm_data, svm_label = cPickle.load(open("pickled_temp/" + file_name + "-SVM.pkl.gz"))
             # f.close()
         except Exception as e:
-            print e.message
-            print("     from images")
+            print(e.message)
+            print("     Exception, trying from images")
             pLabel, pData, svm_data, svm_label = pickleAllImages(svm_size=withSVM, num_labels=labelset, TRAIN_SPLIT=TRAIN_DATA_PRECENT, end_index=end_index, MULTI=MULTI_POSITIVES, dropout_percent=dropout_percent)
             if end_index < 10001:
                 f = gzip.open("pickled_temp/" + file_name + ".pkl.gz", 'wb')
                 try:
-                    cPickle.dump((pLabel[:end_index], pData[:end_index]), f, protocol=2)
+                    cPickle.dump((pLabel[end_index*(batch_index-1):end_index*batch_index], pData[end_index*(batch_index-1):end_index*batch_index]), f, protocol=2)
                 except Exception as e:
-                    print e.message
+                    print(e.message)
                     f.close()
                 try:
-                    cPickle.dump((svm_data, svm_label), open("pickled_temp/" + file_name + "-SVM1.pkl.gz", 'wb'))
+                    cPickle.dump((svm_data, svm_label), open("pickled_temp/" + file_name + "-SVM.pkl.gz", 'wb'))
                 except Exception as e:
-                    print e.message
+                    print(e.message)
                     pass
         
         # Divided data set into 3 parts.
@@ -308,11 +309,11 @@ def load_data(dataset, withSVM = False, toShuffleInput = False , withZeroMeaning
         all_data = numpy.concatenate((train_x, valid_x, test_x), axis=0)
 #         print all_data
         data_mean = numpy.mean(all_data)
-        print "mean-" 
-        print data_mean
+        print("mean-")
+        print(data_mean)
         data_std = numpy.std(all_data, ddof=1)
-        print "std-"
-        print data_std
+        print("std-")
+        print(data_std)
         
         def updateData(data):
             data -= data_mean
@@ -404,7 +405,7 @@ def sgd_optimization_mnist(learning_rate=0.13, n_epochs=1000,
     ######################
     # BUILD ACTUAL MODEL #
     ######################
-    print '... building the model'
+    print('... building the model')
 
     # allocate symbolic variables for the data
     index = T.lscalar()  # index to a [mini]batch
@@ -469,7 +470,7 @@ def sgd_optimization_mnist(learning_rate=0.13, n_epochs=1000,
     ###############
     # TRAIN MODEL #
     ###############
-    print '... training the model'
+    print('... training the model')
     # early-stopping parameters
     patience = 5000  # look as this many examples regardless
     patience_increase = 2  # wait this much longer when a new best is
@@ -551,8 +552,8 @@ def sgd_optimization_mnist(learning_rate=0.13, n_epochs=1000,
         )
         % (best_validation_loss * 100., test_score * 100.)
     )
-    print 'The code run for %d epochs, with %f epochs/sec' % (
-        epoch, 1. * epoch / (end_time - start_time))
+    print('The code run for %d epochs, with %f epochs/sec' % (
+        epoch, 1. * epoch / (end_time - start_time)))
     print >> sys.stderr, ('The code for file ' +
                           os.path.split(__file__)[1] +
                           ' ran for %.1fs' % ((end_time - start_time)))

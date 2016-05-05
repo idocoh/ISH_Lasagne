@@ -57,7 +57,7 @@ def load2d(num_labels, outputFile=None, input_width=300, input_height=140, end_i
            dropout_percent=0.1, data_set='ISH.pkl.gz', toShuffleInput = False, withZeroMeaning = False, TRAIN_PRECENT=0.8):
     print ('loading data...')
 
-    data_sets, svm_data, svm_label = load_data(data_set, withSVM=400, toShuffleInput=toShuffleInput,
+    data_sets, svm_data, svm_label = load_data(data_set, batch_index=3, withSVM=400, toShuffleInput=toShuffleInput,
                                                withZeroMeaning=withZeroMeaning, end_index=end_index,
                                                MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=dropout_percent,
                                                labelset=num_labels, TRAIN_DATA_PRECENT=TRAIN_PRECENT)

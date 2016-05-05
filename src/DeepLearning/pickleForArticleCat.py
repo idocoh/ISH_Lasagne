@@ -58,8 +58,8 @@ def pickleAllImages(num_labels, TRAIN_SPLIT=0.8, end_index=16351, dropout_percen
         posRows = (pLabel != 0).sum(1) > 0
         posData = pData[posRows, :]
         posLabel = pLabel[posRows, :]
-        negData = pData[~posRows[:svm_size+posRows.shape[0]], :]
-        negLabel = pLabel[~posRows[:svm_size+posRows.shape[0]], :]
+        negData = pData[~posRows[:svm_size+200], :]
+        negLabel = pLabel[~posRows[:svm_size+200], :]
 
         # svm_data = np.concatenate((posData, negData[:svm_size-posData.shape[0]]), axis=0)
         # svm_label = np.concatenate((posLabel, negLabel[:svm_size-posData.shape[0]]), axis=0)
