@@ -248,10 +248,10 @@ def load_data(dataset, batch_index = 1, withSVM = False, toShuffleInput = False 
 # #         pData= cPickle.load(f)
 # #         f.close()
 
-        file_name = "pickled_articleCat_" + str(end_index) + "_" + str(batch_index)  # + str(dropout_percent)
+        file_name = "pickled_articleCat_" + str(end_index)  # + str(dropout_percent)
         try:
-            print("     trying from pickled file- ", file_name)
-            f = gzip.open("pickled_temp/" + file_name + ".pkl.gz", 'rb')
+            print("     trying from pickled file- ", file_name + "_" + str(batch_index))
+            f = gzip.open("pickled_temp/" + file_name + "_" + str(batch_index) + ".pkl.gz", 'rb')
             pLabel, pData = cPickle.load(f)
             f.close()
             print("     trying SVM from pickled file- ", file_name + "-SVM.pkl.gz")
@@ -263,7 +263,7 @@ def load_data(dataset, batch_index = 1, withSVM = False, toShuffleInput = False 
             print("     Exception, trying from images")
             pLabel, pData, svm_data, svm_label = pickleAllImages(svm_size=withSVM, num_labels=labelset, TRAIN_SPLIT=TRAIN_DATA_PRECENT, end_index=end_index, MULTI=MULTI_POSITIVES, dropout_percent=dropout_percent)
             if end_index < 10001:
-                f = gzip.open("pickled_temp/" + file_name + ".pkl.gz", 'wb')
+                f = gzip.open("pickled_temp/" + file_name + "_" + str(batch_index) + ".pkl.gz", 'wb')
                 try:
                     cPickle.dump((pLabel[end_index*(batch_index-1):end_index*batch_index], pData[end_index*(batch_index-1):end_index*batch_index]), f, protocol=2)
                 except Exception as e:
