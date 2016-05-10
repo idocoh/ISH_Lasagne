@@ -903,14 +903,18 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
     # ae = pickle.load(open('mnist/conv_ae.pkl','r'))
     # cnn.save_weights_to(folder_path+'conv_ae.np')
 
+    valid_accuracy = cnn.train_history_[-1]['valid_accuracy']
+    if valid_accuracy > 0.05:
+        return valid_accuracy
+
     try:
         print("Running SVM")
         errors, aucs = run_svm(cnn, X_train=svm_data, labels=svm_label)
         print("Errors", errors)
         print("AUC", aucs)
-        output_file.write("SVM errors: " + errors)
-        output_file.write("SVM auc: " + aucs)
-        results_file.write(str(errors) + "\t" + str(aucs) + "\n")
+        output_file.write("SVM errors: " + str(errors))
+        output_file.write("SVM auc: " + str(aucs))
+        results_file.write(str(aucs) + "\n")
 
         output_file.flush()
         results_file.flush()
@@ -918,7 +922,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         print(e)
         print(e.message)
 
-    return cnn.train_history_[-1]['valid_accuracy']
+    return valid_accuracy
 
 '''
     # lastLayerOutputs = outputLastLayer_DAE(train_x, train_y, test_x, test_y)
@@ -1100,7 +1104,7 @@ def run_all():
         print("Run #", i)
         try:
             data, svm_data, svm_label = load2d(batch_index=i, num_labels=num_labels, end_index=end_index, TRAIN_PRECENT=1)
-            run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.068, update_momentum=0.9,
+            run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.067, update_momentum=0.9,
                 dropout_percent=input_noise_rate, loadedData=(data, svm_data, svm_label), folder_name=folder_name, end_index=end_index,
                 zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=9)
 
