@@ -701,9 +701,8 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         results_file.write(("Rectify" if activation is None else str(activation)) + "\t")
         output_file.write(
             "Last layer activation func: " + ("Rectify" if last_layer_activation is None else str(last_layer_activation)) + "\n")
-        results_file.write(("Rectify" if activation is None else str(last_layer_activation)) + "\t")
+        results_file.write(("Rectify" if last_layer_activation is None else str(last_layer_activation)) + "\t")
         #         output_file.write("Multiple Positives by: " + str(multiple_positives) + "\n")
-        print("~~DEBUG:     Rectify" if activation is None else str(last_layer_activation))
         output_file.write("Number of images: " + str(end_index) + "\n")
         results_file.write(str(end_index) + "\t")
         output_file.write("Dropout noise precent: " + str(dropout_percent * 100) + "%\n")
@@ -1090,17 +1089,17 @@ def run_all():
         print ("Running in Ubuntu")
     else:
         print ("Running in Windows")
-    folder_name = "CAE_3000_3Conv2Pool9Filters_different3000Batch-"+str(time.time())
 
     num_labels = 15
-    end_index = 3000
+    end_index = 5500
     input_noise_rate = 0.2
     zero_meaning = False
     epochs = 25
+    folder_name = "CAE_" + str(end_index) + "_3Conv2Pool9Filters_different3000Batch-"+str(time.time())
 
     # ac1, ac2, ac3, ac4, ac5, ac6, ac7, ac8 = 1, 1, 1, 1, 1, 1, 1, 1
 
-    for i in range(1, 6, 1):
+    for i in range(1, 7, 1):
         print("Run #", i)
         try:
             data, svm_data, svm_label = load2d(batch_index=i, num_labels=num_labels, end_index=end_index, TRAIN_PRECENT=1)
