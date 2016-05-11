@@ -1102,8 +1102,8 @@ def run_all():
     for i in range(1, 7, 1):
         print("Run #", i)
         try:
-            data, svm_data, svm_label = load2d(batch_index=i, num_labels=num_labels, end_index=end_index, TRAIN_PRECENT=1)
-            run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.067, update_momentum=0.9,
+            data, svm_data, svm_label = load2d(batch_index=1, num_labels=num_labels, end_index=end_index, TRAIN_PRECENT=1)
+            run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.06+0.002*i, update_momentum=0.9,
                 dropout_percent=input_noise_rate, loadedData=(data, svm_data, svm_label), folder_name=folder_name, end_index=end_index,
                 zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=9)
 
