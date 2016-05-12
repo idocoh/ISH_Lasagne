@@ -247,30 +247,34 @@ def load_data(dataset, batch_index = 1, withSVM = False, toShuffleInput = False 
 # #         f = gzip.open(dataset, 'rb')
 # #         pData= cPickle.load(f)
 # #         f.close()
-
-        file_name = "pickled_articleCat_" + str(end_index)  # + str(dropout_percent)
+        prefix = "pickled_articleCat_"
+        file_name = prefix + str(end_index) + "_" + str(batch_index) + ".pkl.gz"
+        svm_name = prefix + "SVM.pkl.gz"
+        svm_file_exists = False
         try:
-            print("     trying from pickled file- ", file_name + "_" + str(batch_index))
-            f = gzip.open("pickled_temp/" + file_name + "_" + str(batch_index) + ".pkl.gz", 'rb')
+            print("     trying from pickled file- ", file_name)
+            f = gzip.open("pickled_temp/" + file_name, 'rb')
             pLabel, pData = cPickle.load(f)
             f.close()
-            print("     trying SVM from pickled file- ", file_name + "-SVM.pkl.gz")
+            print("     trying SVM from pickled file- ", svm_name)
             # f = gzip.open("pickled_temp/" + file_name + "-SVM11.pkl.gz", 'rb')
-            svm_data, svm_label = cPickle.load(open("pickled_temp/" + file_name + "-SVM.pkl.gz"))
+            svm_data, svm_label = cPickle.load(open("pickled_temp/" + svm_name))
+            svm_file_exists = True
             # f.close()
         except Exception as e:
             print(e.message)
             print("     Exception, trying from images")
             pLabel, pData, svm_data, svm_label = pickleAllImages(svm_size=withSVM, num_labels=labelset, TRAIN_SPLIT=TRAIN_DATA_PRECENT, end_index=end_index, MULTI=MULTI_POSITIVES, dropout_percent=dropout_percent)
             if end_index < 10001:
-                f = gzip.open("pickled_temp/" + file_name + "_" + str(batch_index) + ".pkl.gz", 'wb')
+                f = gzip.open("pickled_temp/" + file_name, 'wb')
                 try:
                     cPickle.dump((pLabel[end_index*(batch_index-1):end_index*batch_index], pData[end_index*(batch_index-1):end_index*batch_index]), f, protocol=2)
                 except Exception as e:
                     print(e.message)
                     f.close()
                 try:
-                    cPickle.dump((svm_data, svm_label), open("pickled_temp/" + file_name + "-SVM.pkl.gz", 'wb'))
+                    if not svm_file_exists:
+                        cPickle.dump((svm_data, svm_label), open("pickled_temp/" + svm_name, 'wb'))
                 except Exception as e:
                     print(e.message)
                     pass

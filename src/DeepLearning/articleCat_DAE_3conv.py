@@ -1091,7 +1091,7 @@ def run_all():
         print ("Running in Windows")
 
     num_labels = 15
-    end_index = 5500
+    end_index = 8250
     input_noise_rate = 0.2
     zero_meaning = False
     epochs = 25
