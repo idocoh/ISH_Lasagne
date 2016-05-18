@@ -4,7 +4,7 @@ from numpy import genfromtxt
 import gzip, cPickle
 from glob import glob
 import numpy as np
-import pandas as pd
+# import pandas as pd
 from random import randint
 from logistic_sgd import load_data
 from numpy import loadtxt
@@ -156,11 +156,13 @@ def dir_to_dataset(glob_files,start_index,end_index,loc_train_labels=""):
             
         # outfile = glob_files+"out"
         # np.save(outfile, dataset)
-        if len(loc_train_labels) > 0:
-            df = pd.read_csv(loc_train_labels)
-            return np.array(dataset), np.array(df["Class"])
-        else:
-            return np.array(dataset)
+
+        # //TODO: import pandas and all this:
+        # if len(loc_train_labels) > 0:
+        #     df = pd.read_csv(loc_train_labels)
+        #     return np.array(dataset), np.array(df["Class"])
+        # else:
+        #     return np.array(dataset)
 
 def getTopCatVector(glob_files,start_index,end_index):
         

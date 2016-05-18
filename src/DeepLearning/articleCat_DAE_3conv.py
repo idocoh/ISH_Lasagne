@@ -204,9 +204,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         filter_5 = (11, 11)
         filter_6 = (7, 7)
 
-    def createCSAE(input_height, input_width, X_train, X_out):
-
-        X_train *= np.random.binomial(1, 1-dropout_percent, size=X_train.shape)
+    def createCSAE(input_height, input_width):
 
         cnn = NeuralNet(layers=[
             ('input', layers.InputLayer),
@@ -329,6 +327,12 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
             max_epochs=epochs,
             verbose=1,
             hiddenLayer_to_output=-13)
+
+        return cnn
+
+    def trainCSAE(cnn, input_height, input_width, X_train, X_out):
+
+        X_train *= np.random.binomial(1, 1-dropout_percent, size=X_train.shape)
 
         cnn.fit(X_train, X_out)
 
@@ -689,7 +693,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         output_file.write("Learning rate: " + str(learning_rate) + "\n")
         results_file.write(str(learning_rate) + "\t")
         output_file.write(("Momentum: " + str(update_momentum) + "\n") if update_rho is None else (
-        "Decay Factor: " + str(update_rho) + "\n"))
+            "Decay Factor: " + str(update_rho) + "\n"))
         results_file.write(str(update_momentum) + "\t")
         output_file.write(("FlipBatcherIterater" if flip_batch else "BatchIterator") + " with batch: " + str(batch_size) + "\n")
         results_file.write("FlipBatcherIterater\t" + str(batch_size) + "\t")
@@ -809,25 +813,39 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
     start_time = time.clock()
     print ("Start time: ", time.ctime())
 
+    cnn = createCSAE(input_height, input_width)
+
+    to_loop = False
     if loadedData is None:
-        train_x, train_y, test_x, test_y, svm_data, svm_label = load2d(categories, output_file, input_width, input_height, end_index, multiple_positives, dropout_percent)  # load 2-d data
+        train_x, train_y, test_x, test_y, svm_data, svm_label = load2d(categories, 1, output_file, input_width, input_height, end_index, multiple_positives, dropout_percent)  # load 2-d data
+        to_loop = True
     else:
         data, svm_data, svm_label = loadedData
         train_x, train_y, test_x, test_y = data
 
-    if zero_meaning:
-        train_x = train_x.astype(np.float64)
-        mu, sigma = np.mean(train_x.flatten()), np.std(train_x.flatten())
-        print("Mean- ", mu)
-        print("Std- ", sigma)
-        train_x = (train_x - mu) / sigma
+    batch_index = 1
+    while batch_index < 16351/end_index:
+        if zero_meaning:
+            train_x = train_x.astype(np.float64)
+            mu, sigma = np.mean(train_x.flatten()), np.std(train_x.flatten())
+            print("Mean- ", mu)
+            print("Std- ", sigma)
+            train_x = (train_x - mu) / sigma
 
-    x_train = train_x[:end_index].astype(np.float32).reshape((-1, 1, input_width, input_height))
-    x_out = x_train.reshape((x_train.shape[0], -1))
-    # test_x = test_x.astype(np.float32).reshape((-1, 1, input_width, input_height))
+        x_train = train_x[:end_index].astype(np.float32).reshape((-1, 1, input_width, input_height))
+        x_out = x_train.reshape((x_train.shape[0], -1))
+        # test_x = test_x.astype(np.float32).reshape((-1, 1, input_width, input_height))
 
-    cnn = createCSAE(input_height, input_width, x_train, x_out)
+        print("Training with batch - ", batch_index)
+        cnn = trainCSAE(cnn, input_height, input_width, x_train, x_out)
 
+        if to_loop:
+            batch_index += 1
+            train_x, train_y, test_x, test_y, svm_data, svm_label = load2d(categories, batch_index, output_file, input_width,
+                                                                   input_height, end_index, multiple_positives,
+                                                                   dropout_percent)
+        else:
+            batch_index = 16351
 
     ''' Denoising Autoencoder
     dae = DenoisingAutoencoder(n_hidden=10)
@@ -1095,21 +1113,29 @@ def run_all():
     input_noise_rate = 0.2
     zero_meaning = False
     epochs = 25
-    folder_name = "CAE_" + str(end_index) + "_3Conv2Pool9Filters_different3000Batch-"+str(time.time())
+    folder_name = "CAE_" + str(end_index) + "_3Conv2Pool9Filters_6000AllBatchs-"+str(time.time())
 
     # ac1, ac2, ac3, ac4, ac5, ac6, ac7, ac8 = 1, 1, 1, 1, 1, 1, 1, 1
 
-    for i in range(1, 7, 1):
+    for i in range(1, 20, 1):
         print("Run #", i)
         try:
-            data, svm_data, svm_label = load2d(batch_index=1, num_labels=num_labels, end_index=end_index, TRAIN_PRECENT=1)
-            run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.06+0.002*i, update_momentum=0.9,
-                dropout_percent=input_noise_rate, loadedData=(data, svm_data, svm_label), folder_name=folder_name, end_index=end_index,
+            run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.053 + 0.002 * i, update_momentum=0.9,
+                dropout_percent=input_noise_rate, folder_name=folder_name, end_index=end_index,
                 zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=9)
 
         except Exception as e:
             print("failed to run- ", i)
             print(e)
+        # try:
+        #     data, svm_data, svm_label = load2d(batch_index=1, num_labels=num_labels, end_index=end_index, TRAIN_PRECENT=1)
+        #     run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.06+0.002*i, update_momentum=0.9,
+        #         dropout_percent=input_noise_rate, loadedData=(data, svm_data, svm_label), folder_name=folder_name, end_index=end_index,
+        #         zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=9)
+        #
+        # except Exception as e:
+        #     print("failed to run- ", i)
+        #     print(e)
             # try:
             #     if np.isfinite(ac3) and i % 3 == 0:
             #         ac3 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.06 + 0.005 * i, update_momentum=0.9,

@@ -145,13 +145,8 @@ def generatePositives(positiveImage, labels, positiveDataArray, positivelabelsAr
 #     np.random.shuffle(arr)
 
 if __name__ == '__main__':
-    pLabel, pData, svm_data, svm_label = pickleAllImages(svm_size=1000, num_labels=15, end_index=0, dropout_percent=0.3, MULTI=60)
-    file_name = "piclked_articleCat__4000"  # + "_" + str(dropout_percent)
-    f = gzip.open("pickled_temp/" + file_name + ".pkl.gz", 'wb')
-    try:
-        cPickle.dump((pLabel[:4000], pData[:4000]), f, protocol=2)
-    except:
-        f.close()
+    pLabel, pData, svm_data, svm_label = pickleAllImages(svm_size=16351, num_labels=15, end_index=0, dropout_percent=0.3, MULTI=60)
+    file_name = "piclked_articleCat_16351"
     try:
         cPickle.dump((svm_data, svm_label), open("pickled_temp/" + file_name + "-SVM.pkl.gz", 'wb'))
     except:
