@@ -813,39 +813,29 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
     start_time = time.clock()
     print ("Start time: ", time.ctime())
 
-    cnn = createCSAE(input_height, input_width)
-
     to_loop = False
     if loadedData is None:
-        data, svm_data, svm_label = load2d(batch_index=1, num_labels=categories, end_index=end_index, TRAIN_PRECENT=1)
+        train_x, train_y, test_x, test_y, svm_data, svm_label = load2d(categories, i, output_file, input_width, input_height, end_index, multiple_positives, dropout_percent)  # load 2-d data
         to_loop = True
     else:
         data, svm_data, svm_label = loadedData
-    train_x, train_y, test_x, test_y = data
+        train_x, train_y, test_x, test_y = data
+    cnn = createCSAE(input_height, input_width)
 
-    batch_index = 1
-    while batch_index < 16351/end_index:
-        if zero_meaning:
-            train_x = train_x.astype(np.float64)
-            mu, sigma = np.mean(train_x.flatten()), np.std(train_x.flatten())
-            print("Mean- ", mu)
-            print("Std- ", sigma)
-            train_x = (train_x - mu) / sigma
+    if zero_meaning:
+        train_x = train_x.astype(np.float64)
+        mu, sigma = np.mean(train_x.flatten()), np.std(train_x.flatten())
+        print("Mean- ", mu)
+        print("Std- ", sigma)
+        train_x = (train_x - mu) / sigma
 
-        x_train = train_x[:end_index].astype(np.float32).reshape((-1, 1, input_width, input_height))
-        x_out = x_train.reshape((x_train.shape[0], -1))
-        # test_x = test_x.astype(np.float32).reshape((-1, 1, input_width, input_height))
+    x_train = train_x[:end_index].astype(np.float32).reshape((-1, 1, input_width, input_height))
+    x_out = x_train.reshape((x_train.shape[0], -1))
+    # test_x = test_x.astype(np.float32).reshape((-1, 1, input_width, input_height))
 
-        print("Training with batch - ", batch_index)
-        cnn = trainCSAE(cnn, input_height, input_width, x_train, x_out)
+    cnn = trainCSAE(cnn, input_height, input_width, x_train, x_out)
 
-        if to_loop:
-            batch_index += 1
-            data, svm_data, svm_label = load2d(batch_index=1, num_labels=categories, end_index=end_index,
-                                               TRAIN_PRECENT=1)
-            train_x, train_y, test_x, test_y = data
-        else:
-            batch_index = 16351
+
 
     ''' Denoising Autoencoder
     dae = DenoisingAutoencoder(n_hidden=10)
@@ -1109,20 +1099,20 @@ def run_all():
         print ("Running in Windows")
 
     num_labels = 15
-    end_index = 8250
+    end_index = 6000
     input_noise_rate = 0.2
     zero_meaning = False
     epochs = 25
-    folder_name = "CAE_" + str(end_index) + "_3Conv2Pool9Filters_6000AllBatchs-"+str(time.time())
+    folder_name = "CAE_" + str(end_index) + "_3Conv2Pool9Filters_different3000Batch-"+str(time.time())
 
     # ac1, ac2, ac3, ac4, ac5, ac6, ac7, ac8 = 1, 1, 1, 1, 1, 1, 1, 1
 
     for i in range(1, 20, 1):
         print("Run #", i)
         try:
-            run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.053 + 0.002 * i, update_momentum=0.9,
+            run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.04 + 0.005 * i, update_momentum=0.9,
                 dropout_percent=input_noise_rate, folder_name=folder_name, end_index=end_index,
-                zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=9)
+                zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=11)
 
         except Exception as e:
             print("failed to run- ", i)
