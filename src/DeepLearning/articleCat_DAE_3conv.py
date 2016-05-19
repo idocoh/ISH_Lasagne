@@ -813,10 +813,8 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
     start_time = time.clock()
     print ("Start time: ", time.ctime())
 
-    to_loop = False
     if loadedData is None:
-        train_x, train_y, test_x, test_y, svm_data, svm_label = load2d(categories, i, output_file, input_width, input_height, end_index, multiple_positives, dropout_percent)  # load 2-d data
-        to_loop = True
+        train_x, train_y, test_x, test_y, svm_data, svm_label = load2d(categories, output_file, input_width, input_height, end_index, multiple_positives, dropout_percent)  # load 2-d data
     else:
         data, svm_data, svm_label = loadedData
         train_x, train_y, test_x, test_y = data
@@ -1106,26 +1104,18 @@ def run_all():
     folder_name = "CAE_" + str(end_index) + "_3Conv2Pool9Filters_different3000Batch-"+str(time.time())
 
     # ac1, ac2, ac3, ac4, ac5, ac6, ac7, ac8 = 1, 1, 1, 1, 1, 1, 1, 1
+    data, svm_data, svm_label = load2d(batch_index=1, num_labels=num_labels, end_index=end_index, TRAIN_PRECENT=1)
 
     for i in range(1, 20, 1):
         print("Run #", i)
         try:
-            run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.04 + 0.005 * i, update_momentum=0.9,
-                dropout_percent=input_noise_rate, folder_name=folder_name, end_index=end_index,
+            run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.04+0.005*i, update_momentum=0.9,
+                dropout_percent=input_noise_rate, loadedData=(data, svm_data, svm_label), folder_name=folder_name, end_index=end_index,
                 zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=11)
 
         except Exception as e:
             print("failed to run- ", i)
             print(e)
-        # try:
-        #     data, svm_data, svm_label = load2d(batch_index=1, num_labels=num_labels, end_index=end_index, TRAIN_PRECENT=1)
-        #     run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.06+0.002*i, update_momentum=0.9,
-        #         dropout_percent=input_noise_rate, loadedData=(data, svm_data, svm_label), folder_name=folder_name, end_index=end_index,
-        #         zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=9)
-        #
-        # except Exception as e:
-        #     print("failed to run- ", i)
-        #     print(e)
             # try:
             #     if np.isfinite(ac3) and i % 3 == 0:
             #         ac3 = run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.06 + 0.005 * i, update_momentum=0.9,
