@@ -817,11 +817,11 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
 
     to_loop = False
     if loadedData is None:
-        train_x, train_y, test_x, test_y, svm_data, svm_label = load2d(categories, 1, output_file, input_width, input_height, end_index, multiple_positives, dropout_percent)  # load 2-d data
+        data, svm_data, svm_label = load2d(batch_index=1, num_labels=categories, end_index=end_index, TRAIN_PRECENT=1)
         to_loop = True
     else:
         data, svm_data, svm_label = loadedData
-        train_x, train_y, test_x, test_y = data
+    train_x, train_y, test_x, test_y = data
 
     batch_index = 1
     while batch_index < 16351/end_index:
@@ -841,9 +841,9 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
 
         if to_loop:
             batch_index += 1
-            train_x, train_y, test_x, test_y, svm_data, svm_label = load2d(categories, batch_index, output_file, input_width,
-                                                                   input_height, end_index, multiple_positives,
-                                                                   dropout_percent)
+            data, svm_data, svm_label = load2d(batch_index=1, num_labels=categories, end_index=end_index,
+                                               TRAIN_PRECENT=1)
+            train_x, train_y, test_x, test_y = data
         else:
             batch_index = 16351
 
