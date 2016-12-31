@@ -53,12 +53,13 @@ FILE_SEPARATOR = "/"
 counter = 0
 isUbuntu = False
 
+
 def load2d(num_labels, batch_index=1, outputFile=None, input_width=300, input_height=140, end_index=16351, MULTI_POSITIVES=20,
            dropout_percent=0.1, data_set='ISH.pkl.gz', toShuffleInput = False, withZeroMeaning = False, TRAIN_PRECENT=0.8):
     print ('loading data...')
 
-    data_sets, svm_data, svm_label = load_data(data_set, batch_index=batch_index, withSVM=400, toShuffleInput=toShuffleInput,
-                                               withZeroMeaning=withZeroMeaning, end_index=end_index,
+    data_sets = load_data(data_set, batch_index=batch_index, withSVM=0, toShuffleInput=toShuffleInput,
+                                               withZeroMeaning=withZeroMeaning,
                                                MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=dropout_percent,
                                                labelset=num_labels, TRAIN_DATA_PRECENT=TRAIN_PRECENT)
 
@@ -70,12 +71,13 @@ def load2d(num_labels, batch_index=1, outputFile=None, input_width=300, input_he
 # #         valid_set_x = valid_set_x.reshape(-1, 1, input_width, input_height)
 #     test_set_x = test_set_x.reshape(-1, 1, input_width, input_height)
 
-    print(train_set_x.shape[0], 'train samples')
+    print(train_set_x.shape[0], ' samples loaded')
     # if outputFile is not None:
     #     outputFile.write("Number of training examples: "+str(train_set_x.shape[0]) + "\n\n")
-    return (train_set_x, train_set_y, test_set_x, test_set_y), svm_data, svm_label
+    return (train_set_x, train_set_y, test_set_x, test_set_y)
 
 # <codecell>
+
 
 class Unpool2DLayer(layers.Layer):
     """
@@ -115,6 +117,7 @@ class Unpool2DLayer(layers.Layer):
 ### when we load the batches to input to the neural network, we randomly / flip
 ### rotate the images, to artificially increase the size of the training set
 
+
 class FlipBatchIterator(BatchIterator):
     def transform(self, X1, X2):
         X1b, X2b = super(FlipBatchIterator, self).transform(X1, X2)
@@ -135,12 +138,13 @@ class FlipBatchIterator(BatchIterator):
 
         return X1b, X2b
 
+
 def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=None, epochs=15,
         input_width=300, input_height=140, train_valid_split=0.2, multiple_positives=20, flip_batch=True,
-        dropout_percent=0.1, end_index=16351, activation=None, last_layer_activation=None, batch_size=32,
+        dropout_percent=0.1, amount_train=16351, activation=None, last_layer_activation=None, batch_size=32,
         layers_size=[5, 10, 20, 40], shuffle_input=False, zero_meaning=False, filters_type=3,
         input_noise_rate=0.3, pre_train_epochs=1, softmax_train_epochs=2, fine_tune_epochs=2,
-        categories=15, folder_name="default", dataset='withOutDataSet'):
+        categories=15, svm_negative_amount=800, folder_name="default", dataset='withOutDataSet'):
 
     global counter
     folder_path = "results_dae"+FILE_SEPARATOR + folder_name + FILE_SEPARATOR + "run_" + str(counter) + FILE_SEPARATOR
@@ -333,7 +337,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
     def trainCSAE(cnn, input_height, input_width, X_train, X_out):
 
         X_train *= np.random.binomial(1, 1-dropout_percent, size=X_train.shape)
-
+        print('Training CAE with ', X_train.shape[0], ' samples')
         cnn.fit(X_train, X_out)
 
         try:
@@ -707,8 +711,8 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
             "Last layer activation func: " + ("Rectify" if last_layer_activation is None else str(last_layer_activation)) + "\n")
         results_file.write(("Rectify" if last_layer_activation is None else str(last_layer_activation)) + "\t")
         #         output_file.write("Multiple Positives by: " + str(multiple_positives) + "\n")
-        output_file.write("Number of images: " + str(end_index) + "\n")
-        results_file.write(str(end_index) + "\t")
+        output_file.write("Number of images for training: " + str(amount_train) + "\n")
+        results_file.write(str(amount_train) + "\t")
         output_file.write("Dropout noise precent: " + str(dropout_percent * 100) + "%\n")
         results_file.write(str(dropout_percent * 100) + "%\t")
         output_file.write("Train/validation split: " + str(train_valid_split) + "\n")
@@ -814,9 +818,9 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
     print ("Start time: ", time.ctime())
 
     if loadedData is None:
-        train_x, train_y, test_x, test_y, svm_data, svm_label = load2d(categories, output_file, input_width, input_height, end_index, multiple_positives, dropout_percent)  # load 2-d data
+        train_x, train_y, test_x, test_y = load2d(categories, output_file, input_width, input_height, amount_train, multiple_positives, dropout_percent)  # load 2-d data
     else:
-        data, svm_data, svm_label = loadedData
+        data = loadedData
         train_x, train_y, test_x, test_y = data
     cnn = createCSAE(input_height, input_width)
 
@@ -827,11 +831,11 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         print("Std- ", sigma)
         train_x = (train_x - mu) / sigma
 
-    x_train = train_x[:end_index].astype(np.float32).reshape((-1, 1, input_width, input_height))
-    x_out = x_train.reshape((x_train.shape[0], -1))
+    x_train = train_x.astype(np.float32).reshape((-1, 1, input_width, input_height))
+    x_flat = x_train.reshape((x_train.shape[0], -1))
     # test_x = test_x.astype(np.float32).reshape((-1, 1, input_width, input_height))
 
-    cnn = trainCSAE(cnn, input_height, input_width, x_train, x_out)
+    cnn = trainCSAE(cnn, input_height, input_width, x_train[:amount_train], x_flat[:amount_train])
 
 
 
@@ -914,7 +918,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
 
     try:
         print("Running SVM")
-        errors, aucs = run_svm(cnn, X_train=svm_data, labels=svm_label)
+        errors, aucs = run_svm(cnn, X_train=x_train, labels=train_y, svm_negative_amount=svm_negative_amount)
         print("Errors", errors)
         print("AUC", aucs)
         output_file.write("SVM errors: " + str(errors))
@@ -1097,21 +1101,23 @@ def run_all():
         print ("Running in Windows")
 
     num_labels = 15
-    end_index = 6000
+    amount_train = 6000
+    svm_negative_amount = 1600
     input_noise_rate = 0.2
     zero_meaning = False
-    epochs = 25
-    folder_name = "CAE_" + str(end_index) + "_3Conv2Pool9Filters_different3000Batch-"+str(time.time())
+    epochs = 15
+    folder_name = "CAE_" + str(amount_train) + "_3Conv2Pool9Filters_different6000Batch1-"+str(time.time())
 
     # ac1, ac2, ac3, ac4, ac5, ac6, ac7, ac8 = 1, 1, 1, 1, 1, 1, 1, 1
-    data, svm_data, svm_label = load2d(batch_index=1, num_labels=num_labels, end_index=end_index, TRAIN_PRECENT=1)
+    data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1)
 
     for i in range(1, 20, 1):
         print("Run #", i)
         try:
             run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.04+0.005*i, update_momentum=0.9,
-                dropout_percent=input_noise_rate, loadedData=(data, svm_data, svm_label), folder_name=folder_name, end_index=end_index,
-                zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=11)
+                dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name, amount_train=amount_train,
+                zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=11,
+                svm_negative_amount=svm_negative_amount)
 
         except Exception as e:
             print("failed to run- ", i)

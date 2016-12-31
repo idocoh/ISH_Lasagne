@@ -80,7 +80,7 @@ class FlipBatchIterator(BatchIterator):
         return X1b, X2b
 
 
-def images_svm(pickled_file, x=None, all_labels=None, num_labels=15, TRAIN_SPLIT=0.8):
+def images_svm(pickled_file, x=None, all_labels=None, svm_negative_amount=800, num_labels=15, TRAIN_SPLIT=0.8):
 
     FILE_SEPARATOR="/"
     if isinstance(pickled_file, str):
@@ -96,10 +96,12 @@ def images_svm(pickled_file, x=None, all_labels=None, num_labels=15, TRAIN_SPLIT
             print ("Reading images...")
             all_labels, x = pickleAllImages(num_labels=15, pos=True)
         print("Processing images...")
-        input_width, input_height, dropout_percent = 300, 140, 0.2
-        x = x.astype(np.float32).reshape((-1, 1, input_width, input_height))
-        x *= np.random.binomial(1, 1 - dropout_percent, size=x.shape)
+        input_width, input_height, dropout_percent = 300, 140, 0.2  # TODO: pass the params
+        # x = x.astype(np.float32).reshape((-1, 1, input_width, input_height))
+        # x *= np.random.binomial(1, 1 - dropout_percent, size=x.shape)
         # features = cnn.output_hiddenLayer(x)
+
+        x, all_labels = seperateSVM(x.astype(np.float32), all_labels, svm_negative_amount)
 
         quarter_x = np.floor(x.shape[0] / 4)
         print("Starting cnn process...")
@@ -140,6 +142,19 @@ def images_svm(pickled_file, x=None, all_labels=None, num_labels=15, TRAIN_SPLIT
 
     return features, all_labels
 
+def seperateSVM(pData, pLabel, svm_negative_amount):
+    posRows = (pLabel != 0).sum(1) > 0
+    posData = pData[posRows, :]
+    posLabel = pLabel[posRows, :]
+    print("Positive svm samples- ", posData.shape[0])
+    negData = pData[~posRows[:svm_negative_amount], :]
+    negLabel = pLabel[~posRows[:svm_negative_amount], :]
+    print("Negative svm samples- ", negData.shape[0])
+    # svm_data = np.concatenate((posData, negData[:svm_size-posData.shape[0]]), axis=0)
+    # svm_label = np.concatenate((posLabel, negLabel[:svm_size-posData.shape[0]]), axis=0)
+    svm_data = np.concatenate((posData, negData), axis=0)
+    svm_label = np.concatenate((posLabel, negLabel), axis=0)
+    return svm_data, svm_label
 
 def recunstruct_cae(folder_path):
     cnn = NeuralNet()
@@ -308,7 +323,7 @@ def checkLabelPredict(features, labels, cross_validation_parts=5):
     # negative_data = negative_data.reshape((-1, features.shape[-2]*features.shape[-1]))
 
     if positive_data.shape[0] < cross_validation_parts or negative_data.shape[0] < cross_validation_parts:
-        return 1
+        return 1, 1
 
     negative_data_chunks = np.array_split(negative_data, cross_validation_parts)
     positive_data_chunks = np.array_split(positive_data, cross_validation_parts)
@@ -328,9 +343,9 @@ def checkLabelPredict(features, labels, cross_validation_parts=5):
         pos_train = np.copy(positive_data_chunks)
         np.delete(pos_train, cross_validation_index)
         pos_train = np.concatenate(pos_train)
-        print("     Number of positive train- ", pos_train.shape[0], " test- ", pos_test.shape[0])
+        print("     Number of positive train- ", pos_train.shape[0])
         pos_train = generate_positives(pos_train, neg_train.shape[0])
-        print("         Number of generated positive train- ", pos_train.shape[0])
+        print("         Number of generated positive train- ", pos_train.shape[0], " test- ", pos_test.shape[0])
 
 
         start_time = time.clock()
@@ -349,7 +364,7 @@ def checkLabelPredict(features, labels, cross_validation_parts=5):
         # auc_score = roc_auc_score(test_y, test_predict)
 
         scores[cross_validation_index] = score
-        print(score)
+        # print(score)
 
         try:
             start_time = time.clock()
@@ -378,9 +393,9 @@ def generate_positives(positives, num_negatives):
     return np.repeat(positives, multiple_by.astype(int), axis=0)
 
 
-def run_svm(pickle_name, X_train=None, labels=None):
+def run_svm(pickle_name, X_train=None, labels=None, svm_negative_amount=800):
     num_labels = 15
-    features, labels = images_svm(pickle_name, X_train, labels,  num_labels=num_labels)
+    features, labels = images_svm(pickle_name, X_train, labels,  num_labels=num_labels, svm_negative_amount=svm_negative_amount)
     # try:
     #     pickle.dump((features, labels), open('svm.pkl', 'w'))
     # except:

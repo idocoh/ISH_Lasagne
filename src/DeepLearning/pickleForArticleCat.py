@@ -26,7 +26,8 @@ def pickleAllImages(num_labels, TRAIN_SPLIT=0.8, end_index=16351, dropout_percen
     with open(labelsFile) as l:
         pLabel = cPickle.load(l)
         l.close()
-    
+        print "     Done"
+
     dir1 = "pickled_images"+FILE_SEPARATOR+"ISH-noLearn_0_5000_300_140.pkl.gz"
     f1 = gzip.open(dir1, 'rb')
     train_set1, valid_set1, test_set1 = cPickle.load(f1)
@@ -52,28 +53,18 @@ def pickleAllImages(num_labels, TRAIN_SPLIT=0.8, end_index=16351, dropout_percen
     f3.close()   
     print "after reading part 3"
            
-    pData = np.concatenate((train_set1[0], test_set1[0], train_set2[0], test_set2[0], train_set3[0], test_set3[0]), axis = 0)
-
+    pData = np.concatenate((train_set1[0], test_set1[0], train_set2[0], test_set2[0], train_set3[0], test_set3[0]), axis=0)
+    print "Done Reading images"
     if svm_size > 0:
-        posRows = (pLabel != 0).sum(1) > 0
-        posData = pData[posRows, :]
-        posLabel = pLabel[posRows, :]
-        negData = pData[~posRows[:svm_size+200], :]
-        negLabel = pLabel[~posRows[:svm_size+200], :]
-
-        # svm_data = np.concatenate((posData, negData[:svm_size-posData.shape[0]]), axis=0)
-        # svm_label = np.concatenate((posLabel, negLabel[:svm_size-posData.shape[0]]), axis=0)
-        svm_data = np.concatenate((posData, negData), axis=0)
-        svm_label = np.concatenate((posLabel, negLabel), axis=0)
-        return pLabel, pData, svm_data, svm_label
+        return seperateSVM(pData, pLabel, svm_size)
     else:
         return pLabel[:end_index], pData[:end_index]
 
-    # return pLabel[:end_index], pData[:end_index]
 #     f = gzip.open("images_16351_300_140",'wb')
 #     cPickle.dump(pData, f, protocol=2)
 #     f.close()
-    
+
+    # Generate new positive examples with noise
     print "Add Positive examples multiple- ", MULTI
 #     count=0
     countPositives = np.zeros(pLabel.shape[1])
@@ -130,7 +121,23 @@ def pickleAllImages(num_labels, TRAIN_SPLIT=0.8, end_index=16351, dropout_percen
         pLabel = np.concatenate((positivelabelExamples,pLabel[:end_index],positivelabelExamples_test),axis=0)
 
     
-    return pLabel, pData 
+    return pLabel, pData
+
+
+def seperateSVM(pData, pLabel, svm_size):
+    posRows = (pLabel != 0).sum(1) > 0
+    posData = pData[posRows, :]
+    posLabel = pLabel[posRows, :]
+    print("Positive svm samples- ", posData.shape[0])
+    negData = pData[~posRows[:svm_size + 200], :]
+    negLabel = pLabel[~posRows[:svm_size + 200], :]
+    print("Negative svm samples- ", negData.shape[0])
+    # svm_data = np.concatenate((posData, negData[:svm_size-posData.shape[0]]), axis=0)
+    # svm_label = np.concatenate((posLabel, negLabel[:svm_size-posData.shape[0]]), axis=0)
+    svm_data = np.concatenate((posData, negData), axis=0)
+    svm_label = np.concatenate((posLabel, negLabel), axis=0)
+    return pLabel, pData, svm_data, svm_label
+
 
 def generatePositives(positiveImage, labels, positiveDataArray, positivelabelsArray,dropout_percent=0.1,MULTI=30,end_index=0):
     for j in range(0,MULTI-1):

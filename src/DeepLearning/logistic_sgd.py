@@ -231,8 +231,6 @@ def load_data(dataset, batch_index = 1, withSVM = False, toShuffleInput = False 
 # 
 #     train_set = (numpy.concatenate((train_set1[0],train_set2[0]),axis=0), numpy.concatenate((train_set1[1],train_set2[1]),axis=0)) 
 
-    
-    
     if labelset is None:
         # Load the dataset
         f = gzip.open(dataset, 'rb')
@@ -256,15 +254,15 @@ def load_data(dataset, batch_index = 1, withSVM = False, toShuffleInput = False 
             f = gzip.open("pickled_temp/" + file_name, 'rb')
             pLabel, pData = cPickle.load(f)
             f.close()
-            print("     trying SVM from pickled file- ", svm_name)
-            # f = gzip.open("pickled_temp/" + file_name + "-SVM11.pkl.gz", 'rb')
-            svm_data, svm_label = cPickle.load(open("pickled_temp/" + svm_name))
-            svm_file_exists = True
-            # f.close()
+            # print("     trying SVM from pickled file- ", svm_name)
+            # # f = gzip.open("pickled_temp/" + file_name + "-SVM11.pkl.gz", 'rb')
+            # svm_data, svm_label = cPickle.load(open("pickled_temp/" + svm_name))
+            # svm_file_exists = True
+            # # f.close()
         except Exception as e:
             print(e.message)
             print("     Exception, trying from images")
-            pLabel, pData, svm_data, svm_label = pickleAllImages(svm_size=withSVM, num_labels=labelset, TRAIN_SPLIT=TRAIN_DATA_PRECENT, end_index=end_index, MULTI=MULTI_POSITIVES, dropout_percent=dropout_percent)
+            pLabel, pData = pickleAllImages(svm_size=withSVM, num_labels=labelset, TRAIN_SPLIT=TRAIN_DATA_PRECENT, end_index=end_index, MULTI=MULTI_POSITIVES, dropout_percent=dropout_percent)
             if end_index < 10001:
                 f = gzip.open("pickled_temp/" + file_name, 'wb')
                 try:
@@ -272,12 +270,12 @@ def load_data(dataset, batch_index = 1, withSVM = False, toShuffleInput = False 
                 except Exception as e:
                     print(e.message)
                     f.close()
-                try:
-                    if not svm_file_exists:
-                        cPickle.dump((svm_data, svm_label), open("pickled_temp/" + svm_name, 'wb'))
-                except Exception as e:
-                    print(e.message)
-                    pass
+                # try:
+                #     if not svm_file_exists:
+                #         cPickle.dump((svm_data, svm_label), open("pickled_temp/" + svm_name, 'wb'))
+                # except Exception as e:
+                #     print(e.message)
+                #     pass
         
         # Divided data set into 3 parts.
 
@@ -371,7 +369,7 @@ def load_data(dataset, batch_index = 1, withSVM = False, toShuffleInput = False 
 
     rval = [(train_set_x, train_set_y), (valid_set_x, valid_set_y),
             (test_set_x, test_set_y)]
-    return rval, svm_data, svm_label
+    return rval#, svm_data, svm_label
 
 
 def sgd_optimization_mnist(learning_rate=0.13, n_epochs=1000,
