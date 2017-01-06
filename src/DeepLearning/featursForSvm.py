@@ -100,25 +100,29 @@ def images_svm(pickled_file, x=None, all_labels=None, svm_negative_amount=800, n
 
         x, all_labels = separate_svm(x.astype(np.float32), all_labels, svm_negative_amount)
 
-        quarter_x = np.floor(x.shape[0] / 4)
-        print("Starting cnn process...")
-        train_last_hidden_layer_1 = cnn.output_hiddenLayer(x[:quarter_x])
-        train_last_hidden_layer_1 = train_last_hidden_layer_1.reshape((train_last_hidden_layer_1.shape[0], -1))
-        print("after first quarter train output")
-        train_last_hidden_layer_2 = cnn.output_hiddenLayer(x[quarter_x:2 * quarter_x])
-        train_last_hidden_layer_2 = train_last_hidden_layer_2.reshape((train_last_hidden_layer_2.shape[0], -1))
-        print("after second quarter train output")
-        train_last_hidden_layer_3 = cnn.output_hiddenLayer(x[2 * quarter_x: 3 * quarter_x])
-        train_last_hidden_layer_3 = train_last_hidden_layer_3.reshape((train_last_hidden_layer_3.shape[0], -1))
-        print("after third quarter train output")
-        train_last_hidden_layer_4 = cnn.output_hiddenLayer(x[3 * quarter_x:])
-        train_last_hidden_layer_4 = train_last_hidden_layer_4.reshape((train_last_hidden_layer_4.shape[0], -1))
+        start_time = time.clock()
+        print("Starting cnn prediction...")
+        features = np.zeros((x.shape[0], 2625))
+        for i in range(0, x.shape[0]):
+            features[i, :] = cnn.output_hiddenLayer(x[i:i+1]).reshape((1, -1))
+        # quarter_x = np.floor(x.shape[0] / 4)
+        # train_last_hidden_layer_1 = cnn.output_hiddenLayer(x[:quarter_x])
+        # train_last_hidden_layer_1 = train_last_hidden_layer_1.reshape((train_last_hidden_layer_1.shape[0], -1))
+        # print("after first quarter train output")
+        # train_last_hidden_layer_2 = cnn.output_hiddenLayer(x[quarter_x:2 * quarter_x])
+        # train_last_hidden_layer_2 = train_last_hidden_layer_2.reshape((train_last_hidden_layer_2.shape[0], -1))
+        # print("after second quarter train output")
+        # train_last_hidden_layer_3 = cnn.output_hiddenLayer(x[2 * quarter_x: 3 * quarter_x])
+        # train_last_hidden_layer_3 = train_last_hidden_layer_3.reshape((train_last_hidden_layer_3.shape[0], -1))
+        # print("after third quarter train output")
+        # train_last_hidden_layer_4 = cnn.output_hiddenLayer(x[3 * quarter_x:])
+        # train_last_hidden_layer_4 = train_last_hidden_layer_4.reshape((train_last_hidden_layer_4.shape[0], -1))
+        # features = np.concatenate((train_last_hidden_layer_1, train_last_hidden_layer_2, train_last_hidden_layer_3, train_last_hidden_layer_4), axis=0)
 
-        features = np.concatenate((train_last_hidden_layer_1, train_last_hidden_layer_2, train_last_hidden_layer_3, train_last_hidden_layer_4), axis=0)
         print('Features size: ', features.shape)
         print('Labels size: ', all_labels.shape)
-
-
+    run_time = (time.clock() - start_time) / 60.
+    print("     CNN prediction took(min)- ", run_time)
 
     # if num_labels==15:
     #     labels_file = "pickled_images"+FILE_SEPARATOR+"articleCat.pkl.gz"
@@ -190,6 +194,7 @@ def checkLabelPredict(features, labels, cross_validation_parts=5):
 
         pos_test = positive_data_chunks[cross_validation_index]
         pos_test = generate_positives(pos_test, neg_test.shape[0])
+
         pos_train = np.copy(positive_data_chunks)
         np.delete(pos_train, cross_validation_index)
         pos_train = np.concatenate(pos_train)
@@ -197,15 +202,9 @@ def checkLabelPredict(features, labels, cross_validation_parts=5):
         pos_train = generate_positives(pos_train, neg_train.shape[0])
         print("         Number of generated positive train- ", pos_train.shape[0], " test- ", pos_test.shape[0])
 
-
-        start_time = time.clock()
         clf = svm.SVC(kernel='linear', C=1).fit(np.concatenate((pos_train, neg_train), axis=0),
                                                 np.concatenate((np.ones(pos_train.shape[0]),
                                                                 np.zeros(neg_train.shape[0])), axis=0))
-        run_time = (time.clock() - start_time) / 60.
-        print("SVM took(min)- ", run_time)
-
-        start_time = time.clock()
         test_params = np.concatenate((pos_test, neg_test), axis=0)
         test_y = np.concatenate((np.ones(pos_test.shape[0]), np.zeros(neg_test.shape[0])), axis=0)
         score = clf.score(test_params, test_y)
@@ -213,7 +212,6 @@ def checkLabelPredict(features, labels, cross_validation_parts=5):
         scores[cross_validation_index] = score
 
         try:
-            start_time = time.clock()
             test_predict = clf.predict(test_params)
             auc_score = roc_auc_score(test_y, test_predict)
             print("AUC cross-", auc_score)
@@ -247,6 +245,7 @@ def run_svm(pickle_name, X_train=None, labels=None, svm_negative_amount=800):
     errorRates = np.zeros(num_labels)
     aucScores = np.zeros(num_labels)
 
+    start_time = time.clock()
     for label in range(0, num_labels):
         print("Svm for category- ", label)
         labelPredRate, labelAucScore = checkLabelPredict(features, labels[:, label])
@@ -260,9 +259,9 @@ def run_svm(pickle_name, X_train=None, labels=None, svm_negative_amount=800):
     print("Average error- ", errorRate, "%")
     # print("Prediction rate- ", 100 - errorRate, "%")
     print("Average Auc Score- ", aucAverageScore)
-
-    return (errorRates, aucScores)
-    # return errorRates
+    run_time = (time.clock() - start_time) / 60.
+    print("SVM took(min)- ", run_time)
+    return errorRates, aucScores
 
 if __name__ == '__main__':
     # pickName = "C:/devl/python/ISH_Lasagne/src/DeepLearning/results_dae/learn/run_0/encode.pkl"

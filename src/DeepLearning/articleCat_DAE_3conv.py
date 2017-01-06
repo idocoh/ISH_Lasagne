@@ -383,6 +383,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         #         output_file.write("Multiple Positives by: " + str(multiple_positives) + "\n")
         output_file.write("Number of images for training: " + str(amount_train) + "\n")
         results_file.write(str(amount_train) + "\t")
+        output_file.write("Number of negative images in svm: " + str(svm_negative_amount) + "\n")
         output_file.write("Dropout noise precent: " + str(dropout_percent * 100) + "%\n")
         results_file.write(str(dropout_percent * 100) + "%\t")
         output_file.write("Train/validation split: " + str(train_valid_split) + "\n")
@@ -465,8 +466,8 @@ def run_all():
 
     print(theano.sandbox.cuda.dnn_available())
     num_labels = 15
-    amount_train = 5500
-    svm_negative_amount = 1600
+    amount_train = 7500
+    svm_negative_amount = 3000
     input_noise_rate = 0.2
     zero_meaning = False
     epochs = 15
@@ -476,7 +477,7 @@ def run_all():
     for i in range(1, 20, 1):
         print("Run #", i)
         try:
-            run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.04+0.005*i, update_momentum=0.9,
+            run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.065+0.005*i, update_momentum=0.9,
                 dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name, amount_train=amount_train,
                 zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=11,
                 svm_negative_amount=svm_negative_amount)
