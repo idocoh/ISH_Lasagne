@@ -294,14 +294,16 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         print('Training CAE with ', X_train.shape[0], ' samples')
         cnn.fit(X_train, X_out)
 
-        try:
-            pickle.dump(cnn, open(folder_path + 'conv_ae.pkl', 'w'))
-            # cnn = pickle.load(open(folder_path + 'conv_ae.pkl','r'))
-            cnn.save_weights_to(folder_path + 'conv_ae.np')
-        except:
-            print ("Could not pickle cnn")
+        # try:
+        #     pickle.dump(cnn, open(folder_path + 'conv_ae.pkl', 'w'))
+        #     # cnn = pickle.load(open(folder_path + 'conv_ae.pkl','r'))
+        #     cnn.save_weights_to(folder_path + 'conv_ae.np')
+        # except:
+        #     print ("Could not pickle cnn")
 
-        X_pred = cnn.predict(X_train).reshape(-1, input_height, input_width)  # * sigma + mu
+        print('Predicting ', X_train.shape[0], ' samples through CAE')
+        # X_pred = cnn.predict(X_train).reshape(-1, input_height, input_width)  # * sigma + mu
+
         # # X_pred = np.rint(X_pred).astype(int)
         # # X_pred = np.clip(X_pred, a_min=0, a_max=255)
         # # X_pred = X_pred.astype('uint8')
@@ -313,10 +315,15 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         # except:
         #     print "Could not save encoded images"
 
-        print ("Saving some images....")
+        # save_example_images(X_out, X_pred, X_train)
+
+        return cnn
+
+    def save_example_images(X_out, X_pred, X_train):
+        print("Saving some images....")
         for i in range(10):
             index = np.random.randint(X_train.shape[0])
-            print (index)
+            print(index)
 
             def get_picture_array(X, index):
                 array = np.rint(X[index] * 256).astype(np.int).reshape(input_height, input_width)
@@ -339,8 +346,8 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
             new_im.paste(pred_image, (original_image.size[0], 0))
 
             noise_image = Image.fromarray(get_picture_array(X_train, index))
-            new_im.paste(noise_image, (original_image.size[0]*2, 0))
-            new_im.save(folder_path+'origin_prediction_noise-'+str(index)+'.png', format="PNG")
+            new_im.paste(noise_image, (original_image.size[0] * 2, 0))
+            new_im.save(folder_path + 'origin_prediction_noise-' + str(index) + '.png', format="PNG")
 
             # diff = ImageChops.difference(original_image, pred_image)
             # diff = diff.convert('L')
@@ -355,8 +362,6 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
             # new_im.paste(pred_image, (original_image.size[0], 0))
             # new_im.save(folder_path+'origin_VS_noise-'+str(index)+'.png', format="PNG")
             # plt.imshow(new_im)
-
-        return cnn
 
     def write_output_file(output_file, train_history, layer_info):
         # save the network's parameters
@@ -465,19 +470,20 @@ def run_all():
         print ("Running in Windows")
 
     print(theano.sandbox.cuda.dnn_available())
+
     num_labels = 15
     amount_train = 7500
-    svm_negative_amount = 3000
+    svm_negative_amount = 300
     input_noise_rate = 0.2
     zero_meaning = False
-    epochs = 15
+    epochs = 1
     folder_name = "CAE_" + str(amount_train) + "_3Conv2Pool9Filters_different3000Batch1-"+str(time.time())
     data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1)
 
-    for i in range(1, 20, 1):
+    for i in range(1, 2, 1):
         print("Run #", i)
         try:
-            run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.065+0.005*i, update_momentum=0.9,
+            run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.054+0.0005*i, update_momentum=0.9,
                 dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name, amount_train=amount_train,
                 zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=11,
                 svm_negative_amount=svm_negative_amount)
