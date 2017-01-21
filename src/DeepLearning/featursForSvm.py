@@ -17,6 +17,9 @@ from lasagne.updates import nesterov_momentum
 from nolearn.lasagne import TrainSplit
 import time
 
+# import liblinear
+from liblinearutil import *
+
 CONV_AE_PARAMS_PKL = 'conv_ae_params.pkl'
 CONV_AE_NP = 'conv_ae.np'
 CONV_AE_PKL = 'conv_ae.pkl'
@@ -102,9 +105,11 @@ def images_svm(pickled_file, x=None, all_labels=None, svm_negative_amount=800, n
 
         start_time = time.clock()
         print("Starting cnn prediction...")
-        features = np.zeros((x.shape[0], 2625))
+        # features = np.zeros((x.shape[0], 2625))
+        features = []
         for i in range(0, x.shape[0]):
-            features[i, :] = cnn.output_hiddenLayer(x[i:i+1]).reshape((1, -1))
+            features.append(list(cnn.output_hiddenLayer(x[i:i+1]).reshape((1, -1))))
+            # features[i] = cnn.output_hiddenLayer(x[i:i+1]).reshape((1, -1))
         # quarter_x = np.floor(x.shape[0] / 4)
         # train_last_hidden_layer_1 = cnn.output_hiddenLayer(x[:quarter_x])
         # train_last_hidden_layer_1 = train_last_hidden_layer_1.reshape((train_last_hidden_layer_1.shape[0], -1))
@@ -119,8 +124,8 @@ def images_svm(pickled_file, x=None, all_labels=None, svm_negative_amount=800, n
         # train_last_hidden_layer_4 = train_last_hidden_layer_4.reshape((train_last_hidden_layer_4.shape[0], -1))
         # features = np.concatenate((train_last_hidden_layer_1, train_last_hidden_layer_2, train_last_hidden_layer_3, train_last_hidden_layer_4), axis=0)
 
-        print('Features size: ', features.shape)
-        print('Labels size: ', all_labels.shape)
+        # print('Features size: ', features.shape)
+        # print('Labels size: ', all_labels.shape)
     run_time = (time.clock() - start_time) / 60.
     print("     CNN prediction took(min)- ", run_time)
 
@@ -168,12 +173,12 @@ def recunstruct_cae(folder_path):
 def checkLabelPredict(features, labels, cross_validation_parts=5):
     try:
         print ("Features size- ", features.shape)
-        print ("Size of positive samples- ", (features[labels == 1, :]).shape)
+        print ("Size of positive samples- ", (features[labels == 1]).shape)
     except:
         pass
-    positive_data = features[labels == 1, :]
+    positive_data = features[labels == 1]
     # positive_data = positive_data.reshape((-1, features.shape[-2]*features.shape[-1]))
-    negative_data = features[labels == 0, :]
+    negative_data = features[labels == 0]
     # negative_data = negative_data.reshape((-1, features.shape[-2]*features.shape[-1]))
 
     if positive_data.shape[0] < cross_validation_parts or negative_data.shape[0] < cross_validation_parts:
@@ -202,29 +207,75 @@ def checkLabelPredict(features, labels, cross_validation_parts=5):
         pos_train = generate_positives(pos_train, neg_train.shape[0])
         print("         Number of generated positive train- ", pos_train.shape[0], " test- ", pos_test.shape[0])
 
-        clf = svm.SVC(kernel='linear', C=1).fit(np.concatenate((pos_train, neg_train), axis=0),
-                                                np.concatenate((np.ones(pos_train.shape[0]),
-                                                                np.zeros(neg_train.shape[0])), axis=0))
-        test_params = np.concatenate((pos_test, neg_test), axis=0)
-        test_y = np.concatenate((np.ones(pos_test.shape[0]), np.zeros(neg_test.shape[0])), axis=0)
-        score = clf.score(test_params, test_y)
-        print("SVM score- ", score)
+        clf, score, test_params, test_y = classifier_score(neg_test, neg_train, pos_test, pos_train)
         scores[cross_validation_index] = score
 
-        try:
-            test_predict = clf.predict(test_params)
-            auc_score = roc_auc_score(test_y, test_predict)
-            print("AUC cross-", auc_score)
-            auc_scores[cross_validation_index] = auc_score
-        except Exception as e:
-            print(e)
-            print(e.message)
+        # try:
+        #     test_predict = clf.predict(test_params)
+        #     auc_score = roc_auc_score(test_y, test_predict)
+        #     print("AUC cross-", auc_score)
+        #     auc_scores[cross_validation_index] = auc_score
+        # except Exception as e:
+        #     print(e)
+        #     print(e.message)
 
     try:
         return np.average(scores), np.average(auc_scores)
     except:
         return np.average(scores), 999
 
+
+def classifier_score(neg_test, neg_train, pos_test, pos_train):
+    # return svc_score(neg_test, neg_train, pos_test, pos_train)
+    # return linear_svc_score(neg_test, neg_train, pos_test, pos_train)
+    return lib_linear_score(neg_test, neg_train, pos_test, pos_train)
+
+
+
+def svc_score(neg_test, neg_train, pos_test, pos_train):
+    clf = svm.SVC(kernel='linear', C=1).fit(np.concatenate((pos_train, neg_train), axis=0),
+                                            np.concatenate((np.ones(pos_train.shape[0]),
+                                                            np.zeros(neg_train.shape[0])), axis=0))
+    test_params = np.concatenate((pos_test, neg_test), axis=0)
+    test_y = np.concatenate((np.ones(pos_test.shape[0]), np.zeros(neg_test.shape[0])), axis=0)
+    score = clf.score(test_params, test_y)
+    print("SVM score- ", score)
+    return clf, score, test_params, test_y
+
+
+def linear_svc_score(neg_test, neg_train, pos_test, pos_train):
+    clf = svm.LinearSVC(C=1).fit(np.concatenate((pos_train, neg_train), axis=0),
+                                            np.concatenate((np.ones(pos_train.shape[0]),
+                                                            np.zeros(neg_train.shape[0])), axis=0))
+    test_params = np.concatenate((pos_test, neg_test), axis=0)
+    test_y = np.concatenate((np.ones(pos_test.shape[0]), np.zeros(neg_test.shape[0])), axis=0)
+    score = clf.score(test_params, test_y)
+    print("SVM score- ", score)
+    return clf, score, test_params, test_y
+
+
+def lib_linear_score(neg_test, neg_train, pos_test, pos_train):
+    y = list(np.concatenate((np.ones(pos_train.shape[0]), -1*np.ones(neg_train.shape[0])), axis=0))
+    x = list(np.concatenate((pos_train, neg_train), axis=0))
+    m = train(y, x, '-c 1 -s 0')
+    test_params = list(np.concatenate((pos_test, neg_test), axis=0))
+    test_y = list(np.concatenate((np.ones(pos_test.shape[0]), -1*np.ones(neg_test.shape[0])), axis=0))
+    p_label, p_acc, p_val = predict(test_y, test_params, m)
+
+    # prob = liblinearutil.problem([1, -1], [{1: 1, 3: 1}, {1: -1, 3: -1}])
+    # param = parameter('-c 4')
+    # m = liblinear.train(prob, param)
+    # x0, max_idx = gen_feature_nodearray({1: 1, 3: 1})
+    # label = liblinear.predict(m, x0)
+
+    clf = svm.LinearSVC(C=1).fit(np.concatenate((pos_train, neg_train), axis=0),
+                                            np.concatenate((np.ones(pos_train.shape[0]),
+                                                            np.zeros(neg_train.shape[0])), axis=0))
+    test_params = np.concatenate((pos_test, neg_test), axis=0)
+    test_y = np.concatenate((np.ones(pos_test.shape[0]), np.zeros(neg_test.shape[0])), axis=0)
+    score = clf.score(test_params, test_y)
+    print("SVM score- ", score)
+    return clf, score, test_params, test_y
 
 def generate_positives(positives, num_negatives):
     num_positives = positives.shape[0]

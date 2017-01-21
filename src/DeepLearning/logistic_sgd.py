@@ -263,13 +263,13 @@ def load_data(dataset, batch_index = 1, withSVM = False, toShuffleInput = False 
             print(e.message)
             print("     Exception, trying from images")
             pLabel, pData = pickleAllImages(svm_size=withSVM, num_labels=labelset, TRAIN_SPLIT=TRAIN_DATA_PRECENT, end_index=end_index, MULTI=MULTI_POSITIVES, dropout_percent=dropout_percent)
-            if end_index < 10001:
-                f = gzip.open("pickled_temp/" + file_name, 'wb')
-                try:
-                    cPickle.dump((pLabel[end_index*(batch_index-1):end_index*batch_index], pData[end_index*(batch_index-1):end_index*batch_index]), f, protocol=2)
-                except Exception as e:
-                    print(e.message)
-                    f.close()
+            # if end_index < 10001:
+            #     f = gzip.open("pickled_temp/" + file_name, 'wb')
+            #     try:
+            #         cPickle.dump((pLabel[end_index*(batch_index-1):end_index*batch_index], pData[end_index*(batch_index-1):end_index*batch_index]), f, protocol=2)
+            #     except Exception as e:
+            #         print(e.message)
+            #         f.close()
                 # try:
                 #     if not svm_file_exists:
                 #         cPickle.dump((svm_data, svm_label), open("pickled_temp/" + svm_name, 'wb'))
