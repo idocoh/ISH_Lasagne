@@ -284,7 +284,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
             regression=True,
             max_epochs=epochs,
             verbose=1,
-            hiddenLayer_to_output=-13)
+            hiddenLayer_to_output=14)
 
         return cnn
 
@@ -472,11 +472,11 @@ def run_all():
     print(theano.sandbox.cuda.dnn_available())
 
     num_labels = 15
-    amount_train = 7500
-    svm_negative_amount = 300
+    amount_train = 30
+    svm_negative_amount = 30
     input_noise_rate = 0.2
     zero_meaning = False
-    epochs = 1
+    epochs = 2
     folder_name = "CAE_" + str(amount_train) + "_3Conv2Pool9Filters_different3000Batch1-"+str(time.time())
     data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1)
 

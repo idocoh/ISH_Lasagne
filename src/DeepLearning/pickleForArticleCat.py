@@ -122,7 +122,7 @@ def seperateSVM(pData, pLabel, svm_size):
 
 
 def generate_positives(positiveImage, labels, positiveDataArray, positivelabelsArray, dropout_percent=0.1, MULTI=30, end_index=0):
-    for j in range(0,MULTI-1):
+    for j in range(0, MULTI-1):
         dropout = np.random.binomial(1, 1-dropout_percent, size=positiveImage.shape[0])
         positiveDataArray.append(positiveImage*dropout)
         positivelabelsArray.append(labels)
