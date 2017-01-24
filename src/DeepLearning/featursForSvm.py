@@ -102,13 +102,15 @@ def images_svm(pickled_file, x=None, all_labels=None, svm_negative_amount=800, n
         # features = cnn.output_hiddenLayer(x)
 
         x, all_labels = separate_svm(x.astype(np.float32), all_labels, svm_negative_amount)
+        x = x[-40:]
+        all_labels = all_labels[-40:]
 
         start_time = time.clock()
         print("Starting cnn prediction...")
-        # features = np.zeros((x.shape[0], 2625))
-        features = []
+        features = np.zeros((x.shape[0], 2625))
+        # features = []
         for i in range(0, x.shape[0]):
-            features.append(list(cnn.output_hiddenLayer(x[i:i+1]).reshape((1, -1))))
+            features[i:i+1, :] = cnn.output_hiddenLayer(x[i:i+1]).reshape((1, -1))
             # features[i] = cnn.output_hiddenLayer(x[i:i+1]).reshape((1, -1))
         # quarter_x = np.floor(x.shape[0] / 4)
         # train_last_hidden_layer_1 = cnn.output_hiddenLayer(x[:quarter_x])
@@ -176,13 +178,13 @@ def checkLabelPredict(features, labels, cross_validation_parts=5):
         print ("Size of positive samples- ", (features[labels == 1]).shape)
     except:
         pass
-    positive_data = features[labels == 1]
+    positive_data = features[labels == 1, :]
     # positive_data = positive_data.reshape((-1, features.shape[-2]*features.shape[-1]))
-    negative_data = features[labels == 0]
+    negative_data = features[labels == 0, :]
     # negative_data = negative_data.reshape((-1, features.shape[-2]*features.shape[-1]))
 
     if positive_data.shape[0] < cross_validation_parts or negative_data.shape[0] < cross_validation_parts:
-        return 1, 1
+        return -1, -1
 
     negative_data_chunks = np.array_split(negative_data, cross_validation_parts)
     positive_data_chunks = np.array_split(positive_data, cross_validation_parts)
@@ -255,12 +257,12 @@ def linear_svc_score(neg_test, neg_train, pos_test, pos_train):
 
 
 def lib_linear_score(neg_test, neg_train, pos_test, pos_train):
-    y = list(np.concatenate((np.ones(pos_train.shape[0]), -1*np.ones(neg_train.shape[0])), axis=0))
-    x = list(np.concatenate((pos_train, neg_train), axis=0))
-    m = train(y, x, '-c 1 -s 0')
-    test_params = list(np.concatenate((pos_test, neg_test), axis=0))
-    test_y = list(np.concatenate((np.ones(pos_test.shape[0]), -1*np.ones(neg_test.shape[0])), axis=0))
-    p_label, p_acc, p_val = predict(test_y, test_params, m)
+    y = np.concatenate((np.ones(pos_train.shape[0]), -1*np.ones(neg_train.shape[0])), axis=0)
+    x = np.concatenate((pos_train, neg_train), axis=0)
+    m = train(y.tolist(), x.tolist(), '-c 1 -s 0')
+    test_params = np.concatenate((pos_test, neg_test), axis=0)
+    test_y = np.concatenate((np.ones(pos_test.shape[0]), -1*np.ones(neg_test.shape[0])), axis=0)
+    p_label, p_acc, p_val = predict(test_y.tolist(), test_params.tolist(), m)
 
     # prob = liblinearutil.problem([1, -1], [{1: 1, 3: 1}, {1: -1, 3: -1}])
     # param = parameter('-c 4')
@@ -316,7 +318,7 @@ def run_svm(pickle_name, X_train=None, labels=None, svm_negative_amount=800):
 
 if __name__ == '__main__':
     # pickName = "C:/devl/python/ISH_Lasagne/src/DeepLearning/results_dae/learn/run_0/encode.pkl"
-    pickled_file = "C:/devl/python/ISH_Lasagne/src/DeepLearning/results_dae/CAE_3000_2Conv2Pool-1460319214/run_0/conv_ae.pkl"
+    pickled_file = "C:/devl/python/ISH_Lasagne/src/DeepLearning/results_dae/for_debug/run_0/conv_ae.pkl"
     net = pickle.load(open(pickled_file, 'r'))
     run_svm(net)
 
