@@ -102,8 +102,8 @@ def images_svm(pickled_file, x=None, all_labels=None, svm_negative_amount=800, n
         # features = cnn.output_hiddenLayer(x)
 
         x, all_labels = separate_svm(x.astype(np.float32), all_labels, svm_negative_amount)
-        x = x[-40:]
-        all_labels = all_labels[-40:]
+        x = x[-80:]
+        all_labels = all_labels[-80:]
 
         start_time = time.clock()
         print("Starting cnn prediction...")
@@ -255,14 +255,24 @@ def linear_svc_score(neg_test, neg_train, pos_test, pos_train):
     print("SVM score- ", score)
     return clf, score, test_params, test_y
 
-
 def lib_linear_score(neg_test, neg_train, pos_test, pos_train):
     y = np.concatenate((np.ones(pos_train.shape[0]), -1*np.ones(neg_train.shape[0])), axis=0)
     x = np.concatenate((pos_train, neg_train), axis=0)
-    m = train(y.tolist(), x.tolist(), '-c 1 -s 0')
+    clf = train(y.tolist(), x.tolist(), '-c 1 -s 0')
     test_params = np.concatenate((pos_test, neg_test), axis=0)
     test_y = np.concatenate((np.ones(pos_test.shape[0]), -1*np.ones(neg_test.shape[0])), axis=0)
-    p_label, p_acc, p_val = predict(test_y.tolist(), test_params.tolist(), m)
+    p_label, p_acc, p_val = predict(test_y.tolist(), test_params.tolist(), clf)
+    '''
+    p_acc: a tuple including  accuracy (for classification), mean-squared
+    error, and squared correlation coefficient (for regression).
+    '''
+    print("mean-squared error- ", p_acc[1])
+    print("squared correlation coefficient- ", p_acc[2])
+
+    score = roc_auc_score(test_y, np.array(p_label))
+    print("AUC- ", score)
+
+    return clf, score, test_params, test_y
 
     # prob = liblinearutil.problem([1, -1], [{1: 1, 3: 1}, {1: -1, 3: -1}])
     # param = parameter('-c 4')
@@ -270,14 +280,14 @@ def lib_linear_score(neg_test, neg_train, pos_test, pos_train):
     # x0, max_idx = gen_feature_nodearray({1: 1, 3: 1})
     # label = liblinear.predict(m, x0)
 
-    clf = svm.LinearSVC(C=1).fit(np.concatenate((pos_train, neg_train), axis=0),
-                                            np.concatenate((np.ones(pos_train.shape[0]),
-                                                            np.zeros(neg_train.shape[0])), axis=0))
-    test_params = np.concatenate((pos_test, neg_test), axis=0)
-    test_y = np.concatenate((np.ones(pos_test.shape[0]), np.zeros(neg_test.shape[0])), axis=0)
-    score = clf.score(test_params, test_y)
-    print("SVM score- ", score)
-    return clf, score, test_params, test_y
+    # clf = svm.LinearSVC(C=1).fit(np.concatenate((pos_train, neg_train), axis=0),
+    #                                         np.concatenate((np.ones(pos_train.shape[0]),
+    #                                                         np.zeros(neg_train.shape[0])), axis=0))
+    # test_params = np.concatenate((pos_test, neg_test), axis=0)
+    # test_y = np.concatenate((np.ones(pos_test.shape[0]), np.zeros(neg_test.shape[0])), axis=0)
+    # score = clf.score(test_params, test_y)
+    # print("SVM score- ", score)
+    # return clf, score, test_params, test_y
 
 def generate_positives(positives, num_negatives):
     num_positives = positives.shape[0]
@@ -291,10 +301,12 @@ def generate_positives(positives, num_negatives):
 def run_svm(pickle_name, X_train=None, labels=None, svm_negative_amount=800):
     num_labels = 15
     features, labels = images_svm(pickle_name, X_train, labels,  num_labels=num_labels, svm_negative_amount=svm_negative_amount)
-    # try:
-    #     pickle.dump((features, labels), open('svm.pkl', 'w'))
-    # except:
-    #     pass
+    try:
+        # pickle.dump((features, labels), open('svm.pkl', 'w'))
+        pickle.dump(X_train, open('svm-x-data.pkl', 'w'))
+        pickle.dump(labels, open('svm--data.pkl', 'w'))
+    except:
+        pass
     errorRates = np.zeros(num_labels)
     aucScores = np.zeros(num_labels)
 
