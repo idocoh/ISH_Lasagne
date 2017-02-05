@@ -447,6 +447,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
 
     try:
         print("Running SVM")
+        print("     Start time: ", time.ctime())
         errors, aucs = run_svm(cnn, X_train=x_train, labels=train_y, svm_negative_amount=svm_negative_amount)
         print("Errors", errors)
         print("AUC", aucs)
@@ -472,20 +473,20 @@ def run_all():
     print(theano.sandbox.cuda.dnn_available())
 
     num_labels = 15
-    amount_train = 30
-    svm_negative_amount = 30
+    amount_train = 16531
+    svm_negative_amount = 100
     input_noise_rate = 0.2
     zero_meaning = False
-    epochs = 2
+    epochs = 6
     folder_name = "CAE_" + str(amount_train) + "_3Conv2Pool9Filters_different3000Batch1-"+str(time.time())
     data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1)
 
-    for i in range(1, 2, 1):
+    for i in range(1, 12, 1):
         print("Run #", i)
         try:
-            run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.054+0.0005*i, update_momentum=0.9,
+            run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.055+0.0005*i, update_momentum=0.9,
                 dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name, amount_train=amount_train,
-                zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=11,
+                zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=11, train_valid_split=0.001,
                 svm_negative_amount=svm_negative_amount)
 
         except Exception as e:

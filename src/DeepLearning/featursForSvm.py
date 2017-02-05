@@ -102,8 +102,8 @@ def images_svm(pickled_file, x=None, all_labels=None, svm_negative_amount=800, n
         # features = cnn.output_hiddenLayer(x)
 
         x, all_labels = separate_svm(x.astype(np.float32), all_labels, svm_negative_amount)
-        x = x[-80:]
-        all_labels = all_labels[-80:]
+        x = x
+        all_labels = all_labels
 
         start_time = time.clock()
         print("Starting cnn prediction...")
@@ -172,6 +172,13 @@ def recunstruct_cae(folder_path):
     return cnn
 
 
+def classifier_score(neg_test, neg_train, pos_test, pos_train):
+    # svc_score(neg_test, neg_train, pos_test, pos_train)
+    # return svc_score(neg_test, neg_train, pos_test, pos_train)
+    # return linear_svc_score(neg_test, neg_train, pos_test, pos_train)
+    return lib_linear_score(neg_test, neg_train, pos_test, pos_train)
+
+
 def checkLabelPredict(features, labels, cross_validation_parts=5):
     try:
         print ("Features size- ", features.shape)
@@ -210,6 +217,7 @@ def checkLabelPredict(features, labels, cross_validation_parts=5):
         print("         Number of generated positive train- ", pos_train.shape[0], " test- ", pos_test.shape[0])
 
         clf, score, test_params, test_y = classifier_score(neg_test, neg_train, pos_test, pos_train)
+
         scores[cross_validation_index] = score
 
         # try:
@@ -225,12 +233,6 @@ def checkLabelPredict(features, labels, cross_validation_parts=5):
         return np.average(scores), np.average(auc_scores)
     except:
         return np.average(scores), 999
-
-
-def classifier_score(neg_test, neg_train, pos_test, pos_train):
-    # return svc_score(neg_test, neg_train, pos_test, pos_train)
-    # return linear_svc_score(neg_test, neg_train, pos_test, pos_train)
-    return lib_linear_score(neg_test, neg_train, pos_test, pos_train)
 
 
 
@@ -301,12 +303,7 @@ def generate_positives(positives, num_negatives):
 def run_svm(pickle_name, X_train=None, labels=None, svm_negative_amount=800):
     num_labels = 15
     features, labels = images_svm(pickle_name, X_train, labels,  num_labels=num_labels, svm_negative_amount=svm_negative_amount)
-    try:
-        # pickle.dump((features, labels), open('svm.pkl', 'w'))
-        pickle.dump(X_train, open('svm-x-data.pkl', 'w'))
-        pickle.dump(labels, open('svm--data.pkl', 'w'))
-    except:
-        pass
+
     errorRates = np.zeros(num_labels)
     aucScores = np.zeros(num_labels)
 
@@ -326,6 +323,15 @@ def run_svm(pickle_name, X_train=None, labels=None, svm_negative_amount=800):
     print("Average Auc Score- ", aucAverageScore)
     run_time = (time.clock() - start_time) / 60.
     print("SVM took(min)- ", run_time)
+
+    # try:
+    #     # pickle.dump((features, labels), open('svm.pkl', 'w'))
+    #     print("Trying to pickle svm... ")
+    #     pickle.dump(X_train, open('svm-x-data.pkl', 'w'))
+    #     pickle.dump(labels, open('svm--data.pkl', 'w'))
+    # except:
+    #     pass
+
     return errorRates, aucScores
 
 if __name__ == '__main__':
