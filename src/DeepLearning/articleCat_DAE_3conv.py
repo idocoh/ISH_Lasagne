@@ -451,8 +451,8 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         errors, aucs = run_svm(cnn, X_train=x_train, labels=train_y, svm_negative_amount=svm_negative_amount)
         print("Errors", errors)
         print("AUC", aucs)
-        output_file.write("SVM errors: " + str(errors))
-        output_file.write("SVM auc: " + str(aucs))
+        output_file.write("liblinear SVM auc: " + str(errors))
+        output_file.write("linear SVM auc: " + str(aucs))
         results_file.write(str(aucs) + "\n")
 
         output_file.flush()
@@ -477,17 +477,17 @@ def run_all():
     svm_negative_amount = 100
     input_noise_rate = 0.2
     zero_meaning = False
-    epochs = 6
+    epochs = 25
     folder_name = "CAE_" + str(amount_train) + "_3Conv2Pool9Filters_different3000Batch1-"+str(time.time())
     data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1)
 
     for i in range(1, 12, 1):
         print("Run #", i)
         try:
-            run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.055+0.0005*i, update_momentum=0.9,
+            run(layers_size=[32, 32, 64, 32, 32], epochs=epochs, learning_rate=0.05+0.005*(i-1), update_momentum=0.9,
                 dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name, amount_train=amount_train,
                 zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=11, train_valid_split=0.001,
-                svm_negative_amount=svm_negative_amount)
+                svm_negative_amount=svm_negative_amount*i)
 
         except Exception as e:
             print("failed to run- ", i)

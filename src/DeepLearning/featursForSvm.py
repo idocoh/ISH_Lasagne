@@ -216,9 +216,12 @@ def checkLabelPredict(features, labels, cross_validation_parts=5):
         pos_train = generate_positives(pos_train, neg_train.shape[0])
         print("         Number of generated positive train- ", pos_train.shape[0], " test- ", pos_test.shape[0])
 
-        clf, score, test_params, test_y = classifier_score(neg_test, neg_train, pos_test, pos_train)
+        # clf, score, test_params, test_y = classifier_score(neg_test, neg_train, pos_test, pos_train)
 
+        clf, score, test_params, test_y = lib_linear_score(neg_test, neg_train, pos_test, pos_train)
         scores[cross_validation_index] = score
+        clf_svm, score_svm, test_params_svm, test_y_svm = svc_score(neg_test, neg_train, pos_test, pos_train)
+        auc_scores[cross_validation_index] = score_svm
 
         # try:
         #     test_predict = clf.predict(test_params)
