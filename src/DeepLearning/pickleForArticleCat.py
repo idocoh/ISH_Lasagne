@@ -38,19 +38,41 @@ def pickleAllImages(num_labels, TRAIN_SPLIT=0.8, end_index=16351, dropout_percen
         else:
             return pLabel[:end_index], pData[:end_index]
 
-    dir2 = "pickled_images"+FILE_SEPARATOR+"ISH-noLearn_5000_11000_320_160.pkl.gz"#300_140.pkl.gz"
+    dir2 = "pickled_images"+FILE_SEPARATOR+"ISH-noLearn_5000_10000_320_160.pkl.gz"#300_140.pkl.gz"
     f2 = gzip.open(dir2, 'rb')
     train_set2, valid_set2, test_set2 = cPickle.load(f2)
     f2.close()
     print "after reading part 2"
 
-    dir3 = "pickled_images"+FILE_SEPARATOR+"ISH-noLearn_11000_16352_320_160.pkl.gz"#300_140.pkl.gz"
+    if end_index <= 10000:
+        pData = np.concatenate((train_set1[0], train_set2[0]), axis=0)
+        print "Done Reading images"
+        if svm_size > 0:
+            return seperateSVM(pData, pLabel, svm_size)
+        else:
+            return pLabel[:end_index], pData[:end_index]
+
+    dir3 = "pickled_images"+FILE_SEPARATOR+"ISH-noLearn_10000_15000_320_160.pkl.gz"#300_140.pkl.gz"
     f3 = gzip.open(dir3, 'rb')
     train_set3, valid_set3, test_set3 = cPickle.load(f3)
     f3.close()
     print "after reading part 3"
-           
-    pData = np.concatenate((train_set1[0], test_set1[0], train_set2[0], test_set2[0], train_set3[0], test_set3[0]), axis=0)
+
+    if end_index <= 15000:
+        pData = np.concatenate((train_set1[0], train_set2[0], train_set3[0]), axis=0)
+        print "Done Reading images"
+        if svm_size > 0:
+            return seperateSVM(pData, pLabel, svm_size)
+        else:
+            return pLabel[:end_index], pData[:end_index]
+
+    dir4 = "pickled_images" + FILE_SEPARATOR + "ISH-noLearn_15000_16352_320_160.pkl.gz"  # 300_140.pkl.gz"
+    f4 = gzip.open(dir4, 'rb')
+    train_set4, valid_set4, test_set4 = cPickle.load(f4)
+    f4.close()
+    print "after reading part 4"
+
+    pData = np.concatenate((train_set1[0], train_set2[0], train_set3[0], train_set4[0]), axis=0)
     print "Done Reading images"
     if svm_size > 0:
         return seperateSVM(pData, pLabel, svm_size)

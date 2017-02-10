@@ -20,8 +20,6 @@ import time
 # import liblinear
 from liblinearutil import *
 
-COMPACT_VECTOR_SIZE = 800
-
 CONV_AE_PARAMS_PKL = 'conv_ae_params.pkl'
 CONV_AE_NP = 'conv_ae.np'
 CONV_AE_PKL = 'conv_ae.pkl'
@@ -104,14 +102,11 @@ def images_svm(pickled_file, x=None, all_labels=None, svm_negative_amount=800, n
         # features = cnn.output_hiddenLayer(x)
 
         x, all_labels = separate_svm(x.astype(np.float32), all_labels, svm_negative_amount)
-        x = x
-        all_labels = all_labels
 
         start_time = time.clock()
         print("Starting cnn prediction...")
-        # (w, l) = cnn.output_hiddenLayer(x[1:2]).reshape((1, -1)).shape
-        # COMPACT_VECTOR_SIZE = w*l
-        features = np.zeros((x.shape[0], COMPACT_VECTOR_SIZE))
+        (w, l) = cnn.output_hiddenLayer(x[1:2]).reshape((1, -1)).shape
+        features = np.zeros((x.shape[0], w*l))
         # features = []
         for i in range(0, x.shape[0]):
             features[i:i+1, :] = cnn.output_hiddenLayer(x[i:i+1]).reshape((1, -1))
