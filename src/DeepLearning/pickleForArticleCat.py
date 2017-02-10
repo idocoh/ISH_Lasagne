@@ -24,22 +24,30 @@ def pickleAllImages(num_labels, TRAIN_SPLIT=0.8, end_index=16351, dropout_percen
         l.close()
         print "     Done"
 
-    dir1 = "pickled_images"+FILE_SEPARATOR+"ISH-noLearn_0_5000_300_140.pkl.gz"
+    dir1 = "pickled_images"+FILE_SEPARATOR+"ISH-noLearn_0_5000_320_160.pkl.gz"#300_140.pkl.gz"
     f1 = gzip.open(dir1, 'rb')
     train_set1, valid_set1, test_set1 = cPickle.load(f1)
     f1.close()
     print "after reading part 1"
 
-    dir2 = "pickled_images"+FILE_SEPARATOR+"ISH-noLearn_5000_11000_300_140.pkl.gz"
+    if end_index <= 5000:
+        pData = train_set1[0]
+        print "Done Reading images"
+        if svm_size > 0:
+            return seperateSVM(pData, pLabel, svm_size)
+        else:
+            return pLabel[:end_index], pData[:end_index]
+
+    dir2 = "pickled_images"+FILE_SEPARATOR+"ISH-noLearn_5000_11000_320_160.pkl.gz"#300_140.pkl.gz"
     f2 = gzip.open(dir2, 'rb')
     train_set2, valid_set2, test_set2 = cPickle.load(f2)
     f2.close()
     print "after reading part 2"
 
-    dir3 = "pickled_images"+FILE_SEPARATOR+"ISH-noLearn_11000_16352_300_140.pkl.gz"
+    dir3 = "pickled_images"+FILE_SEPARATOR+"ISH-noLearn_11000_16352_320_160.pkl.gz"#300_140.pkl.gz"
     f3 = gzip.open(dir3, 'rb')
     train_set3, valid_set3, test_set3 = cPickle.load(f3)
-    f3.close()   
+    f3.close()
     print "after reading part 3"
            
     pData = np.concatenate((train_set1[0], test_set1[0], train_set2[0], test_set2[0], train_set3[0], test_set3[0]), axis=0)

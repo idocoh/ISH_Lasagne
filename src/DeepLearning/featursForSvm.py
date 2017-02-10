@@ -107,7 +107,7 @@ def images_svm(pickled_file, x=None, all_labels=None, svm_negative_amount=800, n
 
         start_time = time.clock()
         print("Starting cnn prediction...")
-        features = np.zeros((x.shape[0], 2625))
+        features = np.zeros((x.shape[0], 3200))
         # features = []
         for i in range(0, x.shape[0]):
             features[i:i+1, :] = cnn.output_hiddenLayer(x[i:i+1]).reshape((1, -1))
@@ -173,6 +173,7 @@ def recunstruct_cae(folder_path):
 
 
 def classifier_score(neg_test, neg_train, pos_test, pos_train):
+    # NN_classifier_score(neg_test, neg_train, pos_test, pos_train)
     # svc_score(neg_test, neg_train, pos_test, pos_train)
     # return svc_score(neg_test, neg_train, pos_test, pos_train)
     # return linear_svc_score(neg_test, neg_train, pos_test, pos_train)
@@ -292,6 +293,23 @@ def lib_linear_score(neg_test, neg_train, pos_test, pos_train):
     # test_y = np.concatenate((np.ones(pos_test.shape[0]), np.zeros(neg_test.shape[0])), axis=0)
     # score = clf.score(test_params, test_y)
     # print("SVM score- ", score)
+    # return clf, score, test_params, test_y
+
+def NN_classifier_score(neg_test, neg_train, pos_test, pos_train):
+    y = np.concatenate((np.ones(pos_train.shape[0]), -1*np.ones(neg_train.shape[0])), axis=0)
+    x = np.concatenate((pos_train, neg_train), axis=0)
+    # clf = train(y.tolist(), x.tolist(), '-c 1 -s 0')
+
+    test_params = np.concatenate((pos_test, neg_test), axis=0)
+    test_y = np.concatenate((np.ones(pos_test.shape[0]), -1*np.ones(neg_test.shape[0])), axis=0)
+    # p_label, p_acc, p_val = predict(test_y.tolist(), test_params.tolist(), clf)
+
+    import nn_classifier
+    nn_classifier.main(x, y, test_y, test_params)
+
+    # score = roc_auc_score(test_y, np.array(p_label))
+    # print("NN AUC- ", score)
+    #
     # return clf, score, test_params, test_y
 
 def generate_positives(positives, num_negatives):

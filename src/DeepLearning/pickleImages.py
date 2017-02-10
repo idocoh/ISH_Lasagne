@@ -14,8 +14,8 @@ import time
 Image.MAX_IMAGE_PIXELS = None
 
 NUM_IMAGES = 50
-IMAGE_WIDTH = 300
-IMAGE_HEIGHT = 140
+IMAGE_WIDTH = 320
+IMAGE_HEIGHT = 160
 TRAIN_DATA_PRECENT = 0.8
 VALIDATION_DATA_PRECENT = TRAIN_DATA_PRECENT + 0.0
 
@@ -56,7 +56,7 @@ class pickleImages(object):
     
     def pickleData(self,start_index,end_index):
       
-        y=1
+        y = 1
 #         y = getTopCatVector(self.dir+"\\*TopCat.txt",start_index,end_index)
                
 #         fy = gzip.open('BraionISH_TopCAT.pkl.gz','wb')
@@ -80,12 +80,12 @@ class pickleImages(object):
         validation_index = np.floor(dataAmount*VALIDATION_DATA_PRECENT)
         test_index = dataAmount
 #         # Divided dataset into 3 parts. 
-        train_set_x = Data[:train_index]
-        val_set_x = Data[train_index:validation_index]
-        test_set_x = Data[validation_index:]
+        train_set_x = Data#[:train_index]
+        val_set_x = []#Data[train_index:validation_index]
+        test_set_x = []#Data[validation_index:]
         train_set_y = y#[:train_index]
-        val_set_y = y#[train_index:validation_index]
-        test_set_y = y#[validation_index:]
+        val_set_y = []#y[train_index:validation_index]
+        test_set_y = []#y[validation_index:]
         
         train_set = train_set_x, train_set_y
         val_set = val_set_x, val_set_y
@@ -95,7 +95,7 @@ class pickleImages(object):
         
 #         f = gzip.open('ISH-noLearn_all_300_140.pkl.gz','wb')
         pickledPath = 'pickled_images/ISH-noLearn_'+str(start_index)+'_'+str(end_index)+'_'+str(IMAGE_WIDTH)+'_'+str(IMAGE_HEIGHT)+'.pkl.gz'
-        f = gzip.open(pickledPath,'wb')
+        f = gzip.open(pickledPath, 'wb')
         cPickle.dump(dataset, f, protocol=2)
         f.close()   
         return pickledPath
@@ -126,8 +126,8 @@ def dir_to_dataset(glob_files,start_index,end_index,loc_train_labels=""):
         print("Gonna process:\n\t %s"%glob_files)
         dataset = []
         for file_count, file_name in enumerate( sorted(glob(glob_files),key=len) ):
-            if file_count < start_index or end_index-1 < file_count :
-                continue;
+            if file_count < start_index or end_index-1 < file_count:
+                continue
             image = Image.open(file_name).convert('L') #tograyscale
 #             print image.format,image.size, image.mode
 #             image.show()
@@ -135,7 +135,7 @@ def dir_to_dataset(glob_files,start_index,end_index,loc_train_labels=""):
             
             wpercent = (IMAGE_WIDTH/float(image.size[0]))
             hsize = int((float(image.size[1])*float(wpercent)))
-            image = image.resize((IMAGE_WIDTH,IMAGE_HEIGHT), Image.ANTIALIAS)
+            image = image.resize((IMAGE_WIDTH, IMAGE_HEIGHT), Image.ANTIALIAS)
 #             image.thumbnail((),Image.ANTIALIAS)
 #             print image.format,image.size, image.mode
 #             img = Image.open(file_name).convert('LA') #tograyscale
@@ -144,7 +144,7 @@ def dir_to_dataset(glob_files,start_index,end_index,loc_train_labels=""):
 
             #convert to float
             pixels = list(image.getdata())
-            float_pixels  = [float(x) / 255 for x in pixels]
+            float_pixels = [float(x) / 255 for x in pixels]
             dataset.append(float_pixels)
 #             print float_pixels
         
@@ -162,7 +162,7 @@ def dir_to_dataset(glob_files,start_index,end_index,loc_train_labels=""):
         #     df = pd.read_csv(loc_train_labels)
         #     return np.array(dataset), np.array(df["Class"])
         # else:
-        #     return np.array(dataset)
+        return np.array(dataset)
 
 def getTopCatVector(glob_files,start_index,end_index):
         
@@ -182,10 +182,10 @@ def getTopCatVector(glob_files,start_index,end_index):
         return np.array(topCatVectorSet)
             
 def runPickleImages(dir,startIndex=0,endIndex=NUM_IMAGES):
-    start_time=time.clock()
+    start_time = time.clock()
     
     pick = pickleImages(dir)
-    pickledPath = pick.pickleData(startIndex,endIndex)
+    pickledPath = pick.pickleData(startIndex, endIndex)
     print "time"
     print time.clock()-start_time
     
@@ -197,6 +197,8 @@ if __name__ == '__main__':#     dir = "C:\\Users\\Abigail\\Desktop\\Ido\\pyWS\\F
 #     pick = pickleImages(dir)
 #     pick.pickleData()
     
-    dir = "C:\Users\Ido\Pictures\BrainISHimages"
-    runPickleImages(dir)
+    dir = "C:\Users\Research\Pictures\BrainISHimages"
+    # runPickleImages(dir, 0, 5000)
+    runPickleImages(dir, 5001, 11000)
+    runPickleImages(dir, 11000, 16352)
 #     test_SdA()
