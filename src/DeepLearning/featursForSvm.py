@@ -19,6 +19,7 @@ import time
 
 # import liblinear
 from liblinearutil import *
+import nnClassifier
 
 CONV_AE_PARAMS_PKL = 'conv_ae_params.pkl'
 CONV_AE_NP = 'conv_ae.np'
@@ -300,23 +301,22 @@ def lib_linear_score(neg_test, neg_train, pos_test, pos_train):
     # return clf, score, test_params, test_y
 
 def NN_classifier_score(neg_test, neg_train, pos_test, pos_train):
-    y = np.concatenate(([np.concatenate((np.ones(pos_train.shape[0]), 0*np.ones(neg_train.shape[0])), axis=0)],
-                        [np.concatenate((0*np.ones(pos_train.shape[0]), np.ones(neg_train.shape[0])), axis=0)]),
-                       axis=0)
-    test_y = np.concatenate(([np.concatenate((np.ones(pos_test.shape[0]), 0*np.ones(neg_test.shape[0])), axis=0)],
-                             [np.concatenate((0*np.ones(pos_test.shape[0]), np.ones(neg_test.shape[0])), axis=0)]),
-                            axis=0)
+    pos_train_size = pos_train.shape[0]
+    neg_train_size = neg_train.shape[0]
+    y = np.transpose(np.concatenate(([np.concatenate((np.ones(pos_train_size, np.float32), 0 * np.ones(neg_train_size, np.float32)), axis=0)],
+                        [np.concatenate((0 * np.ones(pos_train_size, np.float32), np.ones(neg_train_size, np.float32)), axis=0)]),
+                       axis=0))
+    pos_test_size = pos_test.shape[0]
+    neg_test_size = neg_test.shape[0]
+    test_y = np.transpose(np.concatenate(([np.concatenate((np.ones(pos_test_size, np.float32), 0 * np.ones(neg_test_size, np.float32)), axis=0)],
+                             [np.concatenate((0 * np.ones(pos_test_size, np.float32), np.ones(neg_test_size, np.float32)), axis=0)]),
+                            axis=0))
     x = np.concatenate((pos_train, neg_train), axis=0)
-
     test_params = np.concatenate((pos_test, neg_test), axis=0)
 
-    import nn_classifier
-    nn_classifier.main(x, y, test_y, test_params)
+    classifier_net, error_rate, auc_score = nnClassifier.runNNclassifier(x, y, test_params, test_y)
 
-    # score = roc_auc_score(test_y, np.array(p_label))
-    # print("NN AUC- ", score)
-    #
-    # return clf, score, test_params, test_y
+    return classifier_net, auc_score, test_params, test_y
 
 def generate_positives(positives, num_negatives):
     num_positives = positives.shape[0]
