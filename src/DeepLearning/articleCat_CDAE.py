@@ -23,13 +23,15 @@ counter = 0
 
 
 def load2d(num_labels, batch_index=1, outputFile=None, input_width=320, input_height=160, end_index=16351, MULTI_POSITIVES=20,
-           dropout_percent=0.1, data_set='ISH.pkl.gz', toShuffleInput = False, withZeroMeaning = False, TRAIN_PRECENT=0.8):
+           dropout_percent=0.1, data_set='ISH.pkl.gz', toShuffleInput = False, withZeroMeaning = False, TRAIN_PRECENT=0.8,
+           steps=[5000, 10000, 15000, 16352], image_width=320, image_height=160):
     print ('loading data...')
 
     data_sets = load_data(data_set, batch_index=batch_index, withSVM=0, toShuffleInput=toShuffleInput,
                                                withZeroMeaning=withZeroMeaning, end_index=end_index,
                                                MULTI_POSITIVES=MULTI_POSITIVES, dropout_percent=dropout_percent,
-                                               labelset=num_labels, TRAIN_DATA_PRECENT=TRAIN_PRECENT)
+                                               labelset=num_labels, TRAIN_DATA_PRECENT=TRAIN_PRECENT,
+                                            steps=steps, image_width=image_width, image_height=image_height)
 
     train_set_x, train_set_y = data_sets[0]
 #     valid_set_x, valid_set_y = data_sets[1]
@@ -518,6 +520,9 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
     if valid_accuracy > 0.05:
         return valid_accuracy
 
+
+
+
     try:
         print("Running SVM")
         print("     Start time: ", time.ctime())
@@ -546,13 +551,14 @@ def run_all():
     print(theano.sandbox.cuda.dnn_available())
 
     num_labels = 15
-    amount_train = 16351
+    amount_train = 163
     svm_negative_amount = 100
     input_noise_rate = 0.2
     zero_meaning = False
-    epochs = 10
+    epochs = 1
     folder_name = "CAE_" + str(amount_train) + "_4Conv3Pool_different_Filters-"+str(time.time())
-    data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1, end_index=amount_train)
+    # data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1, end_index=amount_train,
+    #                              steps=[5000, 10000, 15000, 16352], image_width=320, image_height=160)
 
     # for i in range(1, 2, 1):
         # print("Run #", i)
@@ -566,13 +572,15 @@ def run_all():
         #     print("failed to run- ", i)
         #     print(e)
 
-    for i in range(1, 4, 1):
+    for i in range(2, 4, 1):
         print("Run #", i)
         try:
             for j in range(1, 4, 1):
                 print("Filter run #", 3+8*(j-1))
                 try:
-                    run(layers_size=[32, 32, 32, 32, 32, 32, 32] / np.power(2, (i-1)), epochs=epochs, learning_rate=0.044,
+                    data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1, end_index=amount_train,
+                                  steps=[5000, 10000, 15000, 16352], image_width=320, image_height=160)
+                    run(layers_size=[32, 32, 32, 32, 32, 32, 32] / np.power(2, i), epochs=epochs, learning_rate=0.044,
                         update_momentum=0.9,
                         dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name,
                         amount_train=amount_train,
