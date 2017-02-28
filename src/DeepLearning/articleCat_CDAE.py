@@ -924,7 +924,7 @@ def run_all():
     input_noise_rate = 0.2
     zero_meaning = False
     epochs = 10
-    folder_name = "CAE_" + str(amount_train) + "_4Conv3Pool_different_Filters-"+str(time.time())
+    folder_name = "CAE_" + str(amount_train) + "_different_sizes-"+str(time.time())
     # data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1, end_index=amount_train,
     #                              steps=[5000, 10000, 15000, 16352], image_width=320, image_height=160)
 
@@ -952,14 +952,14 @@ def run_all():
         [5000, 10000, 16352],
         [5000, 10000, 16352],
         [5000, 10000, 16352],
-        [00, 10000, 16352],
+        [5000, 10000, 16352],
         [5000, 11000, 16352],
         [5000, 10000, 15000, 16352],
         [4000, 8000, 12000, 16000, 16352]
     ]
     image_width = [160, 160, 160, 200, 300, 320, 320]
     image_height = [80, 80, 100, 120, 140, 160, 200]
-    number_pooling_layers=[3, 2, 2, 2, 2, 3, 3]
+    number_pooling_layers = [3, 2, 2, 2, 2, 3, 3]
 
     for i in range(0, 7, 1):
         print("Run #", i)
@@ -974,15 +974,17 @@ def run_all():
                         dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name,
                         amount_train=amount_train,
                         zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=3+8*(j-1),
-                        train_valid_split=0.001,
+                        train_valid_split=0.001, input_width=image_width[i], input_height=image_height[i],
                         svm_negative_amount=svm_negative_amount, batch_size=32)
 
                 except Exception as e:
                     print("failed to run- ", i)
                     print(e)
+                    print(e.message)
         except Exception as e:
                 print("failed to run- ", i)
                 print(e)
+                print(e.message)
 
 if __name__ == "__main__":
     import os
