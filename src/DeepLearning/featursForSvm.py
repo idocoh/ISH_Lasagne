@@ -218,8 +218,8 @@ def checkLabelPredict(features, labels, cross_validation_parts=5):
 
         # clf, score, test_params, test_y = classifier_score(neg_test, neg_train, pos_test, pos_train)
 
-        clf, score, test_params, test_y = lib_linear_score(neg_test, neg_train, pos_test, pos_train)
-        scores[cross_validation_index] = score
+        # clf, score, test_params, test_y = lib_linear_score(neg_test, neg_train, pos_test, pos_train)
+        # scores[cross_validation_index] = score
         clf_svm, score_svm, test_params_svm, test_y_svm = svc_score(neg_test, neg_train, pos_test, pos_train)
         auc_scores[cross_validation_index] = score_svm
 
@@ -236,7 +236,6 @@ def checkLabelPredict(features, labels, cross_validation_parts=5):
         return np.average(scores), np.average(auc_scores)
     except:
         return np.average(scores), 999
-
 
 
 def svc_score(neg_test, neg_train, pos_test, pos_train):
@@ -259,6 +258,7 @@ def linear_svc_score(neg_test, neg_train, pos_test, pos_train):
     score = clf.score(test_params, test_y)
     print("SVM score- ", score)
     return clf, score, test_params, test_y
+
 
 def lib_linear_score(neg_test, neg_train, pos_test, pos_train):
     y = np.concatenate((np.ones(pos_train.shape[0]), -1*np.ones(neg_train.shape[0])), axis=0)
@@ -294,6 +294,7 @@ def lib_linear_score(neg_test, neg_train, pos_test, pos_train):
     # print("SVM score- ", score)
     # return clf, score, test_params, test_y
 
+
 def NN_classifier_score(neg_test, neg_train, pos_test, pos_train):
     y = np.concatenate((np.ones(pos_train.shape[0]), -1*np.ones(neg_train.shape[0])), axis=0)
     x = np.concatenate((pos_train, neg_train), axis=0)
@@ -311,6 +312,7 @@ def NN_classifier_score(neg_test, neg_train, pos_test, pos_train):
     #
     # return clf, score, test_params, test_y
 
+
 def generate_positives(positives, num_negatives):
     num_positives = positives.shape[0]
     multiple_by = np.ones(num_positives)*np.divide(num_negatives, num_positives)
@@ -320,7 +322,7 @@ def generate_positives(positives, num_negatives):
     return np.repeat(positives, multiple_by.astype(int), axis=0)
 
 
-def run_svm(pickle_name, X_train=None, labels=None, svm_negative_amount=800):
+def run_svm(pickle_name, X_train=None, labels=None, svm_negative_amount=800, folder_path=None):
     num_labels = 15
     features, labels = images_svm(pickle_name, X_train, labels,  num_labels=num_labels, svm_negative_amount=svm_negative_amount)
 
@@ -344,15 +346,20 @@ def run_svm(pickle_name, X_train=None, labels=None, svm_negative_amount=800):
     run_time = (time.clock() - start_time) / 60.
     print("SVM took(min)- ", run_time)
 
-    # try:
-    #     # pickle.dump((features, labels), open('svm.pkl', 'w'))
-    #     print("Trying to pickle svm... ")
-    #     pickle.dump(X_train, open('svm-x-data.pkl', 'w'))
-    #     pickle.dump(labels, open('svm--data.pkl', 'w'))
-    # except:
-    #     pass
+    # save_svm_data(features, labels)
 
     return errorRates, aucScores
+
+
+    def save_svm_data(features, labels):
+        try:
+            # pickle.dump((features, labels), open('svm.pkl', 'w'))
+            print("Trying to pickle svm... ")
+            pickle.dump(features, open(folder_path + 'svm-x-data.pkl', 'w'))
+            pickle.dump(labels, open(folder_path + 'svm-y-data.pkl', 'w'))
+        except:
+            pass
+
 
 if __name__ == '__main__':
     # pickName = "C:/devl/python/ISH_Lasagne/src/DeepLearning/results_dae/learn/run_0/encode.pkl"

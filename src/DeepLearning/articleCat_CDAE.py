@@ -735,13 +735,6 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         print('Training CAE with ', X_train.shape[0], ' samples')
         cnn.fit(X_train, X_out)
 
-        # try:
-        #     pickle.dump(cnn, open(folder_path + 'conv_ae.pkl', 'w'))
-        #     # cnn = pickle.load(open(folder_path + 'conv_ae.pkl','r'))
-        #     cnn.save_weights_to(folder_path + 'conv_ae.np')
-        # except:
-        #     print ("Could not pickle cnn")
-
         # print('Predicting ', X_train.shape[0], ' samples through CAE')
         # X_pred = cnn.predict(X_train).reshape(-1, input_height, input_width)  # * sigma + mu
 
@@ -870,12 +863,8 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         data = loadedData
         train_x, train_y, test_x, test_y = data
 
-    if number_pooling_layers == 4:
-        cnn = create_cae_4pool(input_height, input_width)
-    elif number_pooling_layers == 3:
-        cnn = create_cae_3pool(input_height, input_width)
-    elif number_pooling_layers == 2:
-        cnn = create_cae_2pool(input_height, input_width)
+    cnn = create_cae(create_cae_2pool, create_cae_3pool, create_cae_4pool, input_height, input_width,
+                     number_pooling_layers)
 
     if zero_meaning:
         train_x = train_x.astype(np.float64)
@@ -896,21 +885,28 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
     if valid_accuracy > 0.05:
         return valid_accuracy
 
-    try:
-         sys.setrecursionlimit(10000)
-         print("Trying to pickle cnn... ")
-         pickle.dump(cnn, open(folder_name+"cnn.pkl", 'w'))
-         print("    Done pickle cnn... ")
-    except Exception as e:
-         print(" Could not pickle cnn... ")
-         print(e)
-         print(e.message)
+    save_cnn(cnn, folder_path)
+
+    get_auc_score(cnn, output_file, results_file, svm_negative_amount, train_y, x_train, folder_path)
+
+    return valid_accuracy
 
 
+def create_cae(create_cae_2pool, create_cae_3pool, create_cae_4pool, input_height, input_width, number_pooling_layers):
+    if number_pooling_layers == 4:
+        cnn = create_cae_4pool(input_height, input_width)
+    elif number_pooling_layers == 3:
+        cnn = create_cae_3pool(input_height, input_width)
+    elif number_pooling_layers == 2:
+        cnn = create_cae_2pool(input_height, input_width)
+    return cnn
+
+
+def get_auc_score(cnn, output_file, results_file, svm_negative_amount, train_y, x_train, folder_path):
     try:
         print("Running SVM")
         print("     Start time: ", time.ctime())
-        errors, aucs = run_svm(cnn, X_train=x_train, labels=train_y, svm_negative_amount=svm_negative_amount)
+        errors, aucs = run_svm(cnn, X_train=x_train, labels=train_y, svm_negative_amount=svm_negative_amount, folder_path=folder_path)
         print("Errors", errors)
         print("AUC", aucs)
         output_file.write("liblinear SVM auc: " + str(errors))
@@ -923,7 +919,28 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         print(e)
         print(e.message)
 
-    return valid_accuracy
+
+def save_cnn(cnn, folder_path):
+    try:
+        sys.setrecursionlimit(10000)
+        print("Trying to pickle network... ")
+        pickle.dump(cnn, open(folder_path + "nn.pkl", 'w'))
+        print("    Done pickle network... ")
+    except Exception as e:
+        print(" Could not pickle network... ")
+        print(e)
+        print(e.message)
+
+
+def load_network(folder_path):
+    try:
+        sys.setrecursionlimit(10000)
+        print("Trying to load network... ")
+        return pickle.load(open(folder_path + "nn.pkl", 'r'))
+    except Exception as e:
+        print(" Could not load network... ")
+        print(e)
+        print(e.message)
 
 
 def run_all():
@@ -941,28 +958,6 @@ def run_all():
     zero_meaning = False
     epochs = 10
     folder_name = "CAE_" + str(amount_train) + "_different_sizes-"+str(time.time())
-    # data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1, end_index=amount_train,
-    #                              steps=[5000, 10000, 15000, 16352], image_width=320, image_height=160)
-
-    # for i in range(1, 2, 1):
-        # print("Run #", i)
-        # try:
-        #     run(layers_size=[16, 32, 32, 32, 32, 32, 16], epochs=epochs, learning_rate=0.05+0.002*(i-1), update_momentum=0.9,
-        #         dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name, amount_train=amount_train,
-        #         zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=11, train_valid_split=0.001,
-        #         svm_negative_amount=svm_negative_amount, batch_size=16)
-        #
-        # except Exception as e:
-        #     print("failed to run- ", i)
-        #     print(e)
-
-    # steps = [5000, 10000, 16352], image_width = 160, image_height = 80, number_pooling_layers=3
-    # steps = [5000, 10000, 16352], image_width = 160, image_height = 80, number_pooling_layers=2
-    # steps = [5000, 10000, 16352], image_width = 160, image_height = 100, number_pooling_layers=2
-    # steps = [5000, 10000, 16352], image_width = 200, image_height = 120, number_pooling_layers=2
-    # steps = [5000, 11000, 16352], image_width = 300, image_height = 140, number_pooling_layers=2
-    # steps = [5000, 10000, 15000, 16352], image_width = 320, image_height = 160, number_pooling_layers=3
-    # steps = [4000, 8000, 12000, 16000, 16352], image_width = 320, image_height = 200, number_pooling_layers=3
 
     steps = [
         [5000, 10000, 16352],
@@ -978,6 +973,8 @@ def run_all():
     number_pooling_layers = [3, 2, 2, 2, 2, 3, 3]
 
     input_size_index = 3
+    data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1, end_index=amount_train,
+                  steps=steps[input_size_index], image_width=image_width[input_size_index], image_height=image_height[input_size_index])
 
     for j in range(2, 0, -1):
         print("Filter run #", 3 + 8 * (j - 1))
@@ -986,8 +983,6 @@ def run_all():
                 learning_rate = 0.044 + 0.003 * k
                 print("run with learning rate- ", learning_rate)
                 try:
-                    data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1, end_index=amount_train,
-                                  steps=steps[input_size_index], image_width=image_width[input_size_index], image_height=image_height[input_size_index])
                     run(layers_size=[8, 16, 32, 64, 32, 16, 8], epochs=epochs, learning_rate=learning_rate,
                         update_momentum=0.9, number_pooling_layers=number_pooling_layers[input_size_index],
                         dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name,
@@ -1001,9 +996,9 @@ def run_all():
                     print(e)
                     print(e.message)
         except Exception as e:
-                print("failed to run- ", input_size_index)
-                print(e)
-                print(e.message)
+            print("failed to run- ", input_size_index)
+            print(e)
+            print(e.message)
 
 if __name__ == "__main__":
     import os
