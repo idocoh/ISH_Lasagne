@@ -138,6 +138,8 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         filter_6 = (3, 3)
         filter_7 = (3, 3)
         filter_8 = (3, 3)
+        filter_9 = (3, 3)
+        filter_10 = (3, 3)
     elif filters_type == 5:
         filter_1 = (5, 5)
         filter_2 = (5, 5)
@@ -147,6 +149,8 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         filter_6 = (5, 5)
         filter_7 = (5, 5)
         filter_8 = (5, 5)
+        filter_9 = (5, 5)
+        filter_10 = (5, 5)
     elif filters_type == 7:
         filter_1 = (7, 7)
         filter_2 = (7, 7)
@@ -155,7 +159,9 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         filter_5 = (7, 7)
         filter_6 = (7, 7)
         filter_7 = (7, 7)
-        filter_8 = (5, 5)
+        filter_8 = (7, 7)
+        filter_9 = (7, 7)
+        filter_10 = (5, 5)
     elif filters_type == 9:
         filter_1 = (9, 9)
         filter_2 = (7, 7)
@@ -165,7 +171,20 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         filter_6 = (7, 7)
         filter_7 = (9, 9)
         filter_8 = (5, 5)
+        filter_9 = (9, 9)
+        filter_10 = (5, 5)
     elif filters_type == 11:
+        filter_1 = (11, 11)
+        filter_2 = (7, 7)
+        filter_3 = (5, 5)
+        filter_4 = (3, 3)
+        filter_5 = (5, 5)
+        filter_6 = (7, 7)
+        filter_7 = (11, 11)
+        filter_8 = (5, 5)
+        filter_9 = (5, 5)
+        filter_10 = (5, 5)
+    elif filters_type == 19:
         filter_1 = (11, 11)
         filter_2 = (9, 9)
         filter_3 = (7, 7)
@@ -174,15 +193,8 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         filter_6 = (9, 9)
         filter_7 = (11, 11)
         filter_8 = (7, 7)
-    elif filters_type == 19:
-        filter_1 = (11, 11)
-        filter_2 = (11, 11)
-        filter_3 = (11, 11)
-        filter_4 = (11, 11)
-        filter_5 = (11, 11)
-        filter_6 = (11, 11)
-        filter_7 = (11, 11)
-        filter_8 = (11, 11)
+        filter_9 = (7, 7)
+        filter_10 = (7, 7)
 
     def create_cae_4pool(input_height, input_width):
 
@@ -836,8 +848,12 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         output_file.write(str(filter_3) + "\n")
         output_file.write(str(filter_4) + "\n")
         output_file.write(str(filter_5) + "\n")
-        output_file.write(str(filter_6) + "\n\n")
-        results_file.write("{" + str((filter_1, filter_2, filter_3, filter_4, filter_5, filter_6)) + "]\t")
+        output_file.write(str(filter_6) + "\n")
+        output_file.write(str(filter_7) + "\n")
+        output_file.write(str(filter_8) + "\n")
+        output_file.write(str(filter_9) + "\n")
+        output_file.write(str(filter_10) + "\n\n")
+        results_file.write("{" + str((filter_1, filter_2, filter_3, filter_4, filter_5, filter_6, filter_7, filter_8, filter_9, filter_10)) + "]\t")
         output_file.write("Run time[minutes] is: " + str(run_time) + "\n")
 
         output_file.flush()
@@ -961,28 +977,31 @@ def run_all():
     image_height = [80, 80, 100, 120, 140, 160, 200]
     number_pooling_layers = [3, 2, 2, 2, 2, 3, 3]
 
-    for i in range(0, 7, 1):
-        print("Run #", i)
+    input_size_index = 3
+
+    for j in range(2, 0, -1):
+        print("Filter run #", 3 + 8 * (j - 1))
         try:
-            for j in range(1, 3, 1):
-                print("Filter run #", 3+8*(j-1))
+            for k in range(1, 4, 1):
+                learning_rate = 0.044 + 0.003 * k
+                print("run with learning rate- ", learning_rate)
                 try:
                     data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1, end_index=amount_train,
-                                  steps=steps[i], image_width=image_width[i], image_height=image_height[i])
-                    run(layers_size=[8, 16, 16, 16, 16, 16, 8], epochs=epochs, learning_rate=0.044,
-                        update_momentum=0.9, number_pooling_layers=number_pooling_layers[i],
+                                  steps=steps[input_size_index], image_width=image_width[input_size_index], image_height=image_height[input_size_index])
+                    run(layers_size=[8, 16, 32, 64, 32, 16, 8], epochs=epochs, learning_rate=learning_rate,
+                        update_momentum=0.9, number_pooling_layers=number_pooling_layers[input_size_index],
                         dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name,
                         amount_train=amount_train,
                         zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=3+8*(j-1),
-                        train_valid_split=0.001, input_width=image_width[i], input_height=image_height[i],
+                        train_valid_split=0.001, input_width=image_width[input_size_index], input_height=image_height[input_size_index],
                         svm_negative_amount=svm_negative_amount, batch_size=32)
 
                 except Exception as e:
-                    print("failed to run- ", i)
+                    print("failed to run- ", input_size_index)
                     print(e)
                     print(e.message)
         except Exception as e:
-                print("failed to run- ", i)
+                print("failed to run- ", input_size_index)
                 print(e)
                 print(e.message)
 
