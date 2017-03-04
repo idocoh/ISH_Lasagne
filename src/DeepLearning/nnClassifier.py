@@ -1,12 +1,8 @@
-
-
 from lasagne import layers
 from lasagne.updates import nesterov_momentum
-from numpy.f2py.auxfuncs import isstring
 from sklearn.metrics import roc_auc_score
 from nolearn.lasagne import NeuralNet
 import lasagne
-
 
 from logistic_sgd import load_data
 from nolearn.lasagne import BatchIterator
@@ -16,10 +12,8 @@ import cPickle as pickle
 import gzip
 
 
-
-def runNNclassifier(train_params, train_y, test_params, test_y, data_pointer=None,FOLDER_NAME="defualt",LEARNING_RATE=0.04, UPDATE_MOMENTUM=0.9, UPDATE_RHO=None, NUM_OF_EPOCH=1,
-                    NUM_CAT=15,end_index=16351,input_length=800, TRAIN_VALIDATION_SPLIT=0.2,
-                    NUM_UNITS_HIDDEN_LAYER=[100, 10], BATCH_SIZE=40):
+def runNNclassifier(train_params, train_y, test_params, test_y, LEARNING_RATE=0.04, UPDATE_MOMENTUM=0.9, UPDATE_RHO=None,
+                    NUM_OF_EPOCH=10, TRAIN_VALIDATION_SPLIT=0.2, NUM_UNITS_HIDDEN_LAYER=[1000, 100], BATCH_SIZE=32):
 
     def getNN(pickledFilePath=None):
         if pickledFilePath is not None : #isinstance(pickledFilePath, str):
@@ -53,7 +47,7 @@ def runNNclassifier(train_params, train_y, test_params, test_y, data_pointer=Non
         
         return classifier_net
 
-        
+    input_length = train_params.shape[1]
     classifier_net = getNN()
 
     classifier_net.fit(train_params, train_y)
@@ -66,7 +60,7 @@ def runNNclassifier(train_params, train_y, test_params, test_y, data_pointer=Non
     error_rate = np.sum(np.abs(differ))/differ.shape[0] * 100
     auc_score = roc_auc_score(test_y[:, 0], test_predict)
 
-    print differ
+    # print differ
     print "        Error- ", error_rate, "%"
     print "            RocAucScore- ", auc_score
     return classifier_net, error_rate, auc_score

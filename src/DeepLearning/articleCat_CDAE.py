@@ -1,5 +1,8 @@
 from __future__ import print_function
 import time
+import os
+import sys
+import platform
 
 import numpy as np
 import theano.sandbox.cuda
@@ -7,6 +10,7 @@ from PIL import Image
 from lasagne import layers
 from lasagne.nonlinearities import tanh
 from lasagne.updates import nesterov_momentum
+import cPickle as pickle
 
 from featursForSvm import run_svm
 from logistic_sgd import load_data
@@ -868,7 +872,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         train_x, train_y, test_x, test_y = data
 
     if zero_meaning:
-        train_x = train_x.astype(np.float64)
+        # train_x = train_x.astype(np.float64)
         mu, sigma = np.mean(train_x.flatten()), np.std(train_x.flatten())
         print("Mean- ", mu)
         print("Std- ", sigma)
@@ -892,6 +896,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         save_cnn(cae, folder_path)
     else:
         cae = load_network(LOAD_CAE_PATH)
+        valid_accuracy = cae.train_history_[-1]['valid_accuracy']
 
     get_auc_score(cae, output_file, results_file, svm_negative_amount, train_y, x_train, folder_path)
 
@@ -902,7 +907,8 @@ def get_auc_score(cnn, output_file, results_file, svm_negative_amount, train_y, 
     try:
         print("Running SVM")
         print("     Start time: ", time.ctime())
-        errors, aucs = run_svm(cnn, X_train=x_train, labels=train_y, svm_negative_amount=svm_negative_amount, folder_path=folder_path)
+        errors, aucs = run_svm(cnn, X_train=x_train, labels=train_y, svm_negative_amount=svm_negative_amount,
+                               folder_path=folder_path)
         print("Errors", errors)
         print("AUC", aucs)
         output_file.write("liblinear SVM auc: " + str(errors))
@@ -950,7 +956,7 @@ def run_all():
 
     num_labels = 15
     amount_train = 16351
-    svm_negative_amount = 100
+    svm_negative_amount = 200
     input_noise_rate = 0.2
     zero_meaning = False
     epochs = 15
@@ -978,13 +984,13 @@ def run_all():
     data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1,steps=steps[input_size_index],
                   image_width=image_width[input_size_index], image_height=image_height[input_size_index])
 
-    for k in range(0, 2, 1):
+    for k in range(0, 3, 1):
         try:
             for num_filters_index in range(0, 2, 1):
                 try:
                     for j in range(0, 5, 1):
-                        amount_train = 6000 + 10351*k
-                        learning_rate = 0.06 #45 + 0.005 * k
+                        # amount_train = 6000 + 10351*k
+                        learning_rate = 0.06 - 0.01 * k
                         filter_type_index = 3 + 2 * j * (2-k)
                         print("run Filter type #", filter_type_index)
                         print("run Filter number index #", num_filters_index)

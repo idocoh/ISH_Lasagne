@@ -21,69 +21,8 @@ import time
 from liblinearutil import *
 import nnClassifier
 
-CONV_AE_PARAMS_PKL = 'conv_ae_params.pkl'
-CONV_AE_NP = 'conv_ae.np'
-CONV_AE_PKL = 'conv_ae.pkl'
-
-class Unpool2DLayer(layers.Layer):
-    """
-    This layer performs unpooling over the last two dimensions
-    of a 4D tensor.
-    """
-    def __init__(self, incoming, ds, **kwargs):
-
-        super(Unpool2DLayer, self).__init__(incoming, **kwargs)
-
-        if (isinstance(ds, int)):
-            raise ValueError('ds must have len == 2')
-        else:
-            ds = tuple(ds)
-            if len(ds) != 2:
-                raise ValueError('ds must have len == 2')
-            if ds[0] != ds[1]:
-                raise ValueError('ds should be symmetric (I am lazy)')
-            self.ds = ds
-
-    def get_output_shape_for(self, input_shape):
-        output_shape = list(input_shape)
-
-        output_shape[2] = input_shape[2] * self.ds[0]
-        output_shape[3] = input_shape[3] * self.ds[1]
-
-        return tuple(output_shape)
-
-    def get_output_for(self, input, **kwargs):
-        ds = self.ds
-        input_shape = input.shape
-        output_shape = self.get_output_shape_for(input_shape)
-        return input.repeat(2, axis=2).repeat(2, axis=3)
-
-
-### when we load the batches to input to the neural network, we randomly / flip
-### rotate the images, to artificially increase the size of the training set
-class FlipBatchIterator(BatchIterator):
-    def transform(self, X1, X2):
-        X1b, X2b = super(FlipBatchIterator, self).transform(X1, X2)
-        X2b = X2b.reshape(X1b.shape)
-
-        bs = X1b.shape[0]
-        h_indices = np.random.choice(bs, bs / 2, replace=False)  # horizontal flip
-        v_indices = np.random.choice(bs, bs / 2, replace=False)  # vertical flip
-
-        ###  uncomment these lines if you want to include rotations (images must be square)  ###
-        #r_indices = np.random.choice(bs, bs / 2, replace=False) # 90 degree rotation
-        for X in (X1b, X2b):
-            X[h_indices] = X[h_indices, :, :, ::-1]
-            X[v_indices] = X[v_indices, :, ::-1, :]
-            #X[r_indices] = np.swapaxes(X[r_indices, :, :, :], 2, 3)
-        shape = X2b.shape
-        X2b = X2b.reshape((shape[0], -1))
-
-        return X1b, X2b
-
 
 def images_svm(pickled_file, x=None, all_labels=None, svm_negative_amount=800, num_labels=15, TRAIN_SPLIT=0.8):
-
     if isinstance(pickled_file, str):
         try:
             features = pickle.load(open(pickled_file, 'r'))
@@ -94,7 +33,7 @@ def images_svm(pickled_file, x=None, all_labels=None, svm_negative_amount=800, n
     else:
         cnn = pickled_file
         if x is None:
-            print ("Reading images...")
+            print("Reading images...")
             all_labels, x = pickleAllImages(num_labels=15, pos=True)
         print("Processing images...")
         # input_width, input_height, dropout_percent = 300, 140, 0.2
@@ -107,45 +46,13 @@ def images_svm(pickled_file, x=None, all_labels=None, svm_negative_amount=800, n
         start_time = time.clock()
         print("Starting cnn prediction...")
         (w, l) = cnn.output_hiddenLayer(x[1:2]).reshape((1, -1)).shape
-        features = np.zeros((x.shape[0], w*l))
+        features = np.zeros((x.shape[0], w * l)).astype(np.float32)
         # features = []
         for i in range(0, x.shape[0]):
-            features[i:i+1, :] = cnn.output_hiddenLayer(x[i:i+1]).reshape((1, -1))
-            # features[i] = cnn.output_hiddenLayer(x[i:i+1]).reshape((1, -1))
-        # quarter_x = np.floor(x.shape[0] / 4)
-        # train_last_hidden_layer_1 = cnn.output_hiddenLayer(x[:quarter_x])
-        # train_last_hidden_layer_1 = train_last_hidden_layer_1.reshape((train_last_hidden_layer_1.shape[0], -1))
-        # print("after first quarter train output")
-        # train_last_hidden_layer_2 = cnn.output_hiddenLayer(x[quarter_x:2 * quarter_x])
-        # train_last_hidden_layer_2 = train_last_hidden_layer_2.reshape((train_last_hidden_layer_2.shape[0], -1))
-        # print("after second quarter train output")
-        # train_last_hidden_layer_3 = cnn.output_hiddenLayer(x[2 * quarter_x: 3 * quarter_x])
-        # train_last_hidden_layer_3 = train_last_hidden_layer_3.reshape((train_last_hidden_layer_3.shape[0], -1))
-        # print("after third quarter train output")
-        # train_last_hidden_layer_4 = cnn.output_hiddenLayer(x[3 * quarter_x:])
-        # train_last_hidden_layer_4 = train_last_hidden_layer_4.reshape((train_last_hidden_layer_4.shape[0], -1))
-        # features = np.concatenate((train_last_hidden_layer_1, train_last_hidden_layer_2, train_last_hidden_layer_3, train_last_hidden_layer_4), axis=0)
+            features[i:i + 1, :] = cnn.output_hiddenLayer(x[i:i + 1]).reshape((1, -1)).astype(np.float32)
 
-        # print('Features size: ', features.shape)
-        # print('Labels size: ', all_labels.shape)
     run_time = (time.clock() - start_time) / 60.
     print("     CNN prediction took(min)- ", run_time)
-
-    # if num_labels==15:
-    #     labels_file = "pickled_images"+FILE_SEPARATOR+"articleCat.pkl.gz"
-    # elif num_labels==20:
-    #     labels_file = "pickled_images"+FILE_SEPARATOR+"topCat.pkl.gz"
-    # elif num_labels==164:
-    #     labels_file = "pickled_images"+FILE_SEPARATOR+"all164cat.pkl.gz"
-    # elif num_labels==2081:
-    #     labels_file = "pickled_images"+FILE_SEPARATOR+"all2081cat.pkl.gz"
-    # else:
-    #     print("bad labels path!!!!!!!")
-    #
-    # print("Loading labels")
-    # with open(labels_file) as l:
-    #     labels = pickle.load(l)[:features.shape[0], :]
-    #     l.close()
 
     return features, all_labels
 
@@ -166,6 +73,9 @@ def separate_svm(pData, pLabel, svm_negative_amount):
 
 
 def recunstruct_cae(folder_path):
+    CONV_AE_PARAMS_PKL = 'conv_ae_params.pkl'
+    CONV_AE_NP = 'conv_ae.np'
+    CONV_AE_PKL = 'conv_ae.pkl'
     cnn = NeuralNet()
     cnn.load_params_from(folder_path + CONV_AE_PARAMS_PKL)
     cnn.load_weights_from(folder_path + CONV_AE_NP)
@@ -182,8 +92,8 @@ def classifier_score(neg_test, neg_train, pos_test, pos_train):
 
 def checkLabelPredict(features, labels, cross_validation_parts=5):
     try:
-        print ("Features size- ", features.shape)
-        print ("Size of positive samples- ", (features[labels == 1]).shape)
+        print("Features size- ", features.shape)
+        print("Size of positive samples- ", (features[labels == 1]).shape)
     except:
         pass
     positive_data = features[labels == 1, :]
@@ -255,8 +165,8 @@ def svc_score(neg_test, neg_train, pos_test, pos_train):
 
 def linear_svc_score(neg_test, neg_train, pos_test, pos_train):
     clf = svm.LinearSVC(C=1).fit(np.concatenate((pos_train, neg_train), axis=0),
-                                            np.concatenate((np.ones(pos_train.shape[0]),
-                                                            np.zeros(neg_train.shape[0])), axis=0))
+                                 np.concatenate((np.ones(pos_train.shape[0]),
+                                                 np.zeros(neg_train.shape[0])), axis=0))
     test_params = np.concatenate((pos_test, neg_test), axis=0)
     test_y = np.concatenate((np.ones(pos_test.shape[0]), np.zeros(neg_test.shape[0])), axis=0)
     score = clf.score(test_params, test_y)
@@ -265,11 +175,11 @@ def linear_svc_score(neg_test, neg_train, pos_test, pos_train):
 
 
 def lib_linear_score(neg_test, neg_train, pos_test, pos_train):
-    y = np.concatenate((np.ones(pos_train.shape[0]), -1*np.ones(neg_train.shape[0])), axis=0)
+    y = np.concatenate((np.ones(pos_train.shape[0]), -1 * np.ones(neg_train.shape[0])), axis=0)
     x = np.concatenate((pos_train, neg_train), axis=0)
     clf = train(y.tolist(), x.tolist(), '-c 1 -s 0')
     test_params = np.concatenate((pos_test, neg_test), axis=0)
-    test_y = np.concatenate((np.ones(pos_test.shape[0]), -1*np.ones(neg_test.shape[0])), axis=0)
+    test_y = np.concatenate((np.ones(pos_test.shape[0]), -1 * np.ones(neg_test.shape[0])), axis=0)
     p_label, p_acc, p_val = predict(test_y.tolist(), test_params.tolist(), clf)
     '''
     p_acc: a tuple including  accuracy (for classification), mean-squared
@@ -302,35 +212,66 @@ def lib_linear_score(neg_test, neg_train, pos_test, pos_train):
 def NN_classifier_score(neg_test, neg_train, pos_test, pos_train):
     pos_train_size = pos_train.shape[0]
     neg_train_size = neg_train.shape[0]
-    y = np.transpose(np.concatenate(([np.concatenate((np.ones(pos_train_size, np.float32), 0 * np.ones(neg_train_size, np.float32)), axis=0)],
-                        [np.concatenate((0 * np.ones(pos_train_size, np.float32), np.ones(neg_train_size, np.float32)), axis=0)]),
-                       axis=0))
+    y = np.transpose(np.concatenate(
+        ([np.concatenate((np.ones(pos_train_size, np.float32), 0 * np.ones(neg_train_size, np.float32)), axis=0)],
+         [np.concatenate((0 * np.ones(pos_train_size, np.float32), np.ones(neg_train_size, np.float32)), axis=0)]),
+        axis=0))
     pos_test_size = pos_test.shape[0]
     neg_test_size = neg_test.shape[0]
-    test_y = np.transpose(np.concatenate(([np.concatenate((np.ones(pos_test_size, np.float32), 0 * np.ones(neg_test_size, np.float32)), axis=0)],
-                             [np.concatenate((0 * np.ones(pos_test_size, np.float32), np.ones(neg_test_size, np.float32)), axis=0)]),
-                            axis=0))
+    test_y = np.transpose(np.concatenate(
+        ([np.concatenate((np.ones(pos_test_size, np.float32), 0 * np.ones(neg_test_size, np.float32)), axis=0)],
+         [np.concatenate((0 * np.ones(pos_test_size, np.float32), np.ones(neg_test_size, np.float32)), axis=0)]),
+        axis=0))
     x = np.concatenate((pos_train, neg_train), axis=0)
     test_params = np.concatenate((pos_test, neg_test), axis=0)
+    print ("done with data to nn, training...")
+    return try_nn(test_params, test_y, x, y)
 
-    classifier_net, error_rate, auc_score = nnClassifier.runNNclassifier(x, y, test_params, test_y)
 
-    return classifier_net, auc_score, test_params, test_y
+def try_nn(test_params, test_y, x, y):
+    layers_size = [
+        [1000, 100],
+        [750, 250],
+        [500, 100],
+        [1000, 300]
+    ]
+    temp_auc = np.zeros((5, 4))
+    for i in range(0, 5):
+        try:
+            for j in range(0, 4):
+                try:
+                    learning_rate = 0.04 + 0.5 * i
+                    classifier_net, error_rate, auc_score = \
+                        nnClassifier.runNNclassifier(x, y, test_params, test_y, LEARNING_RATE=learning_rate,
+                                                     NUM_UNITS_HIDDEN_LAYER=layers_size[j])
+                    temp_auc[i, j] = auc_score
+                    print("AUC- " + str(auc_score) + ": rate " + str(learning_rate) + ", layers " + str(layers_size[j]))
+                except Exception as e:
+                    print("failed nn i-", i)
+                    print(e)
+                    print(e.message)
+        except Exception as e:
+            print("failed nn i-", i)
+            print(e)
+            print(e.message)
+
+    return classifier_net, np.max(temp_auc), test_params, test_y
 
 
 def generate_positives(positives, num_negatives):
     num_positives = positives.shape[0]
-    multiple_by = np.ones(num_positives)*np.divide(num_negatives, num_positives)
+    multiple_by = np.ones(num_positives) * np.divide(num_negatives, num_positives)
     for i in range(0, np.remainder(num_negatives, num_positives)):
         multiple_by[i] += 1
 
     return np.repeat(positives, multiple_by.astype(int), axis=0)
 
 
-def run_svm(pickle_name=None, X_train=None, features=None, labels=None, svm_negative_amount=800):
+def run_svm(pickle_name=None, X_train=None, features=None, labels=None, svm_negative_amount=800, folder_path=None):
     num_labels = 15
     if features is None:
-        features, labels = images_svm(pickle_name, X_train, labels,  num_labels=num_labels, svm_negative_amount=svm_negative_amount)
+        features, labels = images_svm(pickle_name, X_train, labels, num_labels=num_labels,
+                                      svm_negative_amount=svm_negative_amount)
 
     errorRates = np.zeros(num_labels)
     aucScores = np.zeros(num_labels)
@@ -352,26 +293,20 @@ def run_svm(pickle_name=None, X_train=None, features=None, labels=None, svm_nega
     run_time = (time.clock() - start_time) / 60.
     print("SVM took(min)- ", run_time)
 
-    try:
-        # pickle.dump((features, labels), open('svm.pkl', 'w'))
-        print("Trying to pickle svm... ")
-        pickle.dump(features, open('svm-x-data.pkl.gz', 'w'))
-        pickle.dump(labels, open('svm-y-data.pkl.gz', 'w'))
-    except:
-        pass
-    # save_svm_data(features, labels)
+    # save_svm_data(features, labels, folder_path)
 
     return errorRates, aucScores
 
 
-    def save_svm_data(features, labels):
-        try:
-            # pickle.dump((features, labels), open('svm.pkl', 'w'))
-            print("Trying to pickle svm... ")
-            pickle.dump(features, open(folder_path + 'svm-x-data.pkl', 'w'))
-            pickle.dump(labels, open(folder_path + 'svm-y-data.pkl', 'w'))
-        except:
-            pass
+def save_svm_data(features, labels, folder_path):
+    try:
+        # pickle.dump((features, labels), open('svm.pkl', 'w'))
+        print("Trying to pickle svm... ")
+        pickle.dump(features, open(folder_path + 'svm-x-data.pkl', 'w'))
+        pickle.dump(labels, open(folder_path + 'svm-y-data.pkl', 'w'))
+    except Exception as e:
+        print(e)
+        print(e.message)
 
 
 if __name__ == '__main__':
@@ -379,7 +314,6 @@ if __name__ == '__main__':
     pickled_file = "C:/devl/python/ISH_Lasagne/src/DeepLearning/results_dae/for_debug/run_0/conv_ae.pkl"
     net = pickle.load(open(pickled_file, 'r'))
     run_svm(net)
-
-
-
-
+    errors, aucs = run_svm(net)
+    print("Errors", errors)
+    print("AUC", aucs)
