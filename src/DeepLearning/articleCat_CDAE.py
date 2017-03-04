@@ -1,26 +1,30 @@
 from __future__ import print_function
-import time
-import sys
-from lasagne.nonlinearities import tanh, LeakyRectify
-from lasagne import layers
-from lasagne.updates import nesterov_momentum
-from PIL import Image
-from featursForSvm import run_svm
-import cPickle as pickle
-import platform
 
+import cPickle as pickle
+import os
+import platform
+import sys
+import time
+
+import numpy as np
+import theano.sandbox.cuda
+from PIL import Image
+from lasagne import layers
+from lasagne.nonlinearities import tanh
+from lasagne.updates import nesterov_momentum
+
+from featursForSvm import run_svm
 from logistic_sgd import load_data
 from nolearn.lasagne import BatchIterator
 from nolearn.lasagne import NeuralNet
 from nolearn.lasagne import PrintLayerInfo
 from nolearn.lasagne import TrainSplit
-import numpy as np
 from shape import ReshapeLayer
-import theano.sandbox.cuda
-
 
 FILE_SEPARATOR = "/"
 counter = 0
+
+LOAD_CAE_PATH = None
 
 
 def load2d(num_labels, batch_index=1, outputFile=None, input_width=320, input_height=160, end_index=16351, MULTI_POSITIVES=20,
@@ -195,6 +199,15 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         filter_8 = (7, 7)
         filter_9 = (7, 7)
         filter_10 = (7, 7)
+
+    def create_cae():
+        if number_pooling_layers == 4:
+            cnn = create_cae_4pool(input_height, input_width)
+        elif number_pooling_layers == 3:
+            cnn = create_cae_3pool(input_height, input_width)
+        elif number_pooling_layers == 2:
+            cnn = create_cae_2pool(input_height, input_width)
+        return cnn
 
     def create_cae_4pool(input_height, input_width):
 
@@ -852,17 +865,12 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         results_file.write(folder_name + "\n")
         results_file.flush()
 
-    start_time = time.clock()
-    print ("Start time: ", time.ctime())
-
     if loadedData is None:
-        train_x, train_y, test_x, test_y = load2d(categories, output_file, input_width, input_height, amount_train, multiple_positives, dropout_percent, end_index=amount_train)  # load 2-d data
+        train_x, train_y, test_x, test_y = load2d(categories, output_file, input_width, input_height, amount_train,
+                                                  multiple_positives, dropout_percent, end_index=amount_train)
     else:
         data = loadedData
         train_x, train_y, test_x, test_y = data
-
-    cnn = create_cae(create_cae_2pool, create_cae_3pool, create_cae_4pool, input_height, input_width,
-                     number_pooling_layers)
 
     if zero_meaning:
         train_x = train_x.astype(np.float64)
@@ -873,31 +881,26 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
 
     x_train = train_x.astype(np.float32).reshape((-1, 1, input_width, input_height))
     x_flat = x_train.reshape((x_train.shape[0], -1))
-    cnn = train_cae(cnn, input_height, input_width, x_train[:amount_train], x_flat[:amount_train])
 
-    run_time = (time.clock() - start_time) / 60.
-    write_output_file(output_file, cnn.train_history_, PrintLayerInfo._get_layer_info_plain(cnn))
-    print ("Learning took (min)- ", run_time)
+    if LOAD_CAE_PATH is None:
+        start_time = time.clock()
+        print ("Start time: ", time.ctime())
+        cae = create_cae()
+        cae = train_cae(cae, input_height, input_width, x_train[:amount_train], x_flat[:amount_train])
+        run_time = (time.clock() - start_time) / 60.
+        write_output_file(output_file, cae.train_history_, PrintLayerInfo._get_layer_info_plain(cae))
+        print ("Learning took (min)- ", run_time)
+        valid_accuracy = cae.train_history_[-1]['valid_accuracy']
+        if valid_accuracy > 0.05:
+            return valid_accuracy
 
-    valid_accuracy = cnn.train_history_[-1]['valid_accuracy']
-    if valid_accuracy > 0.05:
-        return valid_accuracy
+        save_cnn(cae, folder_path)
+    else:
+        cae = load_network(LOAD_CAE_PATH)
 
-    save_cnn(cnn, folder_path)
-
-    get_auc_score(cnn, output_file, results_file, svm_negative_amount, train_y, x_train, folder_path)
+    get_auc_score(cae, output_file, results_file, svm_negative_amount, train_y, x_train, folder_path)
 
     return valid_accuracy
-
-
-def create_cae(create_cae_2pool, create_cae_3pool, create_cae_4pool, input_height, input_width, number_pooling_layers):
-    if number_pooling_layers == 4:
-        cnn = create_cae_4pool(input_height, input_width)
-    elif number_pooling_layers == 3:
-        cnn = create_cae_3pool(input_height, input_width)
-    elif number_pooling_layers == 2:
-        cnn = create_cae_2pool(input_height, input_width)
-    return cnn
 
 
 def get_auc_score(cnn, output_file, results_file, svm_negative_amount, train_y, x_train, folder_path):
@@ -923,6 +926,7 @@ def save_cnn(cnn, folder_path):
         sys.setrecursionlimit(10000)
         print("Trying to pickle network... ")
         pickle.dump(cnn, open(folder_path + "nn.pkl", 'w'))
+        pickle.dump(cnn, open(folder_path + "nn_b.pkl", 'wb'))
         print("    Done pickle network... ")
     except Exception as e:
         print(" Could not pickle network... ")
@@ -954,8 +958,8 @@ def run_all():
     svm_negative_amount = 100
     input_noise_rate = 0.2
     zero_meaning = False
-    epochs = 10
-    folder_name = "CAE_" + str(amount_train) + "_different_sizes-"+str(time.time())
+    epochs = 15
+    folder_name = "CAE_" + str(amount_train) + "_different_sizes-" + str(time.time())
 
     steps = [
         [5000, 10000, 16352],
@@ -971,22 +975,23 @@ def run_all():
     number_pooling_layers = [3, 2, 2, 2, 2, 3, 3]
 
     layers_size = [
-        [32, 32, 64, 32, 32],
-        [16, 32, 64, 32, 16],
-        [32, 64, 128, 64, 32]
+        [32, 64, 128, 64, 32],
+        [64, 64, 128, 64, 64]
         ]
 
     input_size_index = 3
-    data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1, end_index=amount_train,
-                  steps=steps[input_size_index], image_width=image_width[input_size_index], image_height=image_height[input_size_index])
+    data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1,steps=steps[input_size_index],
+                  image_width=image_width[input_size_index], image_height=image_height[input_size_index])
 
-    for k in range(0, 6, 1):
+    for k in range(0, 2, 1):
         try:
-            for num_filters_index in range(0, 3, 1):
+            for num_filters_index in range(0, 2, 1):
                 try:
-                    for j in range(0, 4, 1):
-                        learning_rate = 0.044 + 0.006 * k
-                        print("run Filter type #", 3 + 4 * j)
+                    for j in range(0, 5, 1):
+                        amount_train = 6000 + 10351*k
+                        learning_rate = 0.06 #45 + 0.005 * k
+                        filter_type_index = 3 + 2 * j * (2-k)
+                        print("run Filter type #", filter_type_index)
                         print("run Filter number index #", num_filters_index)
                         print("run Learning rate- ", learning_rate)
                         try:
@@ -994,7 +999,7 @@ def run_all():
                                 update_momentum=0.9, number_pooling_layers=number_pooling_layers[input_size_index],
                                 dropout_percent=input_noise_rate, loadedData=data, folder_name=folder_name,
                                 amount_train=amount_train,
-                                zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=3+8*(j-1),
+                                zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh, filters_type=filter_type_index,
                                 train_valid_split=0.001, input_width=image_width[input_size_index], input_height=image_height[input_size_index],
                                 svm_negative_amount=svm_negative_amount, batch_size=32)
 
@@ -1011,7 +1016,9 @@ def run_all():
             print(e)
             print(e.message)
 
+
 if __name__ == "__main__":
-    import os
-    os.environ["DISPLAY"] = ":99"
+    # os.environ["DISPLAY"] = ":99"
+    LOAD_CAE_PATH = "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_different_sizes-1488449158.87\run_13\\"
+    LOAD_CAE_PATH = LOAD_CAE_PATH.replace("\r", "\\r")
     run_all()
