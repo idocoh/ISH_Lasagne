@@ -103,8 +103,6 @@ def images_svm(pickled_file, x=None, all_labels=None, svm_negative_amount=800, n
         # features = cnn.output_hiddenLayer(x)
 
         x, all_labels = separate_svm(x.astype(np.float32), all_labels, svm_negative_amount)
-        x = x[:20]
-        all_labels = all_labels[:20]
 
         start_time = time.clock()
         print("Starting cnn prediction...")
@@ -226,8 +224,8 @@ def checkLabelPredict(features, labels, cross_validation_parts=5):
 
         # clf, score, test_params, test_y = lib_linear_score(neg_test, neg_train, pos_test, pos_train)
         # scores[cross_validation_index] = score
-        # clf_svm, score_svm, test_params_svm, test_y_svm = svc_score(neg_test, neg_train, pos_test, pos_train)
-        # auc_scores[cross_validation_index] = score_svm
+        clf_svm, score_svm, test_params_svm, test_y_svm = svc_score(neg_test, neg_train, pos_test, pos_train)
+        auc_scores[cross_validation_index] = score_svm
 
         # try:
         #     test_predict = clf.predict(test_params)
@@ -242,7 +240,6 @@ def checkLabelPredict(features, labels, cross_validation_parts=5):
         return np.average(scores), np.average(auc_scores)
     except:
         return np.average(scores), 999
-
 
 
 def svc_score(neg_test, neg_train, pos_test, pos_train):
@@ -265,6 +262,7 @@ def linear_svc_score(neg_test, neg_train, pos_test, pos_train):
     score = clf.score(test_params, test_y)
     print("SVM score- ", score)
     return clf, score, test_params, test_y
+
 
 def lib_linear_score(neg_test, neg_train, pos_test, pos_train):
     y = np.concatenate((np.ones(pos_train.shape[0]), -1*np.ones(neg_train.shape[0])), axis=0)
@@ -300,6 +298,7 @@ def lib_linear_score(neg_test, neg_train, pos_test, pos_train):
     # print("SVM score- ", score)
     # return clf, score, test_params, test_y
 
+
 def NN_classifier_score(neg_test, neg_train, pos_test, pos_train):
     pos_train_size = pos_train.shape[0]
     neg_train_size = neg_train.shape[0]
@@ -317,6 +316,7 @@ def NN_classifier_score(neg_test, neg_train, pos_test, pos_train):
     classifier_net, error_rate, auc_score = nnClassifier.runNNclassifier(x, y, test_params, test_y)
 
     return classifier_net, auc_score, test_params, test_y
+
 
 def generate_positives(positives, num_negatives):
     num_positives = positives.shape[0]
@@ -359,26 +359,26 @@ def run_svm(pickle_name=None, X_train=None, features=None, labels=None, svm_nega
         pickle.dump(labels, open('svm-y-data.pkl.gz', 'w'))
     except:
         pass
+    # save_svm_data(features, labels)
 
     return errorRates, aucScores
 
+
+    def save_svm_data(features, labels):
+        try:
+            # pickle.dump((features, labels), open('svm.pkl', 'w'))
+            print("Trying to pickle svm... ")
+            pickle.dump(features, open(folder_path + 'svm-x-data.pkl', 'w'))
+            pickle.dump(labels, open(folder_path + 'svm-y-data.pkl', 'w'))
+        except:
+            pass
+
+
 if __name__ == '__main__':
     # pickName = "C:/devl/python/ISH_Lasagne/src/DeepLearning/results_dae/learn/run_0/encode.pkl"
-    # pickled_file = "C:/devl/python/ISH_Lasagne/src/DeepLearning/results_dae/for_debug/run_0/conv_ae.pkl"
-    # net = pickle.load(open(pickled_file, 'r'))
-    # run_svm(net)
-
-    main_dir = "C:\\devl\\python\\temp\\"
-
-    with open(main_dir + "svm-x-data.pkl.gz") as l:
-        features = pickle.load(l)
-        l.close()
-
-    with open(main_dir + "svm-y-data.pkl.gz") as l:
-        labels = pickle.load(l)
-        l.close()
-
-    run_svm(features=features,labels=labels)
+    pickled_file = "C:/devl/python/ISH_Lasagne/src/DeepLearning/results_dae/for_debug/run_0/conv_ae.pkl"
+    net = pickle.load(open(pickled_file, 'r'))
+    run_svm(net)
 
 
 
