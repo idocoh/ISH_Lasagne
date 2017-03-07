@@ -954,7 +954,7 @@ def run_all():
 
     print(theano.sandbox.cuda.dnn_available())
 
-    num_labels = 15
+    num_labels = 15 #164 #TEST: change 15
     amount_train = 16351
     svm_negative_amount = 200
     input_noise_rate = 0.2
@@ -980,18 +980,18 @@ def run_all():
         [64, 64, 128, 64, 64]
         ]
 
-    input_size_index = 3
-    data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1,steps=steps[input_size_index],
-                  image_width=image_width[input_size_index], image_height=image_height[input_size_index])
+    num_filters_index = 0
 
-    for k in range(0, 3, 1):
+    for k in range(0, 2, 1):
         try:
-            for num_filters_index in range(0, 2, 1):
+            for j in range(1, 3, 1):
                 try:
-                    for j in range(0, 5, 1):
-                        # amount_train = 6000 + 10351*k
-                        learning_rate = 0.06 - 0.01 * k
-                        filter_type_index = 3 + 2 * j * (2-k)
+                    for input_size_index in range(4, 7, 1):
+                        # input_size_index = 3 #Test: change
+                        data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1, steps=steps[input_size_index],
+                                      image_width=image_width[input_size_index], image_height=image_height[input_size_index])
+                        learning_rate = 0.05 + 0.005 * k
+                        filter_type_index = 3 + 4 * j
                         print("run Filter type #", filter_type_index)
                         print("run Filter number index #", num_filters_index)
                         print("run Learning rate- ", learning_rate)
@@ -1020,6 +1020,8 @@ def run_all():
 
 if __name__ == "__main__":
     # os.environ["DISPLAY"] = ":99"
-    LOAD_CAE_PATH = "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_different_sizes-1488449158.87\run_13\\"
-    LOAD_CAE_PATH = LOAD_CAE_PATH.replace("\r", "\\r")
+    #Test: change
+    # LOAD_CAE_PATH = "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_different_sizes-1488449158.87\run_13\\"
+    # LOAD_CAE_PATH = LOAD_CAE_PATH.replace("\r", "\\r")
+
     run_all()

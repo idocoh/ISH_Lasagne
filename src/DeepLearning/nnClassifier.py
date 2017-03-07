@@ -16,9 +16,9 @@ def runNNclassifier(train_params, train_y, test_params, test_y, LEARNING_RATE=0.
                     NUM_OF_EPOCH=10, TRAIN_VALIDATION_SPLIT=0.2, NUM_UNITS_HIDDEN_LAYER=[1000, 100], BATCH_SIZE=32):
 
     def getNN(pickledFilePath=None):
-        if pickledFilePath is not None : #isinstance(pickledFilePath, str):
+        if pickledFilePath is not None: #isinstance(pickledFilePath, str):
             try:
-                with open(pickledFilePath,'rb') as f:
+                with open(pickledFilePath, 'rb') as f:
                     classifier_net = pickle.load(f)
                     f.close()
             except :
@@ -26,25 +26,49 @@ def runNNclassifier(train_params, train_y, test_params, test_y, LEARNING_RATE=0.
                 classifier_net = pickle.load(f)
                 f.close()
         else:
-            classifier_net = NeuralNet(layers=[
-                        ('input', layers.InputLayer), 
-                        ('hidden1', layers.DenseLayer), 
-                        ('hidden2', layers.DenseLayer), 
-                        ('output', layers.DenseLayer)], 
-                    input_shape=(None, input_length), 
-                    hidden1_num_units=NUM_UNITS_HIDDEN_LAYER[0], hidden2_num_units=NUM_UNITS_HIDDEN_LAYER[1], 
-                    output_num_units=2,
-                    output_nonlinearity=lasagne.nonlinearities.softmax,
-                    update_learning_rate=LEARNING_RATE, 
-                    update_momentum=UPDATE_MOMENTUM,
-                    update=nesterov_momentum,
-                    train_split=TrainSplit(eval_size=TRAIN_VALIDATION_SPLIT), 
-                    batch_iterator_train=BatchIterator(batch_size=BATCH_SIZE), 
-                    regression=True, 
-                    max_epochs=NUM_OF_EPOCH, 
-                    verbose=1,
-                    hiddenLayer_to_output=-2)
-        
+            if len(NUM_UNITS_HIDDEN_LAYER) == 2:
+                classifier_net = NeuralNet(layers=[
+                            ('input', layers.InputLayer),
+                            ('hidden1', layers.DenseLayer),
+                            ('hidden2', layers.DenseLayer),
+                            ('output', layers.DenseLayer)],
+                        input_shape=(None, input_length),
+                        hidden1_num_units=NUM_UNITS_HIDDEN_LAYER[0], hidden2_num_units=NUM_UNITS_HIDDEN_LAYER[1],
+                        output_num_units=2,
+                        output_nonlinearity=lasagne.nonlinearities.softmax,
+                        update_learning_rate=LEARNING_RATE,
+                        update_momentum=UPDATE_MOMENTUM,
+                        update=nesterov_momentum,
+                        train_split=TrainSplit(eval_size=TRAIN_VALIDATION_SPLIT),
+                        batch_iterator_train=BatchIterator(batch_size=BATCH_SIZE),
+                        regression=True,
+                        max_epochs=NUM_OF_EPOCH,
+                        verbose=1,
+                        hiddenLayer_to_output=-2)
+
+            elif len(NUM_UNITS_HIDDEN_LAYER) == 3:
+                classifier_net = NeuralNet(layers=[
+                            ('input', layers.InputLayer),
+                            ('hidden1', layers.DenseLayer),
+                            ('hidden2', layers.DenseLayer),
+                            ('hidden3', layers.DenseLayer),
+                            ('output', layers.DenseLayer)],
+                        input_shape=(None, input_length),
+                        hidden1_num_units=NUM_UNITS_HIDDEN_LAYER[0],
+                        hidden2_num_units=NUM_UNITS_HIDDEN_LAYER[1],
+                        hidden3_num_units=NUM_UNITS_HIDDEN_LAYER[2],
+                        output_num_units=2,
+                        output_nonlinearity=lasagne.nonlinearities.softmax,
+                        update_learning_rate=LEARNING_RATE,
+                        update_momentum=UPDATE_MOMENTUM,
+                        update=nesterov_momentum,
+                        train_split=TrainSplit(eval_size=TRAIN_VALIDATION_SPLIT),
+                        batch_iterator_train=BatchIterator(batch_size=BATCH_SIZE),
+                        regression=True,
+                        max_epochs=NUM_OF_EPOCH,
+                        verbose=1,
+                        hiddenLayer_to_output=-2)
+
         return classifier_net
 
     input_length = train_params.shape[1]
@@ -69,11 +93,5 @@ def runNNclassifier(train_params, train_y, test_params, test_y, LEARNING_RATE=0.
 
 if __name__ == "__main__":
     main_dir = "C:\\devl\\python\\temp\\"
-
-    for i in range(12):
-        pickName = main_dir
-        runNNclassifier(FOLDER_NAME=pickName, NUM_CAT=15)
-    
-    
-
-        
+    pickName = main_dir
+    runNNclassifier(FOLDER_NAME=pickName, NUM_CAT=15)

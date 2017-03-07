@@ -129,6 +129,7 @@ def checkLabelPredict(features, labels, cross_validation_parts=5):
 
         # clf, score, test_params, test_y = classifier_score(neg_test, neg_train, pos_test, pos_train)
 
+        # Test: change
         clf, score, test_params, test_y = NN_classifier_score(neg_test, neg_train, pos_test, pos_train)
         scores[cross_validation_index] = score
 
@@ -230,17 +231,20 @@ def NN_classifier_score(neg_test, neg_train, pos_test, pos_train):
 
 def try_nn(test_params, test_y, x, y):
     layers_size = [
-        [1000, 100],
-        [750, 250],
-        [500, 100],
-        [1000, 300]
+        # [1000, 100],
+        [750, 250]
+        # [500, 100],
+        # [1000, 300],
+        # [1000, 250, 50],
+        # [1000, 500, 250],
+        # [1200, 800, 400]
     ]
-    temp_auc = np.zeros((5, 4))
-    for i in range(0, 5):
+    temp_auc = np.zeros((3, 1))
+    for j in range(0, 1):
         try:
-            for j in range(0, 4):
+            for i in range(0, 3):
                 try:
-                    learning_rate = 0.04 + 0.5 * i
+                    learning_rate = 0.01 + 0.02 * i
                     classifier_net, error_rate, auc_score = \
                         nnClassifier.runNNclassifier(x, y, test_params, test_y, LEARNING_RATE=learning_rate,
                                                      NUM_UNITS_HIDDEN_LAYER=layers_size[j])
@@ -268,7 +272,7 @@ def generate_positives(positives, num_negatives):
 
 
 def run_svm(pickle_name=None, X_train=None, features=None, labels=None, svm_negative_amount=800, folder_path=None):
-    num_labels = 15
+    num_labels = labels.shape[1]
     if features is None:
         features, labels = images_svm(pickle_name, X_train, labels, num_labels=num_labels,
                                       svm_negative_amount=svm_negative_amount)
@@ -277,7 +281,10 @@ def run_svm(pickle_name=None, X_train=None, features=None, labels=None, svm_nega
     aucScores = np.zeros(num_labels)
 
     start_time = time.clock()
+    # Test"
     for label in range(0, num_labels):
+    # for label in range(125, 89, -1):
+
         print("Svm for category- ", label)
         labelPredRate, labelAucScore = checkLabelPredict(features, labels[:, label])
         errorRates[label] = labelPredRate
