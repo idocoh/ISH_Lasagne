@@ -198,7 +198,9 @@ class LogisticRegression(object):
         return T.mean( T.sqrt( T.sum( (self.p_y_given_x - y) * (self.p_y_given_x - y) ,axis=1) ) )
 
 
-def load_data(dataset, batch_index = 1, withSVM = False, toShuffleInput = False , withZeroMeaning = False, labelset=None,start_index=0,end_index=16351,MULTI_POSITIVES=20,dropout_percent=0.1,TRAIN_DATA_PRECENT=0.8,VALIDATION_DATA_PRECENT=0.8):
+def load_data(dataset, batch_index = 1, withSVM = False, toShuffleInput = False , withZeroMeaning = False, labelset=None,
+              start_index=0, end_index=16351, MULTI_POSITIVES=20, dropout_percent=0.1, TRAIN_DATA_PRECENT=0.8,
+              VALIDATION_DATA_PRECENT=0.8, steps=[5000, 10000, 15000, 16352], image_width=320, image_height=160):
     ''' Loads the dataset
 
     :type dataset: string
@@ -262,7 +264,8 @@ def load_data(dataset, batch_index = 1, withSVM = False, toShuffleInput = False 
         except Exception as e:
             print(e.message)
             print("     Exception, trying from images")
-            pLabel, pData = pickleAllImages(svm_size=withSVM, num_labels=labelset, TRAIN_SPLIT=TRAIN_DATA_PRECENT, end_index=end_index, MULTI=MULTI_POSITIVES, dropout_percent=dropout_percent)
+            pLabel, pData = pickleAllImages(svm_size=withSVM, num_labels=labelset, end_index=end_index,
+                                            steps=steps, image_width=image_width, image_height=image_height)
             # if end_index < 10001:
             #     f = gzip.open("pickled_temp/" + file_name, 'wb')
             #     try:
