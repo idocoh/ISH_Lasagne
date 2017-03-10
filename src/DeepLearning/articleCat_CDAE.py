@@ -1710,20 +1710,6 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         print('Training CAE with ', x_train.shape[0], ' samples')
         cnn.fit(x_train, x_out)
 
-        # print('Predicting ', X_train.shape[0], ' samples through CAE')
-        # X_pred = cnn.predict(X_train).reshape(-1, input_height, input_width)  # * sigma + mu
-
-        # # X_pred = np.rint(X_pred).astype(int)
-        # # X_pred = np.clip(X_pred, a_min=0, a_max=255)
-        # # X_pred = X_pred.astype('uint8')
-        #
-        # try:
-        #     trian_last_hiddenLayer = cnn.output_hiddenLayer(X_train)
-        #     # test_last_hiddenLayer = cnn.output_hiddenLayer(test_x)
-        #     pickle.dump(trian_last_hiddenLayer, open(folder_path + 'encode.pkl', 'w'))
-        # except:
-        #     print "Could not save encoded images"
-
         try:
             save_example_images(x_out, cnn)
         except Exception as e:
@@ -1742,10 +1728,6 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
 
             print('Predicting ', index, ' sample through CAE')
             X_pred = cnn.predict(image_sample).reshape(-1, input_height, input_width)  # * sigma + mu
-
-            # X_pred = np.rint(X_pred).astype(int)
-            # X_pred = np.clip(X_pred, a_min=0, a_max=255)
-            # X_pred = X_pred.astype('uint8')
 
             def get_picture_array(X):
                 array = np.rint(X * 256).astype(np.int).reshape(input_height, input_width)
@@ -1924,11 +1906,11 @@ def run_all():
     print(theano.sandbox.cuda.dnn_available())
 
     num_labels = 15 #164 #TEST: change 15
-    amount_train = 200
+    amount_train = 16351
     svm_negative_amount = 200
     input_noise_rate = 0.2
     zero_meaning = False
-    epochs = 2
+    epochs = 20
     folder_name = "CAE_" + str(amount_train) + "_different_sizes-" + str(time.time())
 
     steps = [
@@ -1981,7 +1963,7 @@ def run_all():
                                                 amount_train=amount_train, number_conv_layers=number_conv_layers,
                                                 zero_meaning=zero_meaning, activation=None, last_layer_activation=tanh,
                                                 filters_type=filter_type_index,
-                                                train_valid_split=0.1, input_width=image_width[input_size_index],
+                                                train_valid_split=0.001, input_width=image_width[input_size_index],
                                                 input_height=image_height[input_size_index],
                                                 svm_negative_amount=svm_negative_amount, batch_size=32)
 
