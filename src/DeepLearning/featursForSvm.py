@@ -232,23 +232,23 @@ def NN_classifier_score(neg_test, neg_train, pos_test, pos_train):
 def try_nn(test_params, test_y, x, y):
     layers_size = [
         # [1000, 100],
-        [750, 250]
+        # [750, 250],
         # [500, 100],
-        # [1000, 300],
+        [1000, 300]
         # [1000, 250, 50],
         # [1000, 500, 250],
         # [1200, 800, 400]
     ]
-    temp_auc = np.zeros((3, 1))
+    # temp_auc = np.zeros((3, 1))
     for j in range(0, 1):
         try:
-            for i in range(0, 3):
+            for i in range(0, 1):
                 try:
                     learning_rate = 0.01 + 0.02 * i
                     classifier_net, error_rate, auc_score = \
                         nnClassifier.runNNclassifier(x, y, test_params, test_y, LEARNING_RATE=learning_rate,
                                                      NUM_UNITS_HIDDEN_LAYER=layers_size[j])
-                    temp_auc[i, j] = auc_score
+                    # temp_auc[i, j] = auc_score
                     print("AUC- " + str(auc_score) + ": rate " + str(learning_rate) + ", layers " + str(layers_size[j]))
                 except Exception as e:
                     print("failed nn i-", i)
@@ -259,7 +259,7 @@ def try_nn(test_params, test_y, x, y):
             print(e)
             print(e.message)
 
-    return classifier_net, np.max(temp_auc), test_params, test_y
+    return classifier_net, auc_score, test_params, test_y
 
 
 def generate_positives(positives, num_negatives):
