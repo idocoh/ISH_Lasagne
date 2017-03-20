@@ -198,7 +198,9 @@ class LogisticRegression(object):
         return T.mean( T.sqrt( T.sum( (self.p_y_given_x - y) * (self.p_y_given_x - y) ,axis=1) ) )
 
 
-def load_data(dataset, batch_index = 1, withSVM = False, toShuffleInput = False , withZeroMeaning = False, labelset=None,start_index=0,end_index=16351,MULTI_POSITIVES=20,dropout_percent=0.1,TRAIN_DATA_PRECENT=0.8,VALIDATION_DATA_PRECENT=0.8):
+def load_data(dataset, batch_index = 1, withSVM = False, toShuffleInput = False , withZeroMeaning = False, labelset=None,
+              start_index=0, end_index=16351, MULTI_POSITIVES=20, dropout_percent=0.1, TRAIN_DATA_PRECENT=0.8,
+              VALIDATION_DATA_PRECENT=0.8, steps=[5000, 10000, 15000, 16352], image_width=320, image_height=160):
     ''' Loads the dataset
 
     :type dataset: string
@@ -241,41 +243,10 @@ def load_data(dataset, batch_index = 1, withSVM = False, toShuffleInput = False 
             pLabel = cPickle.load(l)
             l.close()
     else:
-#         # Load the dataset for article cat
-# #         f = gzip.open(dataset, 'rb')
-# #         pData= cPickle.load(f)
-# #         f.close()
-        prefix = "pickled_articleCat_"
-        file_name = prefix + str(end_index) + "_" + str(batch_index) + ".pkl.gz"
-        svm_name = prefix + "SVM.pkl.gz"
-        svm_file_exists = False
-        try:
-            print("     trying from pickled file- ", file_name)
-            f = gzip.open("pickled_temp/" + file_name, 'rb')
-            pLabel, pData = cPickle.load(f)
-            f.close()
-            # print("     trying SVM from pickled file- ", svm_name)
-            # # f = gzip.open("pickled_temp/" + file_name + "-SVM11.pkl.gz", 'rb')
-            # svm_data, svm_label = cPickle.load(open("pickled_temp/" + svm_name))
-            # svm_file_exists = True
-            # # f.close()
-        except Exception as e:
-            print(e.message)
-            print("     Exception, trying from images")
-            pLabel, pData = pickleAllImages(svm_size=withSVM, num_labels=labelset, TRAIN_SPLIT=TRAIN_DATA_PRECENT, end_index=end_index, MULTI=MULTI_POSITIVES, dropout_percent=dropout_percent)
-            # if end_index < 10001:
-            #     f = gzip.open("pickled_temp/" + file_name, 'wb')
-            #     try:
-            #         cPickle.dump((pLabel[end_index*(batch_index-1):end_index*batch_index], pData[end_index*(batch_index-1):end_index*batch_index]), f, protocol=2)
-            #     except Exception as e:
-            #         print(e.message)
-            #         f.close()
-                # try:
-                #     if not svm_file_exists:
-                #         cPickle.dump((svm_data, svm_label), open("pickled_temp/" + svm_name, 'wb'))
-                # except Exception as e:
-                #     print(e.message)
-                #     pass
+
+        pLabel, pData = pickleAllImages(svm_size=withSVM, num_labels=labelset, end_index=end_index,
+                                            steps=steps, image_width=image_width, image_height=image_height)
+
         
         # Divided data set into 3 parts.
 
