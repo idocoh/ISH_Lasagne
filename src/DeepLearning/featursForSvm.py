@@ -364,21 +364,21 @@ def run_svm(pickle_name=None, X_train=None, features=None, labels=None, svm_nega
 
 if __name__ == '__main__':
     # pickName = "C:/devl/python/ISH_Lasagne/src/DeepLearning/results_dae/learn/run_0/encode.pkl"
-    # pickled_file = "C:/devl/python/ISH_Lasagne/src/DeepLearning/results_dae/for_debug/run_0/conv_ae.pkl"
-    # net = pickle.load(open(pickled_file, 'r'))
-    # run_svm(net)
+    pickled_file = "C:/devl/python/ISH_Lasagne/src/DeepLearning/results_dae/for_debug/run_0/conv_ae.pkl"
+    net = pickle.load(open(pickled_file, 'r'))
+    run_svm(net)
 
-    main_dir = "C:\\devl\\python\\temp\\"
-
-    with open(main_dir + "svm-x-data.pkl.gz") as l:
-        features = pickle.load(l)
-        l.close()
-
-    with open(main_dir + "svm-y-data.pkl.gz") as l:
-        labels = pickle.load(l)
-        l.close()
-
-    run_svm(features=features,labels=labels)
+    # main_dir = "C:\\devl\\python\\temp\\"
+    #
+    # with open(main_dir + "svm-x-data.pkl.gz") as l:
+    #     features = pickle.load(l)
+    #     l.close()
+    #
+    # with open(main_dir + "svm-y-data.pkl.gz") as l:
+    #     labels = pickle.load(l)
+    #     l.close()
+    #
+    # run_svm(features=features,labels=labels)
 
 
 
