@@ -1944,7 +1944,7 @@ def run_all():
                                     for input_size_index in range(4, 7, 1):  # 5
                                         try:
                                             for num_images in range(0, 9, 1):  # 5
-                                                input_size_index = 5 #Test: change
+                                                # input_size_index = 5 #Test: change
                                                 # num_filters_index = 0 #Test: change
                                                 data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1,
                                                               steps=steps[input_size_index],
@@ -2001,7 +2001,7 @@ def run_all():
 if __name__ == "__main__":
     # os.environ["DISPLAY"] = ":99"
     #Test: change
-    LOAD_CAE_PATH = "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_different_sizes-1489653160.29\run_4\\"
-    LOAD_CAE_PATH = LOAD_CAE_PATH.replace("\r", "\\r")
+    # LOAD_CAE_PATH = "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_different_sizes-1489653160.29\run_4\\"
+    # LOAD_CAE_PATH = LOAD_CAE_PATH.replace("\r", "\\r")
 
     run_all()
