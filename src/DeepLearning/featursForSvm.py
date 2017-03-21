@@ -113,7 +113,7 @@ def checkLabelPredict(features, labels, cross_validation_parts=5):
     auc_scores = np.zeros(cross_validation_parts)
 
     for cross_validation_index in range(0, cross_validation_parts):
-        results_file.write("Cross validation #" + str(cross_validation_index) + "\n")
+        results_file.write("Cross validation #" + str(cross_validation_index+1) + "\n")
         results_file.flush()
 
         neg_test = negative_data_chunks[cross_validation_index]
@@ -221,17 +221,20 @@ def NN_classifier_score(neg_test, neg_train, pos_test, pos_train):
 
 def try_nn(test_params, test_y, x, y):
     layers_size = [
-        [1000, 100],
-        [750, 250],
-        [500, 100],
+        # [1000, 100],
+        # [750, 250],
+        # [500, 100],
         [1000, 300],
-        [1000, 250, 50],
+        # [1000, 250, 50],
         [1000, 500, 250],
-        [1200, 800, 400]
+        [2000, 1000, 500],
+        # [1200, 800, 400],
+        [2000, 1000, 500, 250],
+        [2000, 1000, 500, 250, 50]
     ]
 
-    temp_auc = np.zeros((3, 7))
-    for j in range(0, 7):
+    temp_auc = np.zeros((3, 5))
+    for j in range(0, 5):
         try:
             for i in range(0, 3):
                 try:
@@ -248,7 +251,7 @@ def try_nn(test_params, test_y, x, y):
                     print("failed nn i-", i)
                     print(e)
                     print(e.message)
-            results_file.write("Average AUC- " + str(np.average(temp_auc[:, j])) + ", rate- all, layers- " + str(
+            results_file.write("Max AUC- " + str(np.max(temp_auc[:, j])) + ", rate- all, layers- " + str(
                 layers_size[j]) + "\n")
             results_file.flush()
         except Exception as e:
@@ -256,7 +259,7 @@ def try_nn(test_params, test_y, x, y):
             print(e)
             print(e.message)
 
-    return classifier_net, auc_score, test_params, test_y
+    return classifier_net, np.max(temp_auc[i, j]), test_params, test_y
 
 
 def generate_positives(positives, num_negatives):

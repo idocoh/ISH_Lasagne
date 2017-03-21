@@ -1972,7 +1972,7 @@ def run_all():
                                                         input_width=image_width[input_size_index],
                                                         input_height=image_height[input_size_index],
                                                         svm_negative_amount=svm_negative_amount, batch_size=32)
-
+                                                    return
                                                 except Exception as e:
                                                     print("failed Filter type #", filter_type_index)
                                                     print("failed number conv layers- ", number_conv_layers)
