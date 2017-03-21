@@ -21,6 +21,8 @@ import time
 from liblinearutil import *
 import nnClassifier
 
+pickled_folder = "C:/devl/work/ISH_Lasagne/src/DeepLearning/results_dae/CAE_16351_different_sizes-1489653160.29/run_4"
+results_file = open(pickled_folder + "/NN_output.txt", "a")
 
 def images_svm(pickled_file, x=None, all_labels=None, svm_negative_amount=800, num_labels=15, TRAIN_SPLIT=0.8):
     if isinstance(pickled_file, str):
@@ -231,25 +233,28 @@ def NN_classifier_score(neg_test, neg_train, pos_test, pos_train):
 
 def try_nn(test_params, test_y, x, y):
     layers_size = [
-        # [1000, 100],
-        [750, 250]
-        # [500, 100],
-        # [1000, 300],
-        # [1000, 250, 50],
-        # [1000, 500, 250],
-        # [1200, 800, 400]
+        [1000, 100],
+        [750, 250],
+        [500, 100],
+        [1000, 300],
+        [1000, 250, 50],
+        [1000, 500, 250],
+        [1200, 800, 400]
     ]
-    temp_auc = np.zeros((3, 1))
+    # temp_auc = np.zeros((3, 1))
     for j in range(0, 1):
         try:
-            for i in range(0, 3):
+            for i in range(0, 1):
                 try:
                     learning_rate = 0.01 + 0.02 * i
                     classifier_net, error_rate, auc_score = \
                         nnClassifier.runNNclassifier(x, y, test_params, test_y, LEARNING_RATE=learning_rate,
                                                      NUM_UNITS_HIDDEN_LAYER=layers_size[j])
-                    temp_auc[i, j] = auc_score
+                    # temp_auc[i, j] = auc_score
                     print("AUC- " + str(auc_score) + ": rate " + str(learning_rate) + ", layers " + str(layers_size[j]))
+                    results_file.write("AUC- " + str(auc_score) + ", rate- " + str(learning_rate) + ", layers- " + str(
+                        layers_size[j]) + "\n")
+                    results_file.flush()
                 except Exception as e:
                     print("failed nn i-", i)
                     print(e)
@@ -259,7 +264,7 @@ def try_nn(test_params, test_y, x, y):
             print(e)
             print(e.message)
 
-    return classifier_net, np.max(temp_auc), test_params, test_y
+    return classifier_net, auc_score, test_params, test_y
 
 
 def generate_positives(positives, num_negatives):
@@ -300,6 +305,7 @@ def run_svm(pickle_name=None, X_train=None, features=None, labels=None, svm_nega
     run_time = (time.clock() - start_time) / 60.
     print("SVM took(min)- ", run_time)
 
+    results_file.flush()
     # save_svm_data(features, labels, folder_path)
 
     return errorRates, aucScores
