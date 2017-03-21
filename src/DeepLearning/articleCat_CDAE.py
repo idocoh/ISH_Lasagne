@@ -1911,7 +1911,7 @@ def run_all():
     input_noise_rate = 0.2
     zero_meaning = False
     epochs = 20
-    folder_name = "CAE_" + str(amount_train) + "_different_sizes-" + str(time.time())
+    folder_name = "CAE_" + str(amount_train) + "_test_nn-" + str(time.time())
 
     steps = [
         [5000, 10000, 16352],
