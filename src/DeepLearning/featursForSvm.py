@@ -242,9 +242,9 @@ def try_nn(test_params, test_y, x, y):
         [1200, 800, 400]
     ]
     # temp_auc = np.zeros((3, 1))
-    for j in range(0, 1):
+    for j in range(0, 7):
         try:
-            for i in range(0, 1):
+            for i in range(0, 3):
                 try:
                     learning_rate = 0.01 + 0.02 * i
                     classifier_net, error_rate, auc_score = \
