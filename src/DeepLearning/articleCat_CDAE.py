@@ -1911,7 +1911,7 @@ def run_all():
     input_noise_rate = 0.2
     zero_meaning = False
     epochs = 20
-    folder_name = "CAE_" + str(amount_train) + "_different_sizes-" + str(time.time())
+    folder_name = "CAE_" + str(amount_train) + "_300x140_240x120-" + str(time.time())
 
     steps = [
         [5000, 10000, 16352],
@@ -1935,15 +1935,15 @@ def run_all():
 
     for num_filters_index in range(0, 1, 1):
         try:
-            for lr in range(1, 4, 1):
+            for number_conv_layers in range(4, 1, -2):
                 try:
-                    for f in range(2, 0, -1): # for f in range(0, 3, 1):
+                    for lr in range(1, 4, 1):
                         try:
-                            for number_conv_layers in range(4, 1, -2): #2
+                            for f in range(0, 3, 1):
                                 try:
-                                    for input_size_index in range(4, 7, 1):  # 5
+                                    for input_size_index in range(4, 6, 1):  # 5
                                         try:
-                                            for num_images in range(0, 9, 1):  # 5
+                                            for num_images in range(0, 1, 1):  # 9
                                                 # input_size_index = 5 #Test: change
                                                 # num_filters_index = 0 #Test: change
                                                 data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1,
@@ -1951,7 +1951,7 @@ def run_all():
                                                               image_width=image_width[input_size_index],
                                                               image_height=image_height[input_size_index])
                                                 learning_rate = 0.04 + 0.005 * lr
-                                                filter_type_index = 11 - 4 * f
+                                                filter_type_index = 3 + 4 * f
                                                 print("run number conv layers- ", number_conv_layers)
                                                 print("run Filter type #", filter_type_index)
                                                 print("run Filter number index #", num_filters_index)
