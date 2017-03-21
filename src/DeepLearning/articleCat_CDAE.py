@@ -1701,7 +1701,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
                 output_file.write(str(filter_9) + "\n")
                 output_file.write(str(filter_10) + "\n\n")
 
-        results_file.write(str((filter_1, filter_2, filter_3, filter_4, filter_5, filter_6, filter_7, filter_8,
+        results_file.write(str(filter_1) + "\t" + str((filter_1, filter_2, filter_3, filter_4, filter_5, filter_6, filter_7, filter_8,
                                       filter_9, filter_10)) + "\t")
 
     def train_cae(cnn, x_train, x_out):
@@ -1812,7 +1812,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
 
         output_file.flush()
         results_file.write(str(time.ctime()) + "\t")
-        results_file.write(folder_name + "\n")
+        results_file.write(folder_path + "\n")
         results_file.flush()
 
     if loadedData is None:
@@ -1864,7 +1864,7 @@ def get_auc_score(cnn, output_file, results_file, svm_negative_amount, train_y, 
         print("SVM AUC", aucs)
         output_file.write("NN auc: " + str(errors) + "\n")
         output_file.write("SVM auc: " + str(aucs) + "\n")
-        results_file.write(str(aucs) + "\n")
+        results_file.write(str(np.average(aucs)) + "\t" + str(aucs) + "\n")
 
         output_file.flush()
         results_file.flush()
@@ -1944,7 +1944,7 @@ def run_all():
                                     for input_size_index in range(4, 7, 1):  # 5
                                         try:
                                             for num_images in range(0, 9, 1):  # 5
-                                                # input_size_index = 6 #Test: change
+                                                input_size_index = 5 #Test: change
                                                 # num_filters_index = 0 #Test: change
                                                 data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1,
                                                               steps=steps[input_size_index],
@@ -2001,7 +2001,7 @@ def run_all():
 if __name__ == "__main__":
     # os.environ["DISPLAY"] = ":99"
     #Test: change
-    # LOAD_CAE_PATH = "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_different_sizes-1488449158.87\run_13\\"
-    # LOAD_CAE_PATH = LOAD_CAE_PATH.replace("\r", "\\r")
+    LOAD_CAE_PATH = "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_different_sizes-1489653160.29\run_4\\"
+    LOAD_CAE_PATH = LOAD_CAE_PATH.replace("\r", "\\r")
 
     run_all()
