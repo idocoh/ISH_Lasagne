@@ -1928,12 +1928,13 @@ def run_all():
     number_pooling_layers = [3, 2, 2, 2, 2, 2, 3, 3]
     layers_size = [
         [16, 16, 16, 16, 16, 16, 16, 16, 16],
+        [16, 32, 32, 32, 16, 16, 16, 16, 16],
         [8, 8, 8, 8, 8, 8, 8, 8, 8],
         [32, 64, 128, 64, 32],
         [16, 32, 32, 64, 32, 32, 16]
         ]
 
-    for num_filters_index in range(0, 1, 1):
+    for num_filters_index in range(1, 2, 1):
         try:
             for number_conv_layers in range(4, 1, -2):
                 try:
@@ -1946,6 +1947,7 @@ def run_all():
                                             for num_images in range(0, 1, 1):  # 9
                                                 # input_size_index = 5 #Test: change
                                                 # num_filters_index = 0 #Test: change
+                                                input_noise_rate += 0.1 * f
                                                 data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1,
                                                               steps=steps[input_size_index],
                                                               image_width=image_width[input_size_index],
