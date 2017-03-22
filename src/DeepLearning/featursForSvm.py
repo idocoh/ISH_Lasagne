@@ -228,13 +228,15 @@ def try_nn(test_params, test_y, x, y):
         # [1000, 250, 50],
         [1000, 500, 250],
         [2000, 1000, 500],
+        [1000, 1000, 100],
+        [1000, 1000, 1000],
         # [1200, 800, 400],
         [2000, 1000, 500, 250],
         [2000, 1000, 500, 250, 50]
     ]
 
-    temp_auc = np.zeros((3, 5))
-    for j in range(0, 5):
+    temp_auc = np.zeros((3, 7))
+    for j in range(0, 7):
         try:
             for i in range(0, 3):
                 try:
