@@ -1905,7 +1905,7 @@ def run_all():
 
     print(theano.sandbox.cuda.dnn_available())
 
-    num_labels = 15 #164 #TEST: change 15
+    num_labels = 164 #TEST: change 15
     amount_train = 16351
     svm_negative_amount = 200
     input_noise_rate = 0.2

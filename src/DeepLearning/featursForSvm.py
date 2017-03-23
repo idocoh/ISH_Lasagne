@@ -21,8 +21,8 @@ import time
 from liblinearutil import *
 import nnClassifier
 
-pickled_folder = "C:/devl/work/ISH_Lasagne/src/DeepLearning/results_dae/CAE_16351_different_sizes-1489653160.29/run_4"
-results_file = open(pickled_folder + "/NN_output.txt", "a")
+LOAD_CAE_PATH = "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_300x140_240x120-1490162342.58\run_0\\"
+results_file = open(LOAD_CAE_PATH.replace("\r", "\\r") + "/NN_164_output.txt", "a")
 
 def images_svm(pickled_file, x=None, all_labels=None, svm_negative_amount=800, num_labels=15, TRAIN_SPLIT=0.8):
     if isinstance(pickled_file, str):
@@ -49,7 +49,8 @@ def images_svm(pickled_file, x=None, all_labels=None, svm_negative_amount=800, n
         print("Starting cnn prediction...")
         (w, l) = cnn.output_hiddenLayer(x[1:2]).reshape((1, -1)).shape
         features = np.zeros((x.shape[0], w * l)).astype(np.float32)
-        # features = []
+        results_file.write("Hidden layer size - " + str(w) + " , " + str(l) + "\n")
+        results_file.flush()
         for i in range(0, x.shape[0]):
             features[i:i + 1, :] = cnn.output_hiddenLayer(x[i:i + 1]).reshape((1, -1)).astype(np.float32)
 
@@ -228,15 +229,15 @@ def try_nn(test_params, test_y, x, y):
         # [1000, 250, 50],
         [1000, 500, 250],
         [2000, 1000, 500],
-        [1000, 1000, 100],
-        [1000, 1000, 1000],
+        [1000, 1000, 100]
+        # [1000, 1000, 1000],
         # [1200, 800, 400],
-        [2000, 1000, 500, 250],
-        [2000, 1000, 500, 250, 50]
+        # [2000, 1000, 500, 250],
+        # [2000, 1000, 500, 250, 50]
     ]
 
-    temp_auc = np.zeros((3, 7))
-    for j in range(0, 7):
+    temp_auc = np.zeros((3, 4))
+    for j in range(0, 4):
         try:
             for i in range(0, 3):
                 try:
