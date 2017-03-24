@@ -1701,7 +1701,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
                 output_file.write(str(filter_9) + "\n")
                 output_file.write(str(filter_10) + "\n\n")
 
-        results_file.write(str(filter_1) + "\t" + str((filter_1, filter_2, filter_3, filter_4, filter_5, filter_6, filter_7, filter_8,
+        results_file.write("\n" + str(filter_1) + "\t" + str((filter_1, filter_2, filter_3, filter_4, filter_5, filter_6, filter_7, filter_8,
                                       filter_9, filter_10)) + "\t")
 
     def train_cae(cnn, x_train, x_out):
@@ -1812,7 +1812,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
 
         output_file.flush()
         results_file.write(str(time.ctime()) + "\t")
-        results_file.write(folder_path + "\n")
+        results_file.write(folder_path)
         results_file.flush()
 
     if loadedData is None:
@@ -1847,6 +1847,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         save_cnn(cae, folder_path)
     else:
         cae = load_network(LOAD_CAE_PATH)
+        results_file.write(str(LOAD_CAE_PATH) + "\t")
         valid_accuracy = cae.train_history_[-1]['valid_accuracy']
 
     get_auc_score(cae, output_file, results_file, svm_negative_amount, train_y, x_train, folder_path)
@@ -1864,7 +1865,8 @@ def get_auc_score(cnn, output_file, results_file, svm_negative_amount, train_y, 
         print("SVM AUC", aucs)
         output_file.write("NN auc: " + str(errors) + "\n")
         output_file.write("SVM auc: " + str(aucs) + "\n")
-        results_file.write(str(np.average(aucs)) + "\t" + str(aucs) + "\n")
+        results_file.write("\t" + str(np.average(aucs)) + "\n")
+        results_file.write(str(aucs) + "\n")
 
         output_file.flush()
         results_file.flush()
