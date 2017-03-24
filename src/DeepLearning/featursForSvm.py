@@ -49,8 +49,7 @@ def images_svm(pickled_file, x=None, all_labels=None, svm_negative_amount=800, n
         print("Starting cnn prediction...")
         (w, l) = cnn.output_hiddenLayer(x[1:2]).reshape((1, -1)).shape
         features = np.zeros((x.shape[0], w * l)).astype(np.float32)
-        results_file.write("Hidden layer size - " + str(w) + " , " + str(l) + "\n")
-        results_file.flush()
+        # features = []
         for i in range(0, x.shape[0]):
             features[i:i + 1, :] = cnn.output_hiddenLayer(x[i:i + 1]).reshape((1, -1)).astype(np.float32)
 
@@ -114,9 +113,6 @@ def checkLabelPredict(features, labels, cross_validation_parts=5):
     auc_scores = np.zeros(cross_validation_parts)
 
     for cross_validation_index in range(0, cross_validation_parts):
-        results_file.write("Cross validation #" + str(cross_validation_index+1) + "\n")
-        results_file.flush()
-
         neg_test = negative_data_chunks[cross_validation_index]
         neg_train = np.copy(negative_data_chunks)
         np.delete(neg_train, cross_validation_index)
@@ -200,6 +196,21 @@ def lib_linear_score(neg_test, neg_train, pos_test, pos_train):
 
     return clf, score, test_params, test_y
 
+    # prob = liblinearutil.problem([1, -1], [{1: 1, 3: 1}, {1: -1, 3: -1}])
+    # param = parameter('-c 4')
+    # m = liblinear.train(prob, param)
+    # x0, max_idx = gen_feature_nodearray({1: 1, 3: 1})
+    # label = liblinear.predict(m, x0)
+
+    # clf = svm.LinearSVC(C=1).fit(np.concatenate((pos_train, neg_train), axis=0),
+    #                                         np.concatenate((np.ones(pos_train.shape[0]),
+    #                                                         np.zeros(neg_train.shape[0])), axis=0))
+    # test_params = np.concatenate((pos_test, neg_test), axis=0)
+    # test_y = np.concatenate((np.ones(pos_test.shape[0]), np.zeros(neg_test.shape[0])), axis=0)
+    # score = clf.score(test_params, test_y)
+    # print("SVM score- ", score)
+    # return clf, score, test_params, test_y
+
 
 def NN_classifier_score(neg_test, neg_train, pos_test, pos_train):
     pos_train_size = pos_train.shape[0]
@@ -225,27 +236,21 @@ def try_nn(test_params, test_y, x, y):
         # [1000, 100],
         # [750, 250],
         # [500, 100],
-        [1000, 300],
+        [1000, 300]
         # [1000, 250, 50],
-        [1000, 500, 250],
-        [2000, 1000, 500],
-        [1000, 1000, 100]
-        # [1000, 1000, 1000],
-        # [1200, 800, 400],
-        # [2000, 1000, 500, 250],
-        # [2000, 1000, 500, 250, 50]
+        # [1000, 500, 250],
+        # [1200, 800, 400]
     ]
-
-    temp_auc = np.zeros((3, 4))
-    for j in range(0, 4):
+    # temp_auc = np.zeros((3, 1))
+    for j in range(0, 1):
         try:
-            for i in range(0, 3):
+            for i in range(0, 1):
                 try:
                     learning_rate = 0.01 + 0.02 * i
                     classifier_net, error_rate, auc_score = \
                         nnClassifier.runNNclassifier(x, y, test_params, test_y, LEARNING_RATE=learning_rate,
                                                      NUM_UNITS_HIDDEN_LAYER=layers_size[j])
-                    temp_auc[i, j] = auc_score
+                    # temp_auc[i, j] = auc_score
                     print("AUC- " + str(auc_score) + ": rate " + str(learning_rate) + ", layers " + str(layers_size[j]))
                     results_file.write("AUC- " + str(auc_score) + ", rate- " + str(learning_rate) + ", layers- " + str(
                         layers_size[j]) + "\n")
@@ -254,15 +259,15 @@ def try_nn(test_params, test_y, x, y):
                     print("failed nn i-", i)
                     print(e)
                     print(e.message)
-            results_file.write("Max AUC- " + str(np.max(temp_auc[:, j])) + ", rate- all, layers- " + str(
-                layers_size[j]) + "\n")
-            results_file.flush()
+            # results_file.write("Max AUC- " + str(np.max(temp_auc[:, j])) + ", rate- all, layers- " + str(
+            #     layers_size[j]) + "\n")
+            # results_file.flush()
         except Exception as e:
             print("failed nn i-", i)
             print(e)
             print(e.message)
 
-    return classifier_net, np.max(temp_auc[i, j]), test_params, test_y
+    return classifier_net, auc_score, test_params, test_y
 
 
 def generate_positives(positives, num_negatives):
