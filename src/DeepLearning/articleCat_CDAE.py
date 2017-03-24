@@ -1859,14 +1859,14 @@ def get_auc_score(cnn, output_file, results_file, svm_negative_amount, train_y, 
     try:
         print("Running SVM")
         print("     Start time: ", time.ctime())
-        errors, aucs = run_svm(cnn, X_train=x_train, labels=train_y, svm_negative_amount=svm_negative_amount,
+        nn_aucs, svm_aucs = run_svm(cnn, X_train=x_train, labels=train_y, svm_negative_amount=svm_negative_amount,
                                folder_path=folder_path)
-        print("NN AUC", errors)
-        print("SVM AUC", aucs)
-        output_file.write("NN auc: " + str(errors) + "\n")
-        output_file.write("SVM auc: " + str(aucs) + "\n")
-        results_file.write("\t" + str(np.average(aucs)) + "\n")
-        results_file.write(str(aucs) + "\n")
+        print("NN AUC", nn_aucs)
+        print("SVM AUC", svm_aucs)
+        output_file.write("NN auc: " + str(nn_aucs) + "\n")
+        output_file.write("SVM auc: " + str(svm_aucs) + "\n")
+        results_file.write("\t" + str(np.average(svm_aucs)) + "\n")
+        results_file.write(str(svm_aucs) + "\n")
 
         output_file.flush()
         results_file.flush()
@@ -1907,7 +1907,7 @@ def run_all():
 
     print(theano.sandbox.cuda.dnn_available())
 
-    num_labels = 15 #164 #TEST: change 15
+    num_labels = 164 #TEST: change 15
     amount_train = 16351
     svm_negative_amount = 200
     input_noise_rate = 0.2
