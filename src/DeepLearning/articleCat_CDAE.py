@@ -1709,65 +1709,61 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         x_train *= np.random.binomial(1, 1 - dropout_percent, size=x_train.shape)
         print('Training CAE with ', x_train.shape[0], ' samples')
         cnn.fit(x_train, x_out)
+        return cnn
 
+    def save_example_images(cnn, x_out, x_noise=None):
         try:
-            save_example_images(x_out, cnn)
+            print("Saving some images....")
+            for i in range(48):
+                index = i #np.random.randint(x_out.shape[0])
+                print(index)
+                image_sample = x_out[index]
+                image_sample = image_sample.astype(np.float32).reshape((-1, 1, input_width, input_height))
+
+                print('Predicting ', index, ' sample through CAE')
+                X_pred = cnn.predict(image_sample).reshape(-1, input_height, input_width)  # * sigma + mu
+
+                def get_picture_array(X):
+                    array = np.rint(X * 256).astype(np.int).reshape(input_height, input_width)
+                    array = np.clip(array, a_min=0, a_max=255)
+                    return array.repeat(4, axis=0).repeat(4, axis=1).astype(np.uint8())
+
+                original_image = Image.fromarray(get_picture_array(x_out[index]))
+                # original_image.save(folder_path + 'original' + str(index) + '.png', format="PNG")
+                #
+                # array = np.rint(trian_last_hiddenLayer[index] * 256).astype(np.int).reshape(input_height/2, input_width/2)
+                # array = np.clip(array, a_min=0, a_max=255)
+                # encode_image = Image.fromarray(array.repeat(4, axis=0).repeat(4, axis=1).astype(np.uint8()))
+                # encode_image.save(folder_path + 'encode' + str(index) + '.png', format="PNG")
+
+                new_size = (original_image.size[0] * 3, original_image.size[1])
+                new_im = Image.new('L', new_size)
+                new_im.paste(original_image, (0, 0))
+                pred_image = Image.fromarray(get_picture_array(X_pred))
+                pred_image.save(folder_path + 'pred' + str(index) + '.png', format="PNG")
+                new_im.paste(pred_image, (original_image.size[0], 0))
+                # new_im.save(folder_path + 'origin_prediction-' + str(index) + '.png', format="PNG")
+
+                noise_image = Image.fromarray(get_picture_array(x_noise[index]))
+                new_im.paste(noise_image, (original_image.size[0] * 2, 0))
+                new_im.save(folder_path + 'origin_prediction_noise-' + str(index) + '.png', format="PNG")
+
+                # diff = ImageChops.difference(original_image, pred_image)
+                # diff = diff.convert('L')
+                # diff.save(folder_path + 'diff' + str(index) + '.png', format="PNG")
+
+                # # plt.imshow(new_im)
+                # new_size = (original_image.size[0] * 2, original_image.size[1])
+                # new_im = Image.new('L', new_size)
+                # new_im.paste(original_image, (0, 0))
+                # pred_image = Image.fromarray(get_picture_array(X_train, index))
+                # # pred_image.save(folder_path + 'noisyInput' + str(index) + '.png', format="PNG")
+                # new_im.paste(pred_image, (original_image.size[0], 0))
+                # new_im.save(folder_path+'origin_VS_noise-'+str(index)+'.png', format="PNG")
+                # # plt.imshow(new_im)
         except Exception as e:
             print (e)
             print (e.message)
-
-        return cnn
-
-    def save_example_images(x_out, cnn, x_train=None):
-        print("Saving some images....")
-        for i in range(10):
-            index = np.random.randint(x_out.shape[0])
-            print(index)
-            image_sample = x_out[index]
-            image_sample = image_sample.astype(np.float32).reshape((-1, 1, input_width, input_height))
-
-            print('Predicting ', index, ' sample through CAE')
-            X_pred = cnn.predict(image_sample).reshape(-1, input_height, input_width)  # * sigma + mu
-
-            def get_picture_array(X):
-                array = np.rint(X * 256).astype(np.int).reshape(input_height, input_width)
-                array = np.clip(array, a_min=0, a_max=255)
-                return array.repeat(4, axis=0).repeat(4, axis=1).astype(np.uint8())
-
-            original_image = Image.fromarray(get_picture_array(x_out[index]))
-            # original_image.save(folder_path + 'original' + str(index) + '.png', format="PNG")
-            #
-            # array = np.rint(trian_last_hiddenLayer[index] * 256).astype(np.int).reshape(input_height/2, input_width/2)
-            # array = np.clip(array, a_min=0, a_max=255)
-            # encode_image = Image.fromarray(array.repeat(4, axis=0).repeat(4, axis=1).astype(np.uint8()))
-            # encode_image.save(folder_path + 'encode' + str(index) + '.png', format="PNG")
-
-            new_size = (original_image.size[0] * 2, original_image.size[1])
-            new_im = Image.new('L', new_size)
-            new_im.paste(original_image, (0, 0))
-            pred_image = Image.fromarray(get_picture_array(X_pred))
-            pred_image.save(folder_path + 'pred' + str(index) + '.png', format="PNG")
-            new_im.paste(pred_image, (original_image.size[0], 0))
-            new_im.save(folder_path + 'origin_prediction-' + str(index) + '.png', format="PNG")
-
-
-            # noise_image = Image.fromarray(get_picture_array(x_train[index]))
-            # new_im.paste(noise_image, (original_image.size[0] * 2, 0))
-            # new_im.save(folder_path + 'origin_prediction_noise-' + str(index) + '.png', format="PNG")
-
-            # diff = ImageChops.difference(original_image, pred_image)
-            # diff = diff.convert('L')
-            # diff.save(folder_path + 'diff' + str(index) + '.png', format="PNG")
-
-            # # plt.imshow(new_im)
-            # new_size = (original_image.size[0] * 2, original_image.size[1])
-            # new_im = Image.new('L', new_size)
-            # new_im.paste(original_image, (0, 0))
-            # pred_image = Image.fromarray(get_picture_array(X_train, index))
-            # # pred_image.save(folder_path + 'noisyInput' + str(index) + '.png', format="PNG")
-            # new_im.paste(pred_image, (original_image.size[0], 0))
-            # new_im.save(folder_path+'origin_VS_noise-'+str(index)+'.png', format="PNG")
-            # # plt.imshow(new_im)
 
     def write_output_file(train_history, layer_info):
         # save the network's parameters
@@ -1838,6 +1834,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         cae = create_cae()
         cae = train_cae(cae, x_train[:amount_train], x_flat[:amount_train])
         run_time = (time.clock() - start_time) / 60.
+        save_example_images(cae, x_flat, x_train)
         write_output_file(cae.train_history_, PrintLayerInfo._get_layer_info_plain(cae))
         print ("Learning took (min)- ", run_time)
         valid_accuracy = cae.train_history_[-1]['valid_accuracy']
@@ -1847,6 +1844,8 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         save_cnn(cae, folder_path)
     else:
         cae = load_network(LOAD_CAE_PATH)
+        save_example_images(cae, x_flat, x_train)
+
         results_file.write(str(LOAD_CAE_PATH) + "\t")
         valid_accuracy = cae.train_history_[-1]['valid_accuracy']
 
@@ -1907,7 +1906,7 @@ def run_all():
 
     print(theano.sandbox.cuda.dnn_available())
 
-    num_labels = 164 #TEST: change 15
+    num_labels = 15 #164 #TEST: change 15
     amount_train = 16351
     svm_negative_amount = 200
     input_noise_rate = 0.2
@@ -2004,7 +2003,8 @@ def run_all():
 if __name__ == "__main__":
     # os.environ["DISPLAY"] = ":99"
     #Test: change
-    LOAD_CAE_PATH = "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_300x140_240x120-1490162342.58\run_0\\"
+    # LOAD_CAE_PATH = "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_300x140_240x120-1490162342.58\run_0\\"
+    LOAD_CAE_PATH = "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_different_sizes-1489986570.75\run_6\\"
     LOAD_CAE_PATH = LOAD_CAE_PATH.replace("\r", "\\r")
 
     run_all()
