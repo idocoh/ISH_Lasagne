@@ -24,7 +24,7 @@ import nnClassifier
 # LOAD_CAE_PATH = "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_300x140_240x120-1490162342.58\run_0\\"
 LOAD_CAE_PATH = "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_different_sizes-1489986570.75\run_6\\"
 results_file = open(LOAD_CAE_PATH.replace("\r", "\\r") + "/NN_15_output.txt", "a")
-CONSTANT_NEGATIVES = False
+CONSTANT_NEGATIVES = True
 
 def images_svm(pickled_file, x=None, all_labels=None, svm_negative_amount=800, num_labels=15, TRAIN_SPLIT=0.8):
     if isinstance(pickled_file, str):

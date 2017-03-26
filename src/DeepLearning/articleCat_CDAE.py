@@ -1844,8 +1844,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         save_cnn(cae, folder_path)
     else:
         cae = load_network(LOAD_CAE_PATH)
-        save_example_images(cae, x_flat, x_train)
-
+        # save_example_images(cae, x_flat, x_train)
         results_file.write(str(LOAD_CAE_PATH) + "\t")
         valid_accuracy = cae.train_history_[-1]['valid_accuracy']
 
