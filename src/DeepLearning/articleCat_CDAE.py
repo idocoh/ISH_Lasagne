@@ -1711,10 +1711,10 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         cnn.fit(x_train, x_out)
         return cnn
 
-    def save_example_images(cnn, x_out, x_noise=None):
+    def save_example_images(cnn, x_out, x_noise=None, num_images=50):
         try:
             print("Saving some images....")
-            for i in range(48):
+            for i in range(num_images):
                 index = i #np.random.randint(x_out.shape[0])
                 print(index)
                 image_sample = x_out[index]
@@ -1729,7 +1729,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
                     return array.repeat(4, axis=0).repeat(4, axis=1).astype(np.uint8())
 
                 original_image = Image.fromarray(get_picture_array(x_out[index]))
-                # original_image.save(folder_path + 'original' + str(index) + '.png', format="PNG")
+                original_image.save(folder_path + 'original' + str(index) + '.png', format="PNG")
                 #
                 # array = np.rint(trian_last_hiddenLayer[index] * 256).astype(np.int).reshape(input_height/2, input_width/2)
                 # array = np.clip(array, a_min=0, a_max=255)
@@ -1844,7 +1844,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         save_cnn(cae, folder_path)
     else:
         cae = load_network(LOAD_CAE_PATH)
-        # save_example_images(cae, x_flat, x_train)
+        save_example_images(cae, x_flat, x_train, 50)
         results_file.write(str(LOAD_CAE_PATH) + "\t")
         valid_accuracy = cae.train_history_[-1]['valid_accuracy']
 
@@ -1911,7 +1911,7 @@ def run_all():
     input_noise_rate = 0.2
     zero_meaning = False
     epochs = 20
-    folder_name = "CAE_" + str(amount_train) + "_test_nn-" + str(time.time())
+    folder_name = "CAE_" + str(amount_train) + "_save_images-" + str(time.time())
 
     steps = [
         [5000, 10000, 16352],

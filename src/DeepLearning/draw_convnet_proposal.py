@@ -111,16 +111,20 @@ if __name__ == '__main__':
 
     fig, ax = plt.subplots()
 
-
     ############################
-    # conv layers
+    # conv layers 240x120
     size_list = [140, 140, 70, 70, 35, 35, 35, 70, 70, 140, 140, 140]
     width_list = [300, 300, 150, 150, 75, 75, 75, 150, 150, 300, 300, 300]
-
     num_list = [1, 32, 32, 32, 32, 64, 1, 1, 32, 32, 32, 1]
+    ############################
+    # conv layers 240x120
+    # size_list = [120, 120, 60, 60, 30, 30, 30, 60, 60, 120, 120, 120]
+    # width_list = [240, 240, 120, 120, 60, 60, 60, 120, 120, 240, 240, 240]
+    # num_list = [1, 16, 16, 16, 16, 16, 1, 1, 16, 16, 16, 1]
+
     x_diff_list = [0, layer_width*1.5, layer_width*1.5, layer_width, layer_width,  layer_width, layer_width, layer_width, layer_width, layer_width,  layer_width*1.5, layer_width*1.5]
     # text_list = ['Inputs'] + ['Feature\nmaps*', 'Feature\nmaps'] * (len(size_list)/2 - 1) + ['Outputs']
-    text_list = ['Inputs'] + ['Feature\nmaps*', 'Feature\nmaps', 'Feature\nmaps*', 'Feature\nmaps', 'Feature\nmaps**', 'Feature\nmaps', 'Feature\nmaps', 'Feature\nmaps*', 'Feature\nmaps', 'Feature\nmaps*'] + ['Outputs']
+    text_list = ['Input'] + [' *', '', ' *', '', ' **', '', '', ' *', '', ' *'] + ['Output']
 
     loc_diff_list = [[3, -3]] * len(size_list)
 
@@ -131,16 +135,21 @@ if __name__ == '__main__':
         add_layer(patches, colors, size=size_list[ind],
                   num=num_show_list[ind],
                   top_left=top_left_list[ind], loc_diff=loc_diff_list[ind])
-        label(top_left_list[ind], text_list[ind] + '\n{}@{}x{}'.format(
-            num_list[ind], width_list[ind], size_list[ind]))
+        if ind == 0 or ind == len(size_list)-1:
+            label(top_left_list[ind], text_list[ind] + '\n{}@{}x{}'.format(
+                num_list[ind], width_list[ind], size_list[ind]))
+        else:
+            label(top_left_list[ind], '{}@{}x{}'.format(
+                num_list[ind], width_list[ind], size_list[ind])) # + text_list[ind])
 
 
     ############################
     # in between layers
     start_ratio_list = [[0.4, 0.5], [0.4, 0.8], [0.4, 0.5], [0.4, 0.8], [0.4, 0.5], [0.4, 0.5], [0.4, 0.8], [0.4, 0.5], [0.4, 0.8], [0.4, 0.5], [0.4, 0.5]]
+    # patch_size_list = [3, 2, 3, 2, 3, 3, 2, 3, 2, 3, 3]
     patch_size_list = [9, 2, 7, 2, 5, 5, 2, 7, 2, 9, 5]
     ind_bgn_list = range(len(patch_size_list))
-    text_list = ['Convolution', 'Max-pooling', 'Convolution', 'Max-pooling', 'Convolution', 'Convolution', 'Unpooling', 'Convolution', 'Unpooling', 'Convolution', 'Convolution']
+    text_list = ['Convolution*', 'Max-pooling', 'Convolution*', 'Max-pooling', 'Convolution**', 'Convolution', 'Unpooling', 'Convolution*', 'Unpooling', 'Convolution*', 'Convolution']
 
     for ind in range(len(patch_size_list)):
         add_mapping(patches, colors, start_ratio_list[ind],
@@ -149,9 +158,10 @@ if __name__ == '__main__':
         label(top_left_list[ind], text_list[ind] + '\n{}x{} kernel'.format(
             patch_size_list[ind], patch_size_list[ind]), xy_off=[46, -105])
 
+    # label(top_left_list[1], "* Four sequential convolutional layers  ", xy_off=[-20, -135])
+    # label(top_left_list[1], "** Three sequential convolutional layers  ", xy_off=[-20, -155])
     label(top_left_list[1], "* Three sequential convolutional layers  ", xy_off=[-20, -135])
     label(top_left_list[1], "** Two sequential convolutional layers  ", xy_off=[-20, -155])
-
 
     # ############################
     # # fully connected layers
