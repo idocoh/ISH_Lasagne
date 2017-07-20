@@ -19,6 +19,7 @@ from nolearn.lasagne import NeuralNet
 from nolearn.lasagne import PrintLayerInfo
 from nolearn.lasagne import TrainSplit
 from shape import ReshapeLayer
+from pickleImages import runPickleImages
 
 FILE_SEPARATOR = "/"
 counter = 0
@@ -113,7 +114,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
 
-    All_Results_FIle = "results_dae"+FILE_SEPARATOR + "all_results.txt"
+    All_Results_FIle = "results_dae"+FILE_SEPARATOR + "JULY_results.txt"
     PARAMS_FILE_NAME = folder_path + "parameters.txt"
     # HIDDEN_LAYER_OUTPUT_FILE_NAME = folder_path + "hiddenLayerOutput.pkl.gz"
     # FIG_FILE_NAME = folder_path + "fig"
@@ -1858,13 +1859,13 @@ def get_auc_score(cnn, output_file, results_file, svm_negative_amount, train_y, 
     try:
         print("Running SVM")
         print("     Start time: ", time.ctime())
-        errors, aucs = run_svm(cnn, X_train=x_train, labels=train_y, svm_negative_amount=svm_negative_amount,
+        NN_aucs, SVM_aucs = run_svm(cnn, X_train=x_train, labels=train_y, svm_negative_amount=svm_negative_amount,
                                folder_path=folder_path)
-        print("NN AUC", errors)
-        print("SVM AUC", aucs)
-        output_file.write("NN auc: " + str(errors) + "\n")
-        output_file.write("SVM auc: " + str(aucs) + "\n")
-        results_file.write(str(np.average(aucs)) + "\t" + str(aucs) + "\n")
+        print("NN AUC", NN_aucs)
+        print("SVM AUC", SVM_aucs)
+        output_file.write("NN auc: " + str(NN_aucs) + "\n")
+        output_file.write("SVM auc: " + str(SVM_aucs) + "\n")
+        results_file.write(str(np.average(SVM_aucs)) + "\t" + str(SVM_aucs) + "\n")
 
         output_file.flush()
         results_file.flush()
@@ -1910,8 +1911,9 @@ def run_all():
     svm_negative_amount = 200
     input_noise_rate = 0.2
     zero_meaning = False
+    to_shuffle_input= False
     epochs = 20
-    folder_name = "CAE_" + str(amount_train) + "_different_sizes-" + str(time.time())
+    folder_name = "CAE_" + str(amount_train) + "_All_sizes_2_unpool-" + str(time.time())
 
     steps = [
         [5000, 10000, 16352],
@@ -1921,87 +1923,97 @@ def run_all():
         [5000, 10000, 16352],
         [5000, 11000, 16352],
         [5000, 10000, 15000, 16352],
-        [4000, 8000, 12000, 16000, 16352]
+        [5000, 10000, 16352],
+        [2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 16352],
+        [2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 16352]
     ]
-    image_width = [160, 160, 160, 200, 240, 300, 320, 320]
-    image_height = [80, 80, 100, 120, 120, 140, 160, 200]
-    number_pooling_layers = [3, 2, 2, 2, 2, 2, 3, 3]
+    image_width = [160, 160, 160, 200, 240, 300, 320, 240, 320, 400]
+    image_height = [80, 80, 100, 120, 120, 140, 160, 120, 200, 240]
+    number_pooling_layers = [3, 2, 2, 2, 2, 2, 3, 3, 3, 3]
     layers_size = [
         [16, 16, 16, 16, 16, 16, 16, 16, 16],
         [8, 8, 8, 8, 8, 8, 8, 8, 8],
         [32, 64, 128, 64, 32],
         [16, 32, 32, 64, 32, 32, 16]
         ]
-
-    for num_filters_index in range(0, 1, 1):
+    for to_shuffle_input in [False, True]:
         try:
-            for lr in range(1, 4, 1):
+            for zero_meaning in [False, True]:
                 try:
-                    for f in range(2, 0, -1): # for f in range(0, 3, 1):
+                    for input_size_index in range(5, 0, -1):
                         try:
-                            for number_conv_layers in range(4, 1, -2): #2
+                            for num_filters_index in range(0, 1, 1):
                                 try:
-                                    for input_size_index in range(4, 7, 1):  # 5
+                                    for filter_type in range(2, 1, -1):
                                         try:
-                                            for num_images in range(0, 9, 1):  # 5
-                                                input_size_index = 5 #Test: change
-                                                # num_filters_index = 0 #Test: change
-                                                data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1,
-                                                              steps=steps[input_size_index],
-                                                              image_width=image_width[input_size_index],
-                                                              image_height=image_height[input_size_index])
-                                                learning_rate = 0.04 + 0.005 * lr
-                                                filter_type_index = 11 - 4 * f
-                                                print("run number conv layers- ", number_conv_layers)
-                                                print("run Filter type #", filter_type_index)
-                                                print("run Filter number index #", num_filters_index)
-                                                print("run Learning rate- ", learning_rate)
+                                            for number_conv_layers in range(4, 3, -1):
                                                 try:
-                                                    run(layers_size=layers_size[num_filters_index], epochs=epochs,
-                                                        learning_rate=learning_rate,
-                                                        update_momentum=0.9,
-                                                        number_pooling_layers=number_pooling_layers[input_size_index],
-                                                        dropout_percent=input_noise_rate, loadedData=data,
-                                                        folder_name=folder_name,
-                                                        amount_train=amount_train - num_images*2000,
-                                                        number_conv_layers=number_conv_layers,
-                                                        zero_meaning=zero_meaning, activation=None,
-                                                        last_layer_activation=tanh,
-                                                        filters_type=filter_type_index,
-                                                        train_valid_split=0.001 + 0.002*num_images,
-                                                        input_width=image_width[input_size_index],
-                                                        input_height=image_height[input_size_index],
-                                                        svm_negative_amount=svm_negative_amount, batch_size=32)
+                                                    for lr in range(2, 6, 1):
+                                                        try:
+                                                            for num_images in range(0, 1, 1):
+                                                                data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1,
+                                                                              steps=steps[input_size_index],
+                                                                              image_width=image_width[input_size_index],
+                                                                              image_height=image_height[input_size_index])
+                                                                learning_rate = 0.03 + 0.005 * lr
+                                                                filter_type_index = 11 - 4 * filter_type
+                                                                print("run number conv layers- ", number_conv_layers)
+                                                                print("run Filter type #", filter_type_index)
+                                                                print("run Filter number index #", num_filters_index)
+                                                                print("run Learning rate- ", learning_rate)
+                                                                try:
+                                                                    run(layers_size=layers_size[num_filters_index], epochs=epochs,
+                                                                        learning_rate=learning_rate,
+                                                                        update_momentum=0.9, toShuffleInput=to_shuffle_input,
+                                                                        number_pooling_layers=number_pooling_layers[input_size_index],
+                                                                        dropout_percent=input_noise_rate, loadedData=data,
+                                                                        folder_name=folder_name,
+                                                                        amount_train=amount_train - num_images*2000,
+                                                                        number_conv_layers=number_conv_layers,
+                                                                        zero_meaning=zero_meaning, activation=None,
+                                                                        last_layer_activation=tanh,
+                                                                        filters_type=filter_type_index,
+                                                                        train_valid_split=0.001 + 0.002*num_images,
+                                                                        input_width=image_width[input_size_index],
+                                                                        input_height=image_height[input_size_index],
+                                                                        svm_negative_amount=svm_negative_amount, batch_size=32)
 
+                                                                except Exception as e:
+                                                                    print("failed Filter type #", filter_type_index)
+                                                                    print("failed number conv layers- ", number_conv_layers)
+                                                                    print("failed Filter number index #", num_filters_index)
+                                                                    print("failed Learning rate- ", learning_rate)
+                                                                    print(e)
+                                                                    print(e.message)
+                                                        except Exception as e:
+                                                            print(e)
+                                                            print(e.message)
                                                 except Exception as e:
-                                                    print("failed Filter type #", filter_type_index)
-                                                    print("failed number conv layers- ", number_conv_layers)
-                                                    print("failed Filter number index #", num_filters_index)
-                                                    print("failed Learning rate- ", learning_rate)
                                                     print(e)
                                                     print(e.message)
+
                                         except Exception as e:
                                             print(e)
                                             print(e.message)
                                 except Exception as e:
-                                    print(e)
-                                    print(e.message)
-
+                                        print(e)
+                                        print(e.message)
                         except Exception as e:
                             print(e)
                             print(e.message)
                 except Exception as e:
-                        print(e)
-                        print(e.message)
+                    print(e)
+                    print(e.message)
         except Exception as e:
             print(e)
             print(e.message)
 
 
+
 if __name__ == "__main__":
     # os.environ["DISPLAY"] = ":99"
     #Test: change
-    LOAD_CAE_PATH = "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_different_sizes-1489653160.29\run_4\\"
-    LOAD_CAE_PATH = LOAD_CAE_PATH.replace("\r", "\\r")
+    # LOAD_CAE_PATH = "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_different_sizes-1489653160.29\run_4\\"
+    # LOAD_CAE_PATH = LOAD_CAE_PATH.replace("\r", "\\r")
 
     run_all()

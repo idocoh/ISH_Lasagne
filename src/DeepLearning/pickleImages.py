@@ -15,7 +15,7 @@ Image.MAX_IMAGE_PIXELS = None
 
 NUM_IMAGES = 50
 IMAGE_WIDTH = 320
-IMAGE_HEIGHT = 160
+IMAGE_HEIGHT = 200
 TRAIN_DATA_PRECENT = 0.8
 VALIDATION_DATA_PRECENT = TRAIN_DATA_PRECENT + 0.0
 
@@ -67,7 +67,7 @@ class pickleImages(object):
 #         y = cPickle.load(fy)
 #         fy.close()
     
-        Data = dir_to_dataset(self.dir+"\\*.jpg",start_index,end_index)
+        Data = dir_to_dataset(self.dir+"\\*.jpg", start_index, end_index)
 #         fd = gzip.open('BraionISH_Data.pkl.gz','wb')
 #         cPickle.dump(Data, fd, protocol=2)
 #         fd.close()
@@ -180,8 +180,9 @@ def getTopCatVector(glob_files,start_index,end_index):
 #                      imagesArray.append(randint(0,9))
     #                  print os.path.join(root, file)                 
         return np.array(topCatVectorSet)
-            
-def runPickleImages(dir,startIndex=0,endIndex=NUM_IMAGES):
+
+
+def runPickleImages(dir="C:\Users\Research\Pictures\BrainISHimages", startIndex=0, endIndex=NUM_IMAGES):
     start_time = time.clock()
     
     pick = pickleImages(dir)
@@ -198,7 +199,11 @@ if __name__ == '__main__':#     dir = "C:\\Users\\Abigail\\Desktop\\Ido\\pyWS\\F
 #     pick.pickleData()
     
     dir = "C:\Users\Research\Pictures\BrainISHimages"
-    # runPickleImages(dir, 0, 5000)
-    runPickleImages(dir, 5001, 11000)
-    runPickleImages(dir, 11000, 16352)
+
+    IMAGE_WIDTH = 280
+    IMAGE_HEIGHT = 140
+    runPickleImages(dir, 0, 4000)
+    runPickleImages(dir, 4000, 8000)
+    runPickleImages(dir, 8000, 12000)
+    runPickleImages(dir, 12000, 16352)
 #     test_SdA()
