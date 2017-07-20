@@ -132,11 +132,12 @@ def checkLabelPredict(features, labels, cross_validation_parts=5):
         # clf, score, test_params, test_y = classifier_score(neg_test, neg_train, pos_test, pos_train)
 
         # Test: change
-        clf, score, test_params, test_y = NN_classifier_score(neg_test, neg_train, pos_test, pos_train)
-        scores[cross_validation_index] = score
+        # clf, score, test_params, test_y = NN_classifier_score(neg_test, neg_train, pos_test, pos_train)
+        # scores[cross_validation_index] = score
 
         # clf, score, test_params, test_y = lib_linear_score(neg_test, neg_train, pos_test, pos_train)
         # scores[cross_validation_index] = score
+
         clf_svm, score_svm, test_params_svm, test_y_svm = svc_score(neg_test, neg_train, pos_test, pos_train)
         auc_scores[cross_validation_index] = score_svm
 
@@ -152,7 +153,7 @@ def checkLabelPredict(features, labels, cross_validation_parts=5):
     try:
         return np.average(scores), np.average(auc_scores)
     except:
-        return np.average(scores), 999
+        return -111, np.average(auc_scores)
 
 
 def svc_score(neg_test, neg_train, pos_test, pos_train):
