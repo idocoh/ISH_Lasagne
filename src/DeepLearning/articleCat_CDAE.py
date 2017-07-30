@@ -1922,34 +1922,36 @@ def run_all():
         [5000, 10000, 16352],
         [5000, 10000, 16352],
         [5000, 11000, 16352],
+        [5000, 10000, 16352],
         [5000, 10000, 15000, 16352],
         [5000, 10000, 16352],
         [2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 16352],
         [2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 16352],
-        [5000, 10000, 16352]
+        [5000, 10000, 16352],
+        [2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 16352],
     ]
-    image_width = [160, 160, 200, 240, 300, 320, 240, 320, 400, 160]
-    image_height = [80, 100, 120, 120, 140, 160, 120, 200, 240, 80]
-    number_pooling_layers = [2, 2, 2, 2, 2, 3, 3, 3, 3, 3]
+    image_width = [160, 160, 200, 240, 300, 280, 320, 240, 320, 400, 160, 480]
+    image_height = [80, 100, 120, 120, 140, 140, 160, 120, 200, 240, 80, 240]
+    number_pooling_layers = [2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3]
     layers_size = [
         [16, 16, 16, 16, 16, 16, 16, 16, 16],
         [8, 8, 8, 8, 8, 8, 8, 8, 8],
         [32, 64, 128, 64, 32],
         [16, 32, 32, 64, 32, 32, 16]
         ]
-    for to_shuffle_input in [True]:
+    for zero_meaning in [False, True]:
         try:
-            for zero_meaning in [False]:
+            for to_shuffle_input in [False, True]:
                 try:
-                    for_zm = 0
+                    # for_zm = 0
                     # for_zm = 5 if not zero_meaning else for_zm
-                    for input_size_index in range(4+ for_zm, -1 + for_zm, -1) :
+                    for input_size_index in [11, 5]: #range(4 + for_zm, -1 + for_zm, -1):
                         try:
-                            for num_filters_index in range(0, 1, 1):
+                            for num_filters_index in range(0, 2, 1):
                                 try:
-                                    for filter_type in range(2, 1, -1):
+                                    for filter_type in range(2, -1, -2):
                                         try:
-                                            for number_conv_layers in range(4, 3, -1):
+                                            for number_conv_layers in range(4, 1, -2):
                                                 try:
                                                     for lr in range(2, 6, 1):
                                                         try:
@@ -1966,21 +1968,27 @@ def run_all():
                                                                 print("run Filter number index #", num_filters_index)
                                                                 print("run Learning rate- ", learning_rate)
                                                                 try:
-                                                                    run(layers_size=layers_size[num_filters_index], epochs=epochs,
+                                                                    run(layers_size=layers_size[num_filters_index],
+                                                                        epochs=epochs,
                                                                         learning_rate=learning_rate,
-                                                                        update_momentum=0.9, shuffle_input=to_shuffle_input,
+                                                                        update_momentum=0.9,
+                                                                        shuffle_input=to_shuffle_input,
                                                                         number_pooling_layers=number_pooling_layers[input_size_index],
-                                                                        dropout_percent=input_noise_rate, loadedData=data,
+                                                                        dropout_percent=input_noise_rate,
+                                                                        loadedData=data,
                                                                         folder_name=folder_name,
                                                                         amount_train=amount_train - num_images*2000,
                                                                         number_conv_layers=number_conv_layers,
-                                                                        zero_meaning=zero_meaning, activation=None,
+                                                                        zero_meaning=zero_meaning,
+                                                                        activation=None,
                                                                         last_layer_activation=tanh,
                                                                         filters_type=filter_type_index,
                                                                         train_valid_split=0.001 + 0.002*num_images,
                                                                         input_width=image_width[input_size_index],
                                                                         input_height=image_height[input_size_index],
-                                                                        svm_negative_amount=svm_negative_amount, batch_size=32)
+                                                                        svm_negative_amount=svm_negative_amount,
+                                                                        flip_batch=True,
+                                                                        batch_size=32)
 
                                                                 except Exception as e:
                                                                     print("failed Filter type #", filter_type_index)

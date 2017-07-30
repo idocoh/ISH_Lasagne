@@ -14,8 +14,8 @@ import time
 Image.MAX_IMAGE_PIXELS = None
 
 NUM_IMAGES = 50
-IMAGE_WIDTH = 320
-IMAGE_HEIGHT = 200
+IMAGE_WIDTH = 240
+IMAGE_HEIGHT = 120
 TRAIN_DATA_PRECENT = 0.8
 VALIDATION_DATA_PRECENT = TRAIN_DATA_PRECENT + 0.0
 
@@ -200,10 +200,12 @@ if __name__ == '__main__':#     dir = "C:\\Users\\Abigail\\Desktop\\Ido\\pyWS\\F
     
     dir = "C:\Users\Research\Pictures\BrainISHimages"
 
-    IMAGE_WIDTH = 280
-    IMAGE_HEIGHT = 140
-    runPickleImages(dir, 0, 4000)
-    runPickleImages(dir, 4000, 8000)
-    runPickleImages(dir, 8000, 12000)
-    runPickleImages(dir, 12000, 16352)
+    IMAGE_WIDTH = 480
+    IMAGE_HEIGHT = 240
+    num_iter = [2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 16352]
+    first_i = 0
+    for i in num_iter:
+        runPickleImages(dir, first_i, i)
+        first_i = i
+
 #     test_SdA()
