@@ -21,8 +21,9 @@ import time
 from liblinearutil import *
 import nnClassifier
 
-pickled_folder = "C:/devl/work/ISH_Lasagne/src/DeepLearning/results_dae/CAE_16351_different_sizes-1489653160.29/run_4"
-results_file = open(pickled_folder + "/NN_output.txt", "a")
+# pickled_folder = "C:/devl/work/ISH_Lasagne/src/DeepLearning/results_dae/CAE_16351_different_sizes-1489653160.29/run_4"
+# results_file = open(pickled_folder + "/NN_output.txt", "a")
+
 
 def images_svm(pickled_file, x=None, all_labels=None, svm_negative_amount=800, num_labels=15, TRAIN_SPLIT=0.8):
     if isinstance(pickled_file, str):
@@ -84,15 +85,15 @@ def recunstruct_cae(folder_path):
     return cnn
 
 
-def classifier_score(neg_test, neg_train, pos_test, pos_train):
-    # NN_classifier_score(neg_test, neg_train, pos_test, pos_train)
+def classifier_score(neg_test, neg_train, pos_test, pos_train, results_file=None):
+    return nn_classifier_score(neg_test, neg_train, pos_test, pos_train, results_file)
     # svc_score(neg_test, neg_train, pos_test, pos_train)
     # return svc_score(neg_test, neg_train, pos_test, pos_train)
     # return linear_svc_score(neg_test, neg_train, pos_test, pos_train)
-    return lib_linear_score(neg_test, neg_train, pos_test, pos_train)
+    # return lib_linear_score(neg_test, neg_train, pos_test, pos_train)
 
 
-def checkLabelPredict(features, labels, cross_validation_parts=5):
+def check_label_predict(features, labels, cross_validation_parts=5, results_file=None):
     try:
         print("Features size- ", features.shape)
         print("Size of positive samples- ", (features[labels == 1]).shape)
@@ -109,8 +110,8 @@ def checkLabelPredict(features, labels, cross_validation_parts=5):
     negative_data_chunks = np.array_split(negative_data, cross_validation_parts)
     positive_data_chunks = np.array_split(positive_data, cross_validation_parts)
 
-    scores = np.zeros(cross_validation_parts)
-    auc_scores = np.zeros(cross_validation_parts)
+    nn_auc_scores = np.zeros(cross_validation_parts)
+    svm_auc_scores = np.zeros(cross_validation_parts)
 
     for cross_validation_index in range(0, cross_validation_parts):
         neg_test = negative_data_chunks[cross_validation_index]
@@ -129,17 +130,16 @@ def checkLabelPredict(features, labels, cross_validation_parts=5):
         pos_train = generate_positives(pos_train, neg_train.shape[0])
         print("         Number of generated positive train- ", pos_train.shape[0], " test- ", pos_test.shape[0])
 
-        # clf, score, test_params, test_y = classifier_score(neg_test, neg_train, pos_test, pos_train)
+        # clf, nn_score, test_params, test_y = classifier_score(neg_test, neg_train, pos_test, pos_train, results_file)
+        # clf, nn_score, test_params, test_y = lib_linear_score(neg_test, neg_train, pos_test, pos_train)
 
         # Test: change
-        # clf, score, test_params, test_y = NN_classifier_score(neg_test, neg_train, pos_test, pos_train)
-        # scores[cross_validation_index] = score
+        if results_file is not None:
+            clf, nn_score, test_params, test_y = nn_classifier_score(neg_test, neg_train, pos_test, pos_train, results_file)
+            nn_auc_scores[cross_validation_index] = nn_score
 
-        # clf, score, test_params, test_y = lib_linear_score(neg_test, neg_train, pos_test, pos_train)
-        # scores[cross_validation_index] = score
-
-        clf_svm, score_svm, test_params_svm, test_y_svm = svc_score(neg_test, neg_train, pos_test, pos_train)
-        auc_scores[cross_validation_index] = score_svm
+        clf_svm, svm_score, test_params_svm, test_y_svm = svc_score(neg_test, neg_train, pos_test, pos_train)
+        svm_auc_scores[cross_validation_index] = svm_score
 
         # try:
         #     test_predict = clf.predict(test_params)
@@ -151,9 +151,9 @@ def checkLabelPredict(features, labels, cross_validation_parts=5):
         #     print(e.message)
 
     try:
-        return np.average(scores), np.average(auc_scores)
+        return np.average(nn_auc_scores), np.average(svm_auc_scores)
     except:
-        return -111, np.average(auc_scores)
+        return -111, np.average(svm_auc_scores)
 
 
 def svc_score(neg_test, neg_train, pos_test, pos_train):
@@ -213,7 +213,7 @@ def lib_linear_score(neg_test, neg_train, pos_test, pos_train):
     # return clf, score, test_params, test_y
 
 
-def NN_classifier_score(neg_test, neg_train, pos_test, pos_train):
+def nn_classifier_score(neg_test, neg_train, pos_test, pos_train, results_file=None):
     pos_train_size = pos_train.shape[0]
     neg_train_size = neg_train.shape[0]
     y = np.transpose(np.concatenate(
@@ -229,10 +229,10 @@ def NN_classifier_score(neg_test, neg_train, pos_test, pos_train):
     x = np.concatenate((pos_train, neg_train), axis=0)
     test_params = np.concatenate((pos_test, neg_test), axis=0)
     print ("done with data to nn, training...")
-    return try_nn(test_params, test_y, x, y)
+    return try_nn(test_params, test_y, x, y, results_file)
 
 
-def try_nn(test_params, test_y, x, y):
+def try_nn(test_params, test_y, x, y, results_file=None):
     layers_size = [
         [1000, 100],
         [750, 250],
@@ -243,25 +243,25 @@ def try_nn(test_params, test_y, x, y):
         [1200, 800, 400]
     ]
     # temp_auc = np.zeros((3, 1))
-    for j in range(0, 1):
+    for ls in range(2, 3):
         try:
-            for i in range(0, 1):
+            for lr in range(0, 1):
                 try:
-                    learning_rate = 0.01 + 0.02 * i
+                    learning_rate = 0.01 + 0.02 * lr
                     classifier_net, error_rate, auc_score = \
                         nnClassifier.runNNclassifier(x, y, test_params, test_y, LEARNING_RATE=learning_rate,
-                                                     NUM_UNITS_HIDDEN_LAYER=layers_size[j])
+                                                     NUM_UNITS_HIDDEN_LAYER=layers_size[ls])
                     # temp_auc[i, j] = auc_score
-                    print("AUC- " + str(auc_score) + ": rate " + str(learning_rate) + ", layers " + str(layers_size[j]))
+                    print("AUC- " + str(auc_score) + ": rate " + str(learning_rate) + ", layers " + str(layers_size[ls]))
                     results_file.write("AUC- " + str(auc_score) + ", rate- " + str(learning_rate) + ", layers- " + str(
-                        layers_size[j]) + "\n")
+                        layers_size[ls]) + "\n")
                     results_file.flush()
                 except Exception as e:
-                    print("failed nn i-", i)
+                    print("failed nn i-", lr)
                     print(e)
                     print(e.message)
         except Exception as e:
-            print("failed nn i-", i)
+            print("failed nn i-", lr)
             print(e)
             print(e.message)
 
@@ -279,12 +279,15 @@ def generate_positives(positives, num_negatives):
 
 def run_svm(pickle_name=None, X_train=None, features=None, labels=None, svm_negative_amount=800, folder_path=None):
     num_labels = labels.shape[1]
+
+    results_file = None if folder_path is None else open(folder_path + "/NN_output.txt", "a")
+
     if features is None:
         features, labels = images_svm(pickle_name, X_train, labels, num_labels=num_labels,
                                       svm_negative_amount=svm_negative_amount)
 
-    errorRates = np.zeros(num_labels)
-    aucScores = np.zeros(num_labels)
+    nn_auc_scores = np.zeros(num_labels)
+    svm_auc_scores = np.zeros(num_labels)
 
     start_time = time.clock()
     # Test"
@@ -292,24 +295,24 @@ def run_svm(pickle_name=None, X_train=None, features=None, labels=None, svm_nega
     # for label in range(125, 89, -1):
 
         print("Svm for category- ", label)
-        labelPredRate, labelAucScore = checkLabelPredict(features, labels[:, label])
-        errorRates[label] = labelPredRate
-        aucScores[label] = labelAucScore
-        print("Average category error- ", labelPredRate, "%")
-        print("Average category Auc Score- ", labelAucScore)
+        nn_auc_score, svm_auc_score = check_label_predict(features, labels[:, label], results_file)
+        nn_auc_scores[label] = nn_auc_score
+        svm_auc_scores[label] = svm_auc_score
+        print("Average category NN auc score- ", nn_auc_score, "%")
+        print("Average category SVM auc score- ", svm_auc_score)
 
-    errorRate = np.average(errorRates)
-    aucAverageScore = np.average(aucScores)
-    print("Average error- ", errorRate, "%")
+    nn_auc_average_score = np.average(nn_auc_scores)
+    svm_auc_average_score = np.average(svm_auc_scores)
+    print("Average NN auc score- ", nn_auc_average_score, "%")
     # print("Prediction rate- ", 100 - errorRate, "%")
-    print("Average Auc Score- ", aucAverageScore)
+    print("Average SVM auc score- ", svm_auc_average_score)
     run_time = (time.clock() - start_time) / 60.
-    print("SVM took(min)- ", run_time)
+    print("Classifiers training took(min)- ", run_time)
 
     results_file.flush()
     # save_svm_data(features, labels, folder_path)
 
-    return errorRates, aucScores
+    return nn_auc_scores, svm_auc_scores
 
 
 def save_svm_data(features, labels, folder_path):

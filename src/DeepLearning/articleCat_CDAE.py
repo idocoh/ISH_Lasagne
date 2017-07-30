@@ -28,7 +28,6 @@ counter = 0
 LOAD_CAE_PATH = None
 
 
-
 def load2d(num_labels, batch_index=1, outputFile=None, input_width=320, input_height=160, end_index=16351, MULTI_POSITIVES=20,
            dropout_percent=0.1, data_set='ISH.pkl.gz', toShuffleInput = False, withZeroMeaning = False, TRAIN_PRECENT=0.8,
            steps=[5000, 10000, 15000, 16352], image_width=320, image_height=160):
@@ -108,7 +107,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         input_width=320, input_height=160, train_valid_split=0.2, multiple_positives=20, flip_batch=True,
         dropout_percent=0.1, amount_train=16351, activation=None, last_layer_activation=None, batch_size=32,
         layers_size=[5, 10, 20, 40], shuffle_input=False, zero_meaning=False, filters_type=3,
-        categories=15, svm_negative_amount=800, folder_name="default", number_conv_layers=4):
+        categories=15, svm_negative_amount=800, folder_name="default", number_conv_layers=4, use_nn_classifier=False):
 
     global counter
     folder_path = "results_dae"+FILE_SEPARATOR + folder_name + FILE_SEPARATOR + "run_" + str(counter) + FILE_SEPARATOR
@@ -1851,22 +1850,27 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         cae = load_network(LOAD_CAE_PATH)
         valid_accuracy = cae.train_history_[-1]['valid_accuracy']
 
+    if not use_nn_classifier:
+        folder_path = None  # Do not calculate NN classifier
     get_auc_score(cae, output_file, results_file, svm_negative_amount, train_y, x_train, folder_path)
 
     return valid_accuracy
 
 
-def get_auc_score(cnn, output_file, results_file, svm_negative_amount, train_y, x_train, folder_path):
+def get_auc_score(cnn, output_file, results_file, svm_negative_amount, train_y, x_train, folder_path=None):
     try:
         print("Running SVM")
         print("     Start time: ", time.ctime())
-        NN_aucs, SVM_aucs = run_svm(cnn, X_train=x_train, labels=train_y, svm_negative_amount=svm_negative_amount,
+        nn_aucs, svm_aucs = run_svm(cnn, X_train=x_train, labels=train_y, svm_negative_amount=svm_negative_amount,
                                folder_path=folder_path)
-        print("NN AUC", NN_aucs)
-        print("SVM AUC", SVM_aucs)
-        output_file.write("NN auc: " + str(NN_aucs) + "\n")
-        output_file.write("SVM auc: " + str(SVM_aucs) + "\n")
-        results_file.write(str(np.average(SVM_aucs)) + "\n" + str(SVM_aucs))
+        print("NN AUC", nn_aucs)
+        print("SVM AUC", svm_aucs)
+        output_file.write("NN auc: " + str(nn_aucs) + "\n")
+        output_file.write("SVM auc: " + str(svm_aucs) + "\n")
+        if nn_aucs.any():  # If nn classifier is calculated, it will have values different than zero
+            results_file.write(str(np.average(svm_aucs)) + "\t" + str(np.average(nn_aucs)) + "\n" + str(svm_aucs) + "\n" + str(nn_aucs))
+        else:
+            results_file.write(str(np.average(svm_aucs)) + "\n" + str(svm_aucs))
 
         output_file.flush()
         results_file.flush()
@@ -1912,7 +1916,8 @@ def run_all():
     svm_negative_amount = 200
     input_noise_rate = 0.2
     zero_meaning = False
-    to_shuffle_input= False
+    to_shuffle_input = False
+    use_nn_classifier = False
     epochs = 20
     folder_name = "CAE_" + str(amount_train) + "_Shuffle_input_2_unpool-" + str(time.time())
 
@@ -1988,7 +1993,8 @@ def run_all():
                                                                         input_height=image_height[input_size_index],
                                                                         svm_negative_amount=svm_negative_amount,
                                                                         flip_batch=True,
-                                                                        batch_size=32)
+                                                                        batch_size=32,
+                                                                        use_nn_classifier=use_nn_classifier)
 
                                                                 except Exception as e:
                                                                     print("failed Filter type #", filter_type_index)
