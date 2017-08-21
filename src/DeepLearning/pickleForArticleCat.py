@@ -118,6 +118,14 @@ def pickleAllImages(num_labels, end_index=16351, svm_size=600, steps=[5000, 1000
         train_set9, valid_set9, test_set9 = cPickle.load(f9)
         f9.close()
         pData = np.concatenate((train_set1[0], train_set2[0], train_set3[0], train_set4[0], train_set5[0], train_set6[0], train_set7[0], train_set8[0], train_set9[0]), axis=0)
+        for i in range(8, len(steps)-1):
+            dir_i = "pickled_images" + FILE_SEPARATOR + "ISH-noLearn_" + str(steps[i]) + "_" + str(
+                steps[i+1]) + "_" + str(image_width) + "_" + str(image_height) + ".pkl.gz"
+            f_i = gzip.open(dir_i, 'rb')
+            train_set_i, valid_set_i, test_set_i = cPickle.load(f_i)
+            f_i.close()
+            pData = np.concatenate((pData, train_set_i[0]), axis=0)
+
         print "Done Reading images"
         if svm_size > 0:
             return seperateSVM(pData, pLabel, svm_size)

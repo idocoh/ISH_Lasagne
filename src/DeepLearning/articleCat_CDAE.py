@@ -114,7 +114,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
 
-    All_Results_FIle = "results_dae"+FILE_SEPARATOR + "JULY_home_results.txt"
+    All_Results_FIle = "results_dae"+FILE_SEPARATOR + "August_results.txt"
     PARAMS_FILE_NAME = folder_path + "parameters.txt"
     # HIDDEN_LAYER_OUTPUT_FILE_NAME = folder_path + "hiddenLayerOutput.pkl.gz"
     # FIG_FILE_NAME = folder_path + "fig"
@@ -666,6 +666,97 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
 
             return cnn
 
+        def create_cae_1pool_4conv(input_height, input_width):
+
+            cnn = NeuralNet(layers=[
+                ('input', layers.InputLayer),
+                ('conv1', layers.Conv2DLayer),
+                ('conv11', layers.Conv2DLayer),
+                ('conv12', layers.Conv2DLayer),
+                ('conv13', layers.Conv2DLayer),
+
+                ('pool1', layers.MaxPool2DLayer),
+
+                ('conv2', layers.Conv2DLayer),
+                ('conv21', layers.Conv2DLayer),
+                ('conv22', layers.Conv2DLayer),
+                ('conv23', layers.Conv2DLayer),
+
+                ('unpool1', Unpool2DLayer),
+
+                ('conv3', layers.Conv2DLayer),
+                ('conv31', layers.Conv2DLayer),
+                ('conv32', layers.Conv2DLayer),
+                ('conv33', layers.Conv2DLayer),
+
+                ('conv4', layers.Conv2DLayer),
+                ('output_layer', ReshapeLayer),
+            ],
+
+                input_shape=(None, 1, input_width, input_height),
+                # Layer current size - 1x300x140
+
+                conv1_num_filters=layers_size[0], conv1_filter_size=filter_1, conv1_nonlinearity=activation,
+                # conv1_border_mode="same",
+                conv1_pad="same",
+                conv11_num_filters=layers_size[0], conv11_filter_size=filter_1, conv11_nonlinearity=activation,
+                # conv11_border_mode="same",
+                conv11_pad="same",
+                conv12_num_filters=layers_size[0], conv12_filter_size=filter_1, conv12_nonlinearity=activation,
+                # conv12_border_mode="same",
+                conv12_pad="same",
+                conv13_num_filters=layers_size[0], conv13_filter_size=filter_1, conv13_nonlinearity=activation,
+                # conv13_border_mode="same",
+                conv13_pad="same",
+
+                pool1_pool_size=(2, 2),
+
+                conv2_num_filters=layers_size[1], conv2_filter_size=filter_2, conv2_nonlinearity=activation,
+                # conv2_border_mode="same",
+                conv2_pad="same",
+                conv21_num_filters=layers_size[1], conv21_filter_size=filter_2, conv21_nonlinearity=activation,
+                # conv21_border_mode="same",
+                conv21_pad="same",
+                conv22_num_filters=layers_size[1], conv22_filter_size=filter_2, conv22_nonlinearity=activation,
+                # conv22_border_mode="same",
+                conv22_pad="same",
+                conv23_num_filters=1, conv23_filter_size=filter_2, conv23_nonlinearity=activation,
+                # conv23_border_mode="same",
+                conv23_pad="same",
+
+                unpool1_ds=(2, 2),
+
+                conv3_num_filters=layers_size[2], conv3_filter_size=filter_3, conv3_nonlinearity=activation,
+                # conv3_border_mode="same",
+                conv3_pad="same",
+                conv31_num_filters=layers_size[2], conv31_filter_size=filter_3, conv31_nonlinearity=activation,
+                # conv31_border_mode="same",
+                conv31_pad="same",
+                conv32_num_filters=layers_size[2], conv32_filter_size=filter_3, conv32_nonlinearity=activation,
+                # conv32_border_mode="same",
+                conv32_pad="same",
+                conv33_num_filters=layers_size[2], conv33_filter_size=filter_3, conv33_nonlinearity=activation,
+                # conv33_border_mode="same",
+                conv33_pad="same",
+
+                conv4_num_filters=1, conv4_filter_size=filter_4, conv4_nonlinearity=last_layer_activation,
+                # conv4_border_mode="same",
+                conv4_pad="same",
+
+                output_layer_shape=(([0], -1)),
+
+                update_learning_rate=learning_rate,
+                update_momentum=update_momentum,
+                update=nesterov_momentum,
+                train_split=TrainSplit(eval_size=train_valid_split),
+                batch_iterator_train=FlipBatchIterator(batch_size=batch_size) if flip_batch else BatchIterator(batch_size=batch_size),
+                regression=True,
+                max_epochs=epochs,
+                verbose=1,
+                hiddenLayer_to_output=9)
+
+            return cnn
+
         def create_cae_4pool_3conv(input_height, input_width):
 
             cnn = NeuralNet(layers=[
@@ -1121,6 +1212,84 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
 
             return cnn
 
+        def create_cae_1pool_3conv(input_height, input_width):
+
+            cnn = NeuralNet(layers=[
+                ('input', layers.InputLayer),
+                ('conv1', layers.Conv2DLayer),
+                ('conv11', layers.Conv2DLayer),
+                ('conv12', layers.Conv2DLayer),
+
+                ('pool1', layers.MaxPool2DLayer),
+                ('conv2', layers.Conv2DLayer),
+                ('conv21', layers.Conv2DLayer),
+                ('conv22', layers.Conv2DLayer),
+
+                ('unpool1', Unpool2DLayer),
+                ('conv3', layers.Conv2DLayer),
+                ('conv31', layers.Conv2DLayer),
+                ('conv32', layers.Conv2DLayer),
+
+                ('conv4', layers.Conv2DLayer),
+                ('output_layer', ReshapeLayer),
+            ],
+
+                input_shape=(None, 1, input_width, input_height),
+                # Layer current size - 1x300x140
+
+                conv1_num_filters=layers_size[0], conv1_filter_size=filter_1, conv1_nonlinearity=activation,
+                # conv1_border_mode="same",
+                conv1_pad="same",
+                conv11_num_filters=layers_size[0], conv11_filter_size=filter_1, conv11_nonlinearity=activation,
+                # conv11_border_mode="same",
+                conv11_pad="same",
+                conv12_num_filters=layers_size[0], conv12_filter_size=filter_1, conv12_nonlinearity=activation,
+                # conv12_border_mode="same",
+                conv12_pad="same",
+
+                pool1_pool_size=(2, 2),
+
+                conv2_num_filters=layers_size[1], conv2_filter_size=filter_2, conv2_nonlinearity=activation,
+                # conv2_border_mode="same",
+                conv2_pad="same",
+                conv21_num_filters=layers_size[1], conv21_filter_size=filter_2, conv21_nonlinearity=activation,
+                # conv21_border_mode="same",
+                conv21_pad="same",
+                conv22_num_filters=1, conv22_filter_size=filter_2, conv22_nonlinearity=activation,
+                # conv22_border_mode="same",
+                conv22_pad="same",
+
+                unpool1_ds=(2, 2),
+
+                conv3_num_filters=layers_size[2], conv3_filter_size=filter_3, conv3_nonlinearity=activation,
+                # conv3_border_mode="same",
+                conv3_pad="same",
+                conv31_num_filters=layers_size[2], conv31_filter_size=filter_3, conv31_nonlinearity=activation,
+                # conv31_border_mode="same",
+                conv31_pad="same",
+                conv32_num_filters=layers_size[2], conv32_filter_size=filter_3, conv32_nonlinearity=activation,
+                # conv32_border_mode="same",
+                conv32_pad="same",
+
+                conv4_num_filters=1, conv4_filter_size=filter_4, conv4_nonlinearity=last_layer_activation,
+                # conv4_border_mode="same",
+                conv4_pad="same",
+
+                output_layer_shape=(([0], -1)),
+
+                update_learning_rate=learning_rate,
+                update_momentum=update_momentum,
+                update=nesterov_momentum,
+                train_split=TrainSplit(eval_size=train_valid_split),
+                batch_iterator_train=FlipBatchIterator(batch_size=batch_size) if flip_batch else BatchIterator(
+                    batch_size=batch_size),
+                regression=True,
+                max_epochs=epochs,
+                verbose=1,
+                hiddenLayer_to_output=7)
+
+            return cnn
+
         def create_cae_4pool_2conv(input_height, input_width):
 
             cnn = NeuralNet(layers=[
@@ -1491,6 +1660,136 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
 
             return cnn
 
+        def create_cae_1pool_2conv(input_height, input_width):
+
+            cnn = NeuralNet(layers=[
+                ('input', layers.InputLayer),
+                ('conv1', layers.Conv2DLayer),
+                ('conv11', layers.Conv2DLayer),
+
+                ('pool1', layers.MaxPool2DLayer),
+                ('conv2', layers.Conv2DLayer),
+                ('conv21', layers.Conv2DLayer),
+
+                ('unpool1', Unpool2DLayer),
+                ('conv3', layers.Conv2DLayer),
+                ('conv31', layers.Conv2DLayer),
+
+                ('conv4', layers.Conv2DLayer),
+                ('output_layer', ReshapeLayer),
+            ],
+
+                input_shape=(None, 1, input_width, input_height),
+                # Layer current size - 1x300x140
+
+                conv1_num_filters=layers_size[0], conv1_filter_size=filter_1, conv1_nonlinearity=activation,
+                # conv1_border_mode="same",
+                conv1_pad="same",
+                conv11_num_filters=layers_size[0], conv11_filter_size=filter_1, conv11_nonlinearity=activation,
+                # conv11_border_mode="same",
+                conv11_pad="same",
+
+                pool1_pool_size=(2, 2),
+
+                conv2_num_filters=layers_size[1], conv2_filter_size=filter_2, conv2_nonlinearity=activation,
+                # conv2_border_mode="same",
+                conv2_pad="same",
+                conv21_num_filters=1, conv21_filter_size=filter_2, conv21_nonlinearity=activation,
+                # conv21_border_mode="same",
+                conv21_pad="same",
+
+                unpool1_ds=(2, 2),
+
+                conv3_num_filters=layers_size[2], conv3_filter_size=filter_3, conv3_nonlinearity=activation,
+                # conv3_border_mode="same",
+                conv3_pad="same",
+                conv31_num_filters=layers_size[2], conv31_filter_size=filter_3, conv31_nonlinearity=activation,
+                # conv31_border_mode="same",
+                conv31_pad="same",
+
+                conv4_num_filters=1, conv4_filter_size=filter_4, conv4_nonlinearity=last_layer_activation,
+                # conv4_border_mode="same",
+                conv4_pad="same",
+
+                output_layer_shape=(([0], -1)),
+
+                update_learning_rate=learning_rate,
+                update_momentum=update_momentum,
+                update=nesterov_momentum,
+                train_split=TrainSplit(eval_size=train_valid_split),
+                batch_iterator_train=FlipBatchIterator(batch_size=batch_size) if flip_batch else BatchIterator(
+                    batch_size=batch_size),
+                regression=True,
+                max_epochs=epochs,
+                verbose=1,
+                hiddenLayer_to_output=5)
+
+            return cnn
+
+        if number_pooling_layers == 1:
+            if filters_type == 3:
+                filter_1 = (3, 3)
+                filter_2 = (3, 3)
+                filter_3 = (3, 3)
+                filter_4 = (3, 3)
+                filter_5 = 0
+                filter_6 = 0
+                filter_7 = 0
+                filter_8 = 0
+                filter_9 = 0
+                filter_10 = 0
+            elif filters_type == 5:
+                filter_1 = (5, 5)
+                filter_2 = (5, 5)
+                filter_3 = (5, 5)
+                filter_4 = (5, 5)
+                filter_5 = 0
+                filter_6 = 0
+                filter_7 = 0
+                filter_8 = 0
+                filter_9 = 0
+                filter_10 = 0
+            elif filters_type == 7:
+                filter_1 = (7, 7)
+                filter_2 = (5, 5)
+                filter_3 = (3, 3)
+                filter_4 = (5, 5)
+                filter_5 = (7, 7)
+                filter_6 = (5, 5)
+                filter_7 = 0
+                filter_8 = 0
+                filter_9 = 0
+                filter_10 = 0
+            elif filters_type == 9:
+                filter_1 = (9, 9)
+                filter_2 = (7, 7)
+                filter_3 = (9, 9)
+                filter_4 = (5, 5)
+                filter_5 = 0
+                filter_6 = 0
+                filter_7 = 0
+                filter_8 = 0
+                filter_9 = 0
+                filter_10 = 0
+            elif filters_type == 11:
+                filter_1 = (11, 11)
+                filter_2 = (9, 9)
+                filter_3 = (11, 11)
+                filter_4 = (5, 5)
+                filter_5 = 0
+                filter_6 = 0
+                filter_7 = 0
+                filter_8 = 0
+                filter_9 = 0
+                filter_10 = 0
+
+            if number_conv_layers == 4:
+                cnn = create_cae_1pool_4conv(input_height, input_width)
+            elif number_conv_layers == 3:
+                cnn = create_cae_1pool_3conv(input_height, input_width)
+            elif number_conv_layers == 2:
+                cnn = create_cae_1pool_2conv(input_height, input_width)
+
         if number_pooling_layers == 2:
             if filters_type == 3:
                 filter_1 = (3, 3)
@@ -1782,7 +2081,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
             "Decay Factor: " + str(update_rho) + "\n"))
         results_file.write(str(update_momentum) + "\t")
         output_file.write(("FlipBatcherIterater" if flip_batch else "BatchIterator") + " with batch: " + str(batch_size) + "\n")
-        results_file.write("FlipBatcherIterater\t" + str(batch_size) + "\t")
+        results_file.write(("FlipBatcherIterater" if flip_batch else "BatchIterator") + "\t" + str(batch_size) + "\t")
         output_file.write("Num epochs: " + str(epochs) + "\n")
         results_file.write(str(epochs) + "\t")
         output_file.write("Layers size: " + str(layers_size) + "\n\n")
@@ -1919,7 +2218,7 @@ def run_all():
     to_shuffle_input = False
     use_nn_classifier = False
     epochs = 20
-    folder_name = "CAE_" + str(amount_train) + "_Shuffle_input_2_unpool-" + str(time.time())
+    folder_name = "CAE_" + str(amount_train) + "_Shuffle_inputs-" + str(time.time())
 
     steps = [
         [5000, 10000, 16352],
@@ -1927,39 +2226,55 @@ def run_all():
         [5000, 10000, 16352],
         [5000, 10000, 16352],
         [5000, 11000, 16352],
-        [5000, 10000, 16352],
+        [4000, 8000, 12000, 16352],
         [5000, 10000, 15000, 16352],
         [5000, 10000, 16352],
         [2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 16352],
         [2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 16352],
         [5000, 10000, 16352],
         [2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 16352],
+        [5000, 10000, 16352],
+        [1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500, 8000, 8500,
+         9000, 9500, 10000, 10500, 11000, 11500, 12000, 12500, 13000, 13500, 14000, 14500, 15000, 15500,
+         16000, 16352],
+        [5000, 10000, 16352],
+        [5000, 10000, 16352],
+        [4000, 8000, 12000, 16352],
+        [4000, 8000, 12000, 16352],
+        [5000, 10000, 16352],
+        [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 11000, 12000, 13000, 14000, 15000, 16000, 16352]
     ]
-    image_width = [160, 160, 200, 240, 300, 280, 320, 240, 320, 400, 160, 480]
-    image_height = [80, 100, 120, 120, 140, 140, 160, 120, 200, 240, 80, 240]
-    number_pooling_layers = [2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3]
+    # indexes   = [0,   1,   2,   3,   4,   5,   6,   7,   8,   9,   10,  11,  12,  13,  14,  15,  16,  17,  18, 19]
+    image_width = [160, 160, 200, 240, 300, 280, 320, 240, 320, 400, 160, 480, 120, 960, 100, 200, 200, 240, 80, 640]
+    image_height = [80, 100, 120, 120, 140, 140, 160, 120, 200, 240, 80,  240, 60,  480, 80,  160, 200, 160, 40, 320]
+    number_pooling_layers = [2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 1, 4, 2, 2, 2, 2, 1, 4]
     layers_size = [
-        [16, 16, 16, 16, 16, 16, 16, 16, 16],
         [8, 8, 8, 8, 8, 8, 8, 8, 8],
+        [4, 4, 4, 4, 4, 4, 4, 4, 4],
+        [16, 16, 16, 16, 16, 16, 16, 16, 16],
         [32, 64, 128, 64, 32],
         [16, 32, 32, 64, 32, 32, 16]
-        ]
+    ]
+    tmp_i = 0
     for zero_meaning in [False, True]:
         try:
             for to_shuffle_input in [False, True]:
                 try:
                     # for_zm = 0
                     # for_zm = 5 if not zero_meaning else for_zm
-                    for input_size_index in [11, 5]: #range(4 + for_zm, -1 + for_zm, -1):
+                    for num_filters_index in range(0, 3, 1):
                         try:
-                            for num_filters_index in range(0, 2, 1):
+                            for lr in range(5, 1, -1):
                                 try:
                                     for filter_type in range(2, -1, -2):
                                         try:
                                             for number_conv_layers in range(4, 1, -2):
                                                 try:
-                                                    for lr in range(2, 6, 1):
+                                                    for input_size_index in [11, 12, 14, 15, 16, 5, 17]: #range(4 + for_zm, -1 + for_zm, -1):
                                                         try:
+                                                            if tmp_i < 1 or ((lr == 2 or (lr == 3 and filter_type == 2)) and input_size_index != 17):
+                                                                tmp_i += 1
+                                                                continue
                                                             for num_images in range(0, 1, 1):
                                                                 data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1,
                                                                               steps=steps[input_size_index],
@@ -2014,8 +2329,8 @@ def run_all():
                                             print(e)
                                             print(e.message)
                                 except Exception as e:
-                                        print(e)
-                                        print(e.message)
+                                    print(e)
+                                    print(e.message)
                         except Exception as e:
                             print(e)
                             print(e.message)

@@ -200,12 +200,19 @@ if __name__ == '__main__':#     dir = "C:\\Users\\Abigail\\Desktop\\Ido\\pyWS\\F
     
     dir = "C:\Users\Research\Pictures\BrainISHimages"
 
-    IMAGE_WIDTH = 480
-    IMAGE_HEIGHT = 240
-    num_iter = [2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 16352]
-    first_i = 0
-    for i in num_iter:
-        runPickleImages(dir, first_i, i)
-        first_i = i
+    try:
+        IMAGE_WIDTH = 640
+        IMAGE_HEIGHT = 320
+        num_iter = [2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 11000, 12000, 13000, 14000, 15000,
+                    16000, 16352]
 
-#     test_SdA()
+        first_i = 1000
+        for i in num_iter:
+            runPickleImages(dir, first_i, i)
+            first_i = i
+    except:
+        pass
+
+    #     test_SdA()
+
+

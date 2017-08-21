@@ -93,7 +93,7 @@ def classifier_score(neg_test, neg_train, pos_test, pos_train, results_file=None
     # return lib_linear_score(neg_test, neg_train, pos_test, pos_train)
 
 
-def check_label_predict(features, labels, cross_validation_parts=5, results_file=None):
+def check_label_predict(features, labels, results_file=None, cross_validation_parts=5):
     try:
         print("Features size- ", features.shape)
         print("Size of positive samples- ", (features[labels == 1]).shape)
@@ -309,7 +309,7 @@ def run_svm(pickle_name=None, X_train=None, features=None, labels=None, svm_nega
     run_time = (time.clock() - start_time) / 60.
     print("Classifiers training took(min)- ", run_time)
 
-    results_file.flush()
+    # results_file.flush()
     # save_svm_data(features, labels, folder_path)
 
     return nn_auc_scores, svm_auc_scores
