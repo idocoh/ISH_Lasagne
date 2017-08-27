@@ -114,7 +114,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
 
-    All_Results_FIle = "results_dae"+FILE_SEPARATOR + "August_results.txt"
+    All_Results_FIle = "results_dae"+FILE_SEPARATOR + "August_end_results.txt"
     PARAMS_FILE_NAME = folder_path + "parameters.txt"
     # HIDDEN_LAYER_OUTPUT_FILE_NAME = folder_path + "hiddenLayerOutput.pkl.gz"
     # FIG_FILE_NAME = folder_path + "fig"
@@ -2234,7 +2234,7 @@ def run_all():
         [5000, 10000, 16352],
         [2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 16352],
         [5000, 10000, 16352],
-        [1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500, 8000, 8500,
+        [500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500, 8000, 8500,
          9000, 9500, 10000, 10500, 11000, 11500, 12000, 12500, 13000, 13500, 14000, 14500, 15000, 15500,
          16000, 16352],
         [5000, 10000, 16352],
@@ -2256,30 +2256,35 @@ def run_all():
         [16, 32, 32, 64, 32, 32, 16]
     ]
     tmp_i = 0
-    for zero_meaning in [False, True]:
+    for zero_meaning in [False]:
         try:
-            for to_shuffle_input in [False, True]:
+            for input_size_index in [13, 19, 18]:
                 try:
                     # for_zm = 0
                     # for_zm = 5 if not zero_meaning else for_zm
-                    for num_filters_index in range(0, 3, 1):
+                    data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1,
+                                  steps=steps[input_size_index],
+                                  image_width=image_width[input_size_index],
+                                  image_height=image_height[input_size_index])
+
+                    for num_filters_index in [1]:  # range(0, 3, 1):
                         try:
-                            for lr in range(5, 1, -1):
+                            for lr in [2, 3, 4, 5, 1, 0, 6]:  # range(5, 1, -1):
                                 try:
-                                    for filter_type in range(2, -1, -2):
+                                    for filter_type in [2, 0, 1]:  # range(2, -1, -2):
                                         try:
-                                            for number_conv_layers in range(4, 1, -2):
+                                            for number_conv_layers in range(2, 5, 1):
                                                 try:
-                                                    for input_size_index in [11, 12, 14, 15, 16, 5, 17]: #range(4 + for_zm, -1 + for_zm, -1):
+                                                    for to_shuffle_input in [False]:
                                                         try:
-                                                            if tmp_i < 1 or ((lr == 2 or (lr == 3 and filter_type == 2)) and input_size_index != 17):
-                                                                tmp_i += 1
-                                                                continue
+                                                            # if tmp_i < 1 or ((lr == 2 or (lr == 3 and filter_type == 2)) and input_size_index != 17):
+                                                            #     tmp_i += 1
+                                                            #     continue
                                                             for num_images in range(0, 1, 1):
-                                                                data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1,
-                                                                              steps=steps[input_size_index],
-                                                                              image_width=image_width[input_size_index],
-                                                                              image_height=image_height[input_size_index])
+                                                                # data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1,
+                                                                #               steps=steps[input_size_index],
+                                                                #               image_width=image_width[input_size_index],
+                                                                #               image_height=image_height[input_size_index])
                                                                 learning_rate = 0.03 + 0.005 * lr
                                                                 learning_rate = learning_rate/0.02 if zero_meaning else learning_rate #because std is about 0.02
                                                                 filter_type_index = 11 - 4 * filter_type
@@ -2324,7 +2329,6 @@ def run_all():
                                                 except Exception as e:
                                                     print(e)
                                                     print(e.message)
-
                                         except Exception as e:
                                             print(e)
                                             print(e.message)
