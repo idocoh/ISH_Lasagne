@@ -2273,9 +2273,9 @@ def run_all():
                                                 try:
                                                     for input_size_index in [8]: #range(4 + for_zm, -1 + for_zm, -1):
                                                         try:
-                                                            # if tmp_i < 1 or ((lr == 2 or (lr == 3 and filter_type == 2)) and input_size_index != 17):
+                                                            if lr == 2 and filter_type == 2 and number_conv_layers == 4:
                                                             #     tmp_i += 1
-                                                            #     continue
+                                                                continue
                                                             for num_images in range(0, 1, 1):
                                                                 data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1,
                                                                               steps=steps[input_size_index],
