@@ -22,9 +22,10 @@ from liblinearutil import *
 import nnClassifier
 
 # LOAD_CAE_PATH = "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_300x140_240x120-1490162342.58\run_0\\"
-LOAD_CAE_PATH = "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_different_sizes-1489986570.75\run_6\\"
-results_file = open(LOAD_CAE_PATH.replace("\r", "\\r") + "/NN_15_output.txt", "a")
+# LOAD_CAE_PATH = "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_Shuffle_inputs-1502722116.38\run_31\\"
+# results_file = open(LOAD_CAE_PATH.replace("\r", "\\r") + "/NN_15_output.txt", "a")
 CONSTANT_NEGATIVES = True
+
 
 def images_svm(pickled_file, x=None, all_labels=None, svm_negative_amount=800, num_labels=15, TRAIN_SPLIT=0.8):
     if isinstance(pickled_file, str):
@@ -92,15 +93,15 @@ def recunstruct_cae(folder_path):
     return cnn
 
 
-def classifier_score(neg_test, neg_train, pos_test, pos_train):
-    # NN_classifier_score(neg_test, neg_train, pos_test, pos_train)
+def classifier_score(neg_test, neg_train, pos_test, pos_train, results_file=None):
+    return nn_classifier_score(neg_test, neg_train, pos_test, pos_train, results_file)
     # svc_score(neg_test, neg_train, pos_test, pos_train)
     # return svc_score(neg_test, neg_train, pos_test, pos_train)
     # return linear_svc_score(neg_test, neg_train, pos_test, pos_train)
-    return lib_linear_score(neg_test, neg_train, pos_test, pos_train)
+    # return lib_linear_score(neg_test, neg_train, pos_test, pos_train)
 
 
-def checkLabelPredict(features, labels, cross_validation_parts=5):
+def check_label_predict(features, labels, results_file=None, cross_validation_parts=5):
     try:
         print("Features size- ", features.shape)
         print("Size of positive samples- ", (features[labels == 1]).shape)
@@ -117,8 +118,8 @@ def checkLabelPredict(features, labels, cross_validation_parts=5):
     negative_data_chunks = np.array_split(negative_data, cross_validation_parts)
     positive_data_chunks = np.array_split(positive_data, cross_validation_parts)
 
-    nn_aucs = np.zeros(cross_validation_parts)
-    svm_aucs = np.zeros(cross_validation_parts)
+    nn_auc_scores = np.zeros(cross_validation_parts)
+    svm_auc_scores = np.zeros(cross_validation_parts)
 
     for cross_validation_index in range(0, cross_validation_parts):
         neg_test = negative_data_chunks[cross_validation_index]
@@ -137,30 +138,33 @@ def checkLabelPredict(features, labels, cross_validation_parts=5):
         pos_train = generate_positives(pos_train, neg_train.shape[0])
         print("         Number of generated positive train- ", pos_train.shape[0], " test- ", pos_test.shape[0])
 
-        # clf, score, test_params, test_y = classifier_score(neg_test, neg_train, pos_test, pos_train)
+        # clf, nn_score, test_params, test_y = classifier_score(neg_test, neg_train, pos_test, pos_train, results_file)
+        # clf, nn_score, test_params, test_y = lib_linear_score(neg_test, neg_train, pos_test, pos_train)
 
         # Test: change
-        clf, score, test_params, test_y = NN_classifier_score(neg_test, neg_train, pos_test, pos_train)
-        nn_aucs[cross_validation_index] = score
+        if results_file is not None:
+            clf, nn_score, test_params, test_y = nn_classifier_score(neg_test, neg_train, pos_test, pos_train, results_file)
+            nn_auc_scores[cross_validation_index] = nn_score
 
-        # clf, score, test_params, test_y = lib_linear_score(neg_test, neg_train, pos_test, pos_train)
-        # nn_aucs[cross_validation_index] = score
-        clf_svm, score_svm, test_params_svm, test_y_svm = svc_score(neg_test, neg_train, pos_test, pos_train)
-        svm_aucs[cross_validation_index] = score_svm
+        clf_svm, svm_score, test_params_svm, test_y_svm = svc_score(neg_test, neg_train, pos_test, pos_train)
+        svm_auc_scores[cross_validation_index] = svm_score
+
+        if results_file is not None:
+            results_file.write("& & & &" + str(svm_score) + "\n")
 
         # try:
         #     test_predict = clf.predict(test_params)
         #     auc_score = roc_auc_score(test_y, test_predict)
         #     print("AUC cross-", auc_score)
-        #     svm_aucs[cross_validation_index] = auc_score
+        #     auc_scores[cross_validation_index] = auc_score
         # except Exception as e:
         #     print(e)
         #     print(e.message)
 
     try:
-        return np.average(nn_aucs), np.average(svm_aucs)
+        return np.average(nn_auc_scores), np.average(svm_auc_scores)
     except:
-        return np.average(nn_aucs), 999
+        return -111, np.average(svm_auc_scores)
 
 
 def svc_score(neg_test, neg_train, pos_test, pos_train):
@@ -220,7 +224,7 @@ def lib_linear_score(neg_test, neg_train, pos_test, pos_train):
     # return clf, score, test_params, test_y
 
 
-def NN_classifier_score(neg_test, neg_train, pos_test, pos_train):
+def nn_classifier_score(neg_test, neg_train, pos_test, pos_train, results_file=None):
     pos_train_size = pos_train.shape[0]
     neg_train_size = neg_train.shape[0]
     y = np.transpose(np.concatenate(
@@ -236,42 +240,49 @@ def NN_classifier_score(neg_test, neg_train, pos_test, pos_train):
     x = np.concatenate((pos_train, neg_train), axis=0)
     test_params = np.concatenate((pos_test, neg_test), axis=0)
     print ("done with data to nn, training...")
-    return try_nn(test_params, test_y, x, y)
+    return try_nn(test_params, test_y, x, y, results_file)
 
 
-def try_nn(test_params, test_y, x, y):
+def try_nn(test_params, test_y, x, y, results_file=None):
     layers_size = [
-        # [1000, 100],
-        # [750, 250],
-        # [500, 100],
-        [1000, 300]
-        # [1000, 250, 50],
-        # [1000, 500, 250],
-        # [1200, 800, 400]
+        [500, 100],
+        [750, 250],
+        [1000, 100],
+        [1000, 300],
+        [1000, 250, 50],
+        [1000, 500, 250],
+        [1200, 800, 400]
     ]
-    # temp_auc = np.zeros((3, 1))
-    for j in range(0, 1):
+    temp_aucs = np.zeros((7, 10))
+    i, j = -1, -1
+    for ls in range(0, 7):
         try:
-            for i in range(0, 1):
+            # best_auc = 0
+            # bad = 0
+            i += 1
+            for lr in range(0, 5):
                 try:
-                    learning_rate = 0.01 + 0.002 * i
+                    j += 1
+                    learning_rate = 0.01 + 0.02 * lr
                     classifier_net, error_rate, auc_score = \
                         nnClassifier.runNNclassifier(x, y, test_params, test_y, LEARNING_RATE=learning_rate,
-                                                     NUM_UNITS_HIDDEN_LAYER=layers_size[j])
-                    # temp_auc[i, j] = auc_score
-                    print("AUC- " + str(auc_score) + ": rate " + str(learning_rate) + ", layers " + str(layers_size[j]))
-                    results_file.write("AUC- " + str(auc_score) + ", rate- " + str(learning_rate) + ", layers- " + str(
-                        layers_size[j]) + "\n")
+                                                     NUM_UNITS_HIDDEN_LAYER=layers_size[ls])
+                    temp_aucs[i, j] = auc_score
+                    print("AUC- " + str(auc_score) + ": rate " + str(learning_rate) + ", layers " + str(layers_size[ls]))
+                    results_file.write("&" + str(auc_score) + "&" + str(learning_rate) + "&" + str(layers_size[ls]) + "\n")
+                    # results_file.write("AUC- " + str(auc_score) + ", rate- " + str(learning_rate) + ", layers- " +
+                    # str(layers_size[ls]) + "\n")
                     results_file.flush()
+                    # if best_auc > np.average(temp_aucs[i]) + 0.003 and bad > 2:
+                    #     break
+                    # else:
+                    #     best_auc = np.maximum(np.average(temp_aucs[i]), best_auc)
                 except Exception as e:
-                    print("failed nn i-", i)
+                    print("failed nn lr-", lr)
                     print(e)
                     print(e.message)
-            # results_file.write("Max AUC- " + str(np.max(temp_auc[:, j])) + ", rate- all, layers- " + str(
-            #     layers_size[j]) + "\n")
-            # results_file.flush()
         except Exception as e:
-            print("failed nn i-", i)
+            print("failed nn ls-", ls)
             print(e)
             print(e.message)
 
@@ -289,46 +300,41 @@ def generate_positives(positives, num_negatives):
 
 def run_svm(pickle_name=None, X_train=None, features=None, labels=None, svm_negative_amount=800, folder_path=None):
     num_labels = labels.shape[1]
+
+    results_file = None if folder_path is None else open(folder_path + "/NN_output.txt", "a")
+
     if features is None:
         features, labels = images_svm(pickle_name, X_train, labels, num_labels=num_labels,
                                       svm_negative_amount=svm_negative_amount)
 
-    nn_aucs = np.zeros(num_labels)
-    svm_aucs = np.zeros(num_labels)
+    nn_auc_scores = np.zeros(num_labels)
+    svm_auc_scores = np.zeros(num_labels)
 
     start_time = time.clock()
     # Test"
     for label in range(0, num_labels):
-    # for label in range(125, 89, -1):
 
-        print("Svm for category- ", label)
-        results_file.write("Svm for category #" + str(label+1) + "\n")
-        results_file.flush()
-        label_nn_auc, label_svm_auc = checkLabelPredict(features, labels[:, label])
-        nn_aucs[label] = label_nn_auc
-        svm_aucs[label] = label_svm_auc
-        print("Average category NN AUC- ", label_nn_auc, "%")
-        print("Average category SVM AUC- ", label_svm_auc)
+        print("Svm for category- ", label+1)
+        if results_file is not None:
+            results_file.write(str(label+1) + "\n")
+        nn_auc_score, svm_auc_score = check_label_predict(features, labels[:, label], results_file)
+        nn_auc_scores[label] = nn_auc_score
+        svm_auc_scores[label] = svm_auc_score
+        print("Average category NN auc score- ", nn_auc_score, "%")
+        print("Average category SVM auc score- ", svm_auc_score)
 
-    print("Average error- ", np.average(nn_aucs), "%")
-    print("Average Auc Score- ", np.average(svm_aucs))
+    nn_auc_average_score = np.average(nn_auc_scores)
+    svm_auc_average_score = np.average(svm_auc_scores)
+    print("Average NN auc score- ", nn_auc_average_score, "%")
+    # print("Prediction rate- ", 100 - errorRate, "%")
+    print("Average SVM auc score- ", svm_auc_average_score)
     run_time = (time.clock() - start_time) / 60.
-    print("Classifying took(min)- ", run_time)
+    print("Classifiers training took(min)- ", run_time)
 
-    write_final_data(nn_aucs, num_labels, svm_aucs)
+    # results_file.flush()
     # save_svm_data(features, labels, folder_path)
 
-    return nn_aucs, svm_aucs
-
-
-def write_final_data(nn_aucs, num_labels, svm_aucs):
-    try:
-        results_file.write(svm_aucs + "\n")
-        results_file.write(nn_aucs + "\n")
-        results_file.flush()
-    except Exception as e:
-        print(e)
-        print(e.message)
+    return nn_auc_scores, svm_auc_scores
 
 
 def save_svm_data(features, labels, folder_path):

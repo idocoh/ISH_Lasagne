@@ -14,8 +14,8 @@ import time
 Image.MAX_IMAGE_PIXELS = None
 
 NUM_IMAGES = 50
-IMAGE_WIDTH = 320
-IMAGE_HEIGHT = 160
+IMAGE_WIDTH = 240
+IMAGE_HEIGHT = 120
 TRAIN_DATA_PRECENT = 0.8
 VALIDATION_DATA_PRECENT = TRAIN_DATA_PRECENT + 0.0
 
@@ -181,7 +181,8 @@ def getTopCatVector(glob_files,start_index,end_index):
     #                  print os.path.join(root, file)                 
         return np.array(topCatVectorSet)
             
-def runPickleImages(dir,startIndex=0,endIndex=NUM_IMAGES):
+
+def runPickleImages(dir="C:\Users\Research\Pictures\BrainISHimages", startIndex=0, endIndex=NUM_IMAGES):
     start_time = time.clock()
     
     pick = pickleImages(dir)
@@ -198,7 +199,18 @@ if __name__ == '__main__':#     dir = "C:\\Users\\Abigail\\Desktop\\Ido\\pyWS\\F
 #     pick.pickleData()
     
     dir = "C:\Users\Research\Pictures\BrainISHimages"
-    # runPickleImages(dir, 0, 5000)
-    runPickleImages(dir, 5001, 11000)
-    runPickleImages(dir, 11000, 16352)
+
+    try:
+        IMAGE_WIDTH = 640
+        IMAGE_HEIGHT = 320
+        num_iter = [2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 11000, 12000, 13000, 14000, 15000,
+                    16000, 16352]
+
+        first_i = 1000
+        for i in num_iter:
+            runPickleImages(dir, first_i, i)
+            first_i = i
+    except:
+        pass
+
 #     test_SdA()

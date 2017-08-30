@@ -96,12 +96,48 @@ def pickleAllImages(num_labels, end_index=16351, svm_size=600, steps=[5000, 1000
     f5.close()
     print "after reading part 5"
 
-    pData = np.concatenate((train_set1[0], train_set2[0], train_set3[0], train_set4[0], train_set5[0]), axis=0)
-    print "Done Reading images"
-    if svm_size > 0:
-        return seperateSVM(pData, pLabel, svm_size)
+    if end_index >= steps[3]:
+        dir6 = "pickled_images" + FILE_SEPARATOR + "ISH-noLearn_" + str(steps[4]) + "_" + str(
+            steps[5]) + "_" + str(image_width) + "_" + str(image_height) + ".pkl.gz"
+        f6 = gzip.open(dir6, 'rb')
+        train_set6, valid_set6, test_set6 = cPickle.load(f6)
+        f6.close()
+        dir7 = "pickled_images" + FILE_SEPARATOR + "ISH-noLearn_" + str(steps[5]) + "_" + str(
+            steps[6]) + "_" + str(image_width) + "_" + str(image_height) + ".pkl.gz"
+        f7 = gzip.open(dir7, 'rb')
+        train_set7, valid_set7, test_set7 = cPickle.load(f7)
+        f7.close()
+        dir8 = "pickled_images" + FILE_SEPARATOR + "ISH-noLearn_" + str(steps[6]) + "_" + str(
+            steps[7]) + "_" + str(image_width) + "_" + str(image_height) + ".pkl.gz"
+        f8 = gzip.open(dir8, 'rb')
+        train_set8, valid_set8, test_set8 = cPickle.load(f8)
+        f8.close()
+        dir9 = "pickled_images" + FILE_SEPARATOR + "ISH-noLearn_" + str(steps[7]) + "_" + str(
+            steps[8]) + "_" + str(image_width) + "_" + str(image_height) + ".pkl.gz"
+        f9 = gzip.open(dir9, 'rb')
+        train_set9, valid_set9, test_set9 = cPickle.load(f9)
+        f9.close()
+        pData = np.concatenate((train_set1[0], train_set2[0], train_set3[0], train_set4[0], train_set5[0], train_set6[0], train_set7[0], train_set8[0], train_set9[0]), axis=0)
+        for i in range(8, len(steps)-1):
+            dir_i = "pickled_images" + FILE_SEPARATOR + "ISH-noLearn_" + str(steps[i]) + "_" + str(
+                steps[i+1]) + "_" + str(image_width) + "_" + str(image_height) + ".pkl.gz"
+            f_i = gzip.open(dir_i, 'rb')
+            train_set_i, valid_set_i, test_set_i = cPickle.load(f_i)
+            f_i.close()
+            pData = np.concatenate((pData, train_set_i[0]), axis=0)
+
+        print "Done Reading images"
+        if svm_size > 0:
+            return seperateSVM(pData, pLabel, svm_size)
+        else:
+            return pLabel[:end_index], pData[:end_index]
     else:
-        return pLabel[:end_index], pData[:end_index]
+        pData = np.concatenate((train_set1[0], train_set2[0], train_set3[0], train_set4[0], train_set5[0]), axis=0)
+        print "Done Reading images"
+        if svm_size > 0:
+            return seperateSVM(pData, pLabel, svm_size)
+        else:
+            return pLabel[:end_index], pData[:end_index]
 
 
 #     # Generate new positive examples with noise

@@ -13,7 +13,7 @@ import gzip
 
 
 def runNNclassifier(train_params, train_y, test_params, test_y, LEARNING_RATE=0.04, UPDATE_MOMENTUM=0.9, UPDATE_RHO=None,
-                    NUM_OF_EPOCH=20, TRAIN_VALIDATION_SPLIT=0.2, NUM_UNITS_HIDDEN_LAYER=[1000, 100], BATCH_SIZE=32):
+                    NUM_OF_EPOCH=10, TRAIN_VALIDATION_SPLIT=0.2, NUM_UNITS_HIDDEN_LAYER=[1000, 100], BATCH_SIZE=32):
 
     def getNN(pickledFilePath=None):
         if pickledFilePath is not None: #isinstance(pickledFilePath, str):
