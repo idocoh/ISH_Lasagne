@@ -1,5 +1,4 @@
 from __future__ import print_function
-from __future__ import print_function
 import time
 import os
 import sys
@@ -110,9 +109,12 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         categories=15, svm_negative_amount=800, folder_name="default", number_conv_layers=4, use_nn_classifier=False):
 
     global counter
-    folder_path = "results_dae"+FILE_SEPARATOR + folder_name + FILE_SEPARATOR + "run_" + str(counter) + FILE_SEPARATOR
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
+    if folder_name.startswith("C:"):
+        folder_path = folder_name
+    else:
+        folder_path = "results_dae"+FILE_SEPARATOR + folder_name + FILE_SEPARATOR + "run_" + str(counter) + FILE_SEPARATOR
+        if not os.path.exists(folder_path):
+            os.makedirs(folder_path)
 
     All_Results_FIle = "results_dae"+FILE_SEPARATOR + "August_end_results.txt"
     PARAMS_FILE_NAME = folder_path + "parameters.txt"
@@ -130,7 +132,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
     #     sys.stdout = log_file
 
     counter += 1
-    output_file = open(PARAMS_FILE_NAME, "w")
+    output_file = open(PARAMS_FILE_NAME, "a")
     results_file = open(All_Results_FIle, "a")
 
     def create_cae():
@@ -2158,19 +2160,21 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
 
 def get_auc_score(cnn, output_file, results_file, svm_negative_amount, train_y, x_train, folder_path=None):
     try:
-        print("Running SVM")
+        print("Running Classifiers")
         print("     Start time: ", time.ctime())
         nn_aucs, svm_aucs = run_svm(cnn, X_train=x_train, labels=train_y, svm_negative_amount=svm_negative_amount,
                                folder_path=folder_path)
         print("NN AUC", nn_aucs)
         print("SVM AUC", svm_aucs)
+        if folder_path is None:
+            if nn_aucs.any():  # If nn classifier is calculated, it will have values different than zero
+                results_file.write(str(np.average(svm_aucs)) + "\t" + str(np.average(nn_aucs)) + "\n" + str(svm_aucs) + "\n" + str(nn_aucs))
+            else:
+                results_file.write(str(np.average(svm_aucs)) + "\n" + str(svm_aucs))
+        else:
+            output_file.write("\n" + "New Results from: " + str(time.ctime()) + "\n")
         output_file.write("NN auc: " + str(nn_aucs) + "\n")
         output_file.write("SVM auc: " + str(svm_aucs) + "\n")
-        if nn_aucs.any():  # If nn classifier is calculated, it will have values different than zero
-            results_file.write(str(np.average(svm_aucs)) + "\t" + str(np.average(nn_aucs)) + "\n" + str(svm_aucs) + "\n" + str(nn_aucs))
-        else:
-            results_file.write(str(np.average(svm_aucs)) + "\n" + str(svm_aucs))
-
         output_file.flush()
         results_file.flush()
     except Exception as e:
@@ -2202,7 +2206,7 @@ def load_network(folder_path):
         print(e.message)
 
 
-def run_all():
+def run_all(use_nn_classifier=False, folder_name=None, input_size_pre=None):
     if platform.dist()[0]:
         print ("Running in Ubuntu")
     else:
@@ -2216,7 +2220,6 @@ def run_all():
     input_noise_rate = 0.2
     zero_meaning = False
     to_shuffle_input = False
-    use_nn_classifier = False
     epochs = 20
     folder_name = "CAE_" + str(amount_train) + "_Shuffle_inputs-" + str(time.time())
 
@@ -2346,11 +2349,28 @@ def run_all():
             print(e.message)
 
 
+def test_nn_classification():
+    global LOAD_CAE_PATH
+    all_cae_paths = [
+        "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_Shuffle_inputs-1502722116.38\run_31\\",
+        "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_Shuffle_inputs-1502722116.38\run_88\\",
+        "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_Shuffle_inputs-1502041138.18\run_18\\",
+        "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_Shuffle_inputs-1495315103.29\run_100\\"
+    ]
+    all_cae_sizes = [
+        16,
+        17,
+        11,
+        3
+    ]
+    for i in range(all_cae_paths.__len__()):
+        LOAD_CAE_PATH = all_cae_paths[i].replace("\r", "\\r")
+        print("Running NN classification for " + LOAD_CAE_PATH)
+        run_all(use_nn_classifier=True, folder_name=LOAD_CAE_PATH, input_size_pre=all_cae_sizes[i])
+
 
 if __name__ == "__main__":
     # os.environ["DISPLAY"] = ":99"
-    #Test: change
-    # LOAD_CAE_PATH = "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_different_sizes-1489653160.29\run_4\\"
-    # LOAD_CAE_PATH = LOAD_CAE_PATH.replace("\r", "\\r")
 
+    # test_nn_classification()
     run_all()

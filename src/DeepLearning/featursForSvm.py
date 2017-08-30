@@ -21,8 +21,10 @@ import time
 from liblinearutil import *
 import nnClassifier
 
-# pickled_folder = "C:/devl/work/ISH_Lasagne/src/DeepLearning/results_dae/CAE_16351_different_sizes-1489653160.29/run_4"
-# results_file = open(pickled_folder + "/NN_output.txt", "a")
+# LOAD_CAE_PATH = "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_300x140_240x120-1490162342.58\run_0\\"
+# LOAD_CAE_PATH = "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_Shuffle_inputs-1502722116.38\run_31\\"
+# results_file = open(LOAD_CAE_PATH.replace("\r", "\\r") + "/NN_15_output.txt", "a")
+CONSTANT_NEGATIVES = True
 
 
 def images_svm(pickled_file, x=None, all_labels=None, svm_negative_amount=800, num_labels=15, TRAIN_SPLIT=0.8):
@@ -65,8 +67,14 @@ def separate_svm(pData, pLabel, svm_negative_amount):
     posData = pData[posRows, :]
     posLabel = pLabel[posRows, :]
     print("Positive svm samples- ", posData.shape[0])
-    negData = pData[~posRows[:svm_negative_amount], :]
-    negLabel = pLabel[~posRows[:svm_negative_amount], :]
+    if CONSTANT_NEGATIVES:
+        negData = pData[~posRows[:svm_negative_amount], :]
+        negLabel = pLabel[~posRows[:svm_negative_amount], :]
+    else:
+        random_negatives = np.random.permutation(
+            np.concatenate((np.ones(svm_negative_amount), np.zeros(len(posRows) - svm_negative_amount)), axis=0))
+        negData = pData[~posRows[random_negatives == 1], :]
+        negLabel = pLabel[~posRows[random_negatives == 1], :]
     print("Negative svm samples- ", negData.shape[0])
     # svm_data = np.concatenate((posData, negData[:svm_size-posData.shape[0]]), axis=0)
     # svm_label = np.concatenate((posLabel, negLabel[:svm_size-posData.shape[0]]), axis=0)
@@ -140,6 +148,9 @@ def check_label_predict(features, labels, results_file=None, cross_validation_pa
 
         clf_svm, svm_score, test_params_svm, test_y_svm = svc_score(neg_test, neg_train, pos_test, pos_train)
         svm_auc_scores[cross_validation_index] = svm_score
+
+        if results_file is not None:
+            results_file.write("& & & &" + str(svm_score) + "\n")
 
         # try:
         #     test_predict = clf.predict(test_params)
@@ -234,34 +245,45 @@ def nn_classifier_score(neg_test, neg_train, pos_test, pos_train, results_file=N
 
 def try_nn(test_params, test_y, x, y, results_file=None):
     layers_size = [
-        [1000, 100],
-        [750, 250],
         [500, 100],
+        [750, 250],
+        [1000, 100],
         [1000, 300],
         [1000, 250, 50],
         [1000, 500, 250],
         [1200, 800, 400]
     ]
-    # temp_auc = np.zeros((3, 1))
-    for ls in range(2, 3):
+    temp_aucs = np.zeros((7, 5))
+    i = -1
+    for ls in range(0, 7):
         try:
-            for lr in range(0, 1):
+            # best_auc = 0
+            # bad = 0
+            i += 1
+            j = -1
+            for lr in range(0, 5):
                 try:
+                    j += 1
                     learning_rate = 0.01 + 0.02 * lr
                     classifier_net, error_rate, auc_score = \
                         nnClassifier.runNNclassifier(x, y, test_params, test_y, LEARNING_RATE=learning_rate,
-                                                     NUM_UNITS_HIDDEN_LAYER=layers_size[ls])
-                    # temp_auc[i, j] = auc_score
+                                                     NUM_UNITS_HIDDEN_LAYER=layers_size[ls], NUM_OF_EPOCH=15)
+                    temp_aucs[i, j] = auc_score
                     print("AUC- " + str(auc_score) + ": rate " + str(learning_rate) + ", layers " + str(layers_size[ls]))
-                    results_file.write("AUC- " + str(auc_score) + ", rate- " + str(learning_rate) + ", layers- " + str(
-                        layers_size[ls]) + "\n")
+                    results_file.write("&" + str(auc_score) + "&" + str(learning_rate) + "&" + str(layers_size[ls]) + "\n")
+                    # results_file.write("AUC- " + str(auc_score) + ", rate- " + str(learning_rate) + ", layers- " +
+                    # str(layers_size[ls]) + "\n")
                     results_file.flush()
+                    # if best_auc > np.average(temp_aucs[i]) + 0.003 and bad > 2:
+                    #     break
+                    # else:
+                    #     best_auc = np.maximum(np.average(temp_aucs[i]), best_auc)
                 except Exception as e:
-                    print("failed nn i-", lr)
+                    print("failed nn lr-", lr)
                     print(e)
                     print(e.message)
         except Exception as e:
-            print("failed nn i-", lr)
+            print("failed nn ls-", ls)
             print(e)
             print(e.message)
 
@@ -292,9 +314,10 @@ def run_svm(pickle_name=None, X_train=None, features=None, labels=None, svm_nega
     start_time = time.clock()
     # Test"
     for label in range(0, num_labels):
-    # for label in range(125, 89, -1):
 
-        print("Svm for category- ", label)
+        print("Svm for category- ", label+1)
+        if results_file is not None:
+            results_file.write(str(label+1) + "\n")
         nn_auc_score, svm_auc_score = check_label_predict(features, labels[:, label], results_file)
         nn_auc_scores[label] = nn_auc_score
         svm_auc_scores[label] = svm_auc_score
