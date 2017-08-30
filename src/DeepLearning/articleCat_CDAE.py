@@ -114,7 +114,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
 
-    All_Results_FIle = "results_dae"+FILE_SEPARATOR + "August_results_320x120.txt"
+    All_Results_FIle = "results_dae"+FILE_SEPARATOR + "August_results_add_fix.txt"
     PARAMS_FILE_NAME = folder_path + "parameters.txt"
     # HIDDEN_LAYER_OUTPUT_FILE_NAME = folder_path + "hiddenLayerOutput.pkl.gz"
     # FIG_FILE_NAME = folder_path + "fig"
@@ -2218,7 +2218,7 @@ def run_all():
     to_shuffle_input = False
     use_nn_classifier = False
     epochs = 20
-    folder_name = "CAE_" + str(amount_train) + "_320x200-" + str(time.time())
+    folder_name = "CAE_" + str(amount_train) + "_240x120-" + str(time.time())
 
     steps = [
         [5000, 10000, 16352],
@@ -2263,17 +2263,18 @@ def run_all():
                     # for_zm = 0
                     # for_zm = 5 if not zero_meaning else for_zm
                     # tmp_i += 1
-                    for num_filters_index in [0, 2]:  # range(0, 3, 1):
+                    for num_filters_index in [2, 0]:  # range(0, 3, 1):
                         try:
-                            for lr in range(0, 7, 1):
+                            for lr in range(2, 6, 1):
                                 try:
-                                    for filter_type in [2, 1]:  # range(2, -1, -2):
+                                    for filter_type in [2]:  # range(2, -1, -2):
                                         try:
-                                            for number_conv_layers in [2, 3, 4]:  # range(4, 1, -2):
+                                            for number_conv_layers in [3, 2]:  # range(4, 1, -2):
                                                 try:
-                                                    for input_size_index in [8]: #range(4 + for_zm, -1 + for_zm, -1):
+                                                    for input_size_index in [3]: #range(4 + for_zm, -1 + for_zm, -1):
                                                         try:
-                                                            if lr == 2 and filter_type == 2 and number_conv_layers == 4:
+                                                            if number_conv_layers == 3 and lr != 2 :
+                                                            # if tmp_i < 1 or ((lr == 2 or (lr == 3 and filter_type == 2)) and input_size_index != 17):
                                                             #     tmp_i += 1
                                                                 continue
                                                             for num_images in range(0, 1, 1):
