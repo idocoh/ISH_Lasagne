@@ -253,20 +253,21 @@ def try_nn(test_params, test_y, x, y, results_file=None):
         [1000, 500, 250],
         [1200, 800, 400]
     ]
-    temp_aucs = np.zeros((7, 10))
-    i, j = -1, -1
+    temp_aucs = np.zeros((7, 5))
+    i = -1
     for ls in range(0, 7):
         try:
             # best_auc = 0
             # bad = 0
             i += 1
+            j = -1
             for lr in range(0, 5):
                 try:
                     j += 1
                     learning_rate = 0.01 + 0.02 * lr
                     classifier_net, error_rate, auc_score = \
                         nnClassifier.runNNclassifier(x, y, test_params, test_y, LEARNING_RATE=learning_rate,
-                                                     NUM_UNITS_HIDDEN_LAYER=layers_size[ls])
+                                                     NUM_UNITS_HIDDEN_LAYER=layers_size[ls], NUM_OF_EPOCH=15)
                     temp_aucs[i, j] = auc_score
                     print("AUC- " + str(auc_score) + ": rate " + str(learning_rate) + ", layers " + str(layers_size[ls]))
                     results_file.write("&" + str(auc_score) + "&" + str(learning_rate) + "&" + str(layers_size[ls]) + "\n")
