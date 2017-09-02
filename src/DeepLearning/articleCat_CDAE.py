@@ -1,5 +1,4 @@
 from __future__ import print_function
-from __future__ import print_function
 import time
 import os
 import sys
@@ -110,11 +109,14 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         categories=15, svm_negative_amount=800, folder_name="default", number_conv_layers=4, use_nn_classifier=False):
 
     global counter
-    folder_path = "results_dae"+FILE_SEPARATOR + folder_name + FILE_SEPARATOR + "run_" + str(counter) + FILE_SEPARATOR
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
+    if folder_name.startswith("C:"):
+        folder_path = folder_name
+    else:
+        folder_path = "results_dae"+FILE_SEPARATOR + folder_name + FILE_SEPARATOR + "run_" + str(counter) + FILE_SEPARATOR
+        if not os.path.exists(folder_path):
+            os.makedirs(folder_path)
 
-    All_Results_FIle = "results_dae"+FILE_SEPARATOR + "August_results_320x120.txt"
+    All_Results_FIle = "results_dae"+FILE_SEPARATOR + "August_end_results.txt"
     PARAMS_FILE_NAME = folder_path + "parameters.txt"
     # HIDDEN_LAYER_OUTPUT_FILE_NAME = folder_path + "hiddenLayerOutput.pkl.gz"
     # FIG_FILE_NAME = folder_path + "fig"
@@ -130,7 +132,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
     #     sys.stdout = log_file
 
     counter += 1
-    output_file = open(PARAMS_FILE_NAME, "w")
+    output_file = open(PARAMS_FILE_NAME, "a")
     results_file = open(All_Results_FIle, "a")
 
     def create_cae():
@@ -2158,19 +2160,21 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
 
 def get_auc_score(cnn, output_file, results_file, svm_negative_amount, train_y, x_train, folder_path=None):
     try:
-        print("Running SVM")
+        print("Running Classifiers")
         print("     Start time: ", time.ctime())
         nn_aucs, svm_aucs = run_svm(cnn, X_train=x_train, labels=train_y, svm_negative_amount=svm_negative_amount,
                                folder_path=folder_path)
         print("NN AUC", nn_aucs)
         print("SVM AUC", svm_aucs)
+        if folder_path is None:
+            if nn_aucs.any():  # If nn classifier is calculated, it will have values different than zero
+                results_file.write(str(np.average(svm_aucs)) + "\t" + str(np.average(nn_aucs)) + "\n" + str(svm_aucs) + "\n" + str(nn_aucs))
+            else:
+                results_file.write(str(np.average(svm_aucs)) + "\n" + str(svm_aucs))
+        else:
+            output_file.write("\n" + "New Results from: " + str(time.ctime()) + "\n")
         output_file.write("NN auc: " + str(nn_aucs) + "\n")
         output_file.write("SVM auc: " + str(svm_aucs) + "\n")
-        if nn_aucs.any():  # If nn classifier is calculated, it will have values different than zero
-            results_file.write(str(np.average(svm_aucs)) + "\t" + str(np.average(nn_aucs)) + "\n" + str(svm_aucs) + "\n" + str(nn_aucs))
-        else:
-            results_file.write(str(np.average(svm_aucs)) + "\n" + str(svm_aucs))
-
         output_file.flush()
         results_file.flush()
     except Exception as e:
@@ -2202,155 +2206,3 @@ def load_network(folder_path):
         print(e.message)
 
 
-def run_all():
-    if platform.dist()[0]:
-        print ("Running in Ubuntu")
-    else:
-        print ("Running in Windows")
-
-    print(theano.sandbox.cuda.dnn_available())
-
-    num_labels = 15 #164 #TEST: change 15
-    amount_train = 16351
-    svm_negative_amount = 200
-    input_noise_rate = 0.2
-    zero_meaning = False
-    to_shuffle_input = False
-    use_nn_classifier = False
-    epochs = 20
-    folder_name = "CAE_" + str(amount_train) + "_320x200-" + str(time.time())
-
-    steps = [
-        [5000, 10000, 16352],
-        [5000, 10000, 16352],
-        [5000, 10000, 16352],
-        [5000, 10000, 16352],
-        [5000, 11000, 16352],
-        [4000, 8000, 12000, 16352],
-        [5000, 10000, 15000, 16352],
-        [5000, 10000, 16352],
-        [2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 16352],
-        [2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 16352],
-        [5000, 10000, 16352],
-        [2000, 4000, 6000, 8000, 10000, 12000, 14000, 16000, 16352],
-        [5000, 10000, 16352],
-        [1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500, 8000, 8500,
-         9000, 9500, 10000, 10500, 11000, 11500, 12000, 12500, 13000, 13500, 14000, 14500, 15000, 15500,
-         16000, 16352],
-        [5000, 10000, 16352],
-        [5000, 10000, 16352],
-        [4000, 8000, 12000, 16352],
-        [4000, 8000, 12000, 16352],
-        [5000, 10000, 16352],
-        [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 11000, 12000, 13000, 14000, 15000, 16000, 16352]
-    ]
-    # indexes   = [0,   1,   2,   3,   4,   5,   6,   7,   8,   9,   10,  11,  12,  13,  14,  15,  16,  17,  18, 19]
-    image_width = [160, 160, 200, 240, 300, 280, 320, 240, 320, 400, 160, 480, 120, 960, 100, 200, 200, 240, 80, 640]
-    image_height = [80, 100, 120, 120, 140, 140, 160, 120, 200, 240, 80,  240, 60,  480, 80,  160, 200, 160, 40, 320]
-    number_pooling_layers = [2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 1, 4, 2, 2, 2, 2, 1, 4]
-    layers_size = [
-        [8, 8, 8, 8, 8, 8, 8, 8, 8],
-        [4, 4, 4, 4, 4, 4, 4, 4, 4],
-        [16, 16, 16, 16, 16, 16, 16, 16, 16],
-        [32, 64, 128, 64, 32],
-        [16, 32, 32, 64, 32, 32, 16]
-    ]
-    tmp_i = -1
-    for zero_meaning in [False]:  # , True]:
-        try:
-            for to_shuffle_input in [False]:  # , True]:
-                try:
-                    # for_zm = 0
-                    # for_zm = 5 if not zero_meaning else for_zm
-                    # tmp_i += 1
-                    for num_filters_index in [0]:  # range(0, 3, 1):
-                        try:
-                            for lr in range(0, 7, 1):
-                                try:
-                                    for filter_type in [2, 1]:  # range(2, -1, -2):
-                                        try:
-                                            for number_conv_layers in [2, 3, 4]:  # range(4, 1, -2):
-                                                try:
-                                                    for input_size_index in [8]: #range(4 + for_zm, -1 + for_zm, -1):
-                                                        try:
-                                                            if not ((lr == 3 and filter_type == 2 and number_conv_layers == 2)\
-                                                                    or (filter_type == 2 and number_conv_layers == 3 and [2, 3, 5].__contains__(lr))\
-                                                                    or (filter_type == 1 and number_conv_layers == 3 and lr == 0)\
-                                                                    or (filter_type == 2 and number_conv_layers == 4 and lr == 1)):
-                                                            #     tmp_i += 1
-                                                                continue
-                                                            for num_images in range(0, 1, 1):
-                                                                data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1,
-                                                                              steps=steps[input_size_index],
-                                                                              image_width=image_width[input_size_index],
-                                                                              image_height=image_height[input_size_index])
-                                                                learning_rate = 0.03 + 0.005 * lr
-                                                                learning_rate = learning_rate/0.02 if zero_meaning else learning_rate #because std is about 0.02
-                                                                filter_type_index = 11 - 4 * filter_type
-                                                                print("run number conv layers- ", number_conv_layers)
-                                                                print("run Filter type #", filter_type_index)
-                                                                print("run Filter number index #", num_filters_index)
-                                                                print("run Learning rate- ", learning_rate)
-                                                                try:
-                                                                    run(layers_size=layers_size[num_filters_index],
-                                                                        epochs=epochs,
-                                                                        learning_rate=learning_rate,
-                                                                        update_momentum=0.9,
-                                                                        shuffle_input=to_shuffle_input,
-                                                                        number_pooling_layers=number_pooling_layers[input_size_index],
-                                                                        dropout_percent=input_noise_rate,
-                                                                        loadedData=data,
-                                                                        folder_name=folder_name,
-                                                                        amount_train=amount_train - num_images*2000,
-                                                                        number_conv_layers=number_conv_layers,
-                                                                        zero_meaning=zero_meaning,
-                                                                        activation=None,
-                                                                        last_layer_activation=tanh,
-                                                                        filters_type=filter_type_index,
-                                                                        train_valid_split=0.001 + 0.002*num_images,
-                                                                        input_width=image_width[input_size_index],
-                                                                        input_height=image_height[input_size_index],
-                                                                        svm_negative_amount=svm_negative_amount,
-                                                                        flip_batch=True,
-                                                                        batch_size=32,
-                                                                        use_nn_classifier=use_nn_classifier)
-
-                                                                except Exception as e:
-                                                                    print("failed Filter type #", filter_type_index)
-                                                                    print("failed number conv layers- ", number_conv_layers)
-                                                                    print("failed Filter number index #", num_filters_index)
-                                                                    print("failed Learning rate- ", learning_rate)
-                                                                    print(e)
-                                                                    print(e.message)
-                                                        except Exception as e:
-                                                            print(e)
-                                                            print(e.message)
-                                                except Exception as e:
-                                                    print(e)
-                                                    print(e.message)
-
-                                        except Exception as e:
-                                            print(e)
-                                            print(e.message)
-                                except Exception as e:
-                                    print(e)
-                                    print(e.message)
-                        except Exception as e:
-                            print(e)
-                            print(e.message)
-                except Exception as e:
-                    print(e)
-                    print(e.message)
-        except Exception as e:
-            print(e)
-            print(e.message)
-
-
-
-if __name__ == "__main__":
-    # os.environ["DISPLAY"] = ":99"
-    #Test: change
-    # LOAD_CAE_PATH = "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_different_sizes-1489653160.29\run_4\\"
-    # LOAD_CAE_PATH = LOAD_CAE_PATH.replace("\r", "\\r")
-
-    run_all()
