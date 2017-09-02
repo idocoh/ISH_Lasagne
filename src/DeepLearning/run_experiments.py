@@ -14,14 +14,13 @@ def run_all(use_nn_classifier=False, folder_name=None, input_size_pre=None):
 
     print(theano.sandbox.cuda.dnn_available())
 
+    epochs = 20
     num_labels = 15 #164 #TEST: change 15
     amount_train = 16351
-    svm_negative_amount = 200
     input_noise_rate = 0.2
-    zero_meaning = False
-    to_shuffle_input = False
-    epochs = 20
-    folder_name = "CAE_" + str(amount_train) + "_Shuffle_inputs-" + str(time.time())
+    svm_negative_amount = 200
+
+    folder_name = "CAE_" + str(amount_train) + "_test_nn-" + str(time.time()) if folder_name is None else folder_name
 
     steps = [
         [5000, 10000, 16352],
@@ -52,21 +51,19 @@ def run_all(use_nn_classifier=False, folder_name=None, input_size_pre=None):
     image_height = [80, 100, 120, 120, 140, 140, 160, 120, 200, 240, 80,  240, 60,  480, 80,  160, 200, 160, 40, 320]
     number_pooling_layers = [2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 1, 4, 2, 2, 2, 2, 1, 4]
     layers_size = [
+        [1, 2, 2, 2, 2, 2, 1],
+        [2, 4, 4, 4, 4, 4, 2],
         [4, 8, 8, 8, 8, 8, 4],
         [8, 16, 16, 16, 16, 16, 8],
-        [2, 4, 4, 4, 4, 4, 2],
-        [1, 2, 2, 2, 2, 2, 1],
-        [32, 64, 128, 64, 32],
-        [16, 32, 32, 64, 32, 32, 16]
+        [16, 32, 32, 64, 32, 32, 16],
+        [32, 64, 128, 64, 32]
     ]
 
-    tmp_i = 0
     for zero_meaning in [False]:
         try:
             for input_size_index in [6]:
                 try:
-                    # for_zm = 0
-                    # for_zm = 5 if not zero_meaning else for_zm
+                    input_size_index = input_size_index if input_size_pre is None else input_size_pre  # for NN test
                     data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1,
                                   steps=steps[input_size_index],
                                   image_width=image_width[input_size_index],
@@ -83,7 +80,6 @@ def run_all(use_nn_classifier=False, folder_name=None, input_size_pre=None):
                                                     for to_shuffle_input in [False]:
                                                         try:
                                                             # if lr == 1 and filter_type == 4 and num_filters_index == 0:
-                                                            #     # tmp_i += 1
                                                             #     continue
                                                             for num_images in range(0, 1, 1):
                                                                 # data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1,

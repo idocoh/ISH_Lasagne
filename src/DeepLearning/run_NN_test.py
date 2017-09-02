@@ -17,11 +17,10 @@ def test_nn_classification():
         5
     ]
     for i in [0]:  # range(all_cae_paths.__len__()):
-        LOAD_CAE_PATH = all_cae_paths[i].replace("\r", "\\r")
-        print("Running NN classification for " + LOAD_CAE_PATH)
-        run_all(use_nn_classifier=True, folder_name=LOAD_CAE_PATH, input_size_pre=all_cae_sizes[i])
+        cae_load_path = all_cae_paths[i].replace("\r", "\\r")
+        print("Running NN classification for " + cae_load_path)
+        run_all(use_nn_classifier=True, folder_name=cae_load_path, input_size_pre=all_cae_sizes[i])
 
 
 if __name__ == "__main__":
-
     test_nn_classification()
