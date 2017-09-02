@@ -287,7 +287,7 @@ def try_nn(test_params, test_y, x, y, results_file=None):
             print(e)
             print(e.message)
 
-    return classifier_net, auc_score, test_params, test_y
+    return classifier_net, np.max(temp_aucs), test_params, test_y
 
 
 def generate_positives(positives, num_negatives):
