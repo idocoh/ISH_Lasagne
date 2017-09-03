@@ -116,7 +116,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
 
-    All_Results_FIle = "results_dae"+FILE_SEPARATOR + "August_end_results.txt"
+    All_Results_FIle = "results_dae"+FILE_SEPARATOR + "September_results.txt"
     PARAMS_FILE_NAME = folder_path + "parameters.txt"
     # HIDDEN_LAYER_OUTPUT_FILE_NAME = folder_path + "hiddenLayerOutput.pkl.gz"
     # FIG_FILE_NAME = folder_path + "fig"

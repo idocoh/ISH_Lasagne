@@ -245,26 +245,30 @@ def nn_classifier_score(neg_test, neg_train, pos_test, pos_train, results_file=N
 
 def try_nn(test_params, test_y, x, y, results_file=None):
     layers_size = [
-        [500, 100],
-        [750, 250],
-        [1000, 100],
-        [1000, 300],
-        [1000, 250, 50],
+        # [500, 100],
+        # [750, 250],
+        # [1000, 100],
+        # [1000, 300],
+        [1000, 500],
+        # [1000, 250, 50],
         [1000, 500, 250],
-        [1200, 800, 400]
+        [1200, 800, 400],
+        [1500, 1000, 500],
+        [1500, 1000, 500, 250],
+        [1600, 1200, 800, 400, 200]
     ]
-    temp_aucs = np.zeros((7, 5))
+    temp_aucs = np.zeros((6, 3))
     i = -1
-    for ls in range(0, 7):
+    for ls in range(0, 6):
         try:
             # best_auc = 0
             # bad = 0
             i += 1
             j = -1
-            for lr in range(0, 5):
+            for lr in range(1, 4):
                 try:
                     j += 1
-                    learning_rate = 0.01 + 0.02 * lr
+                    learning_rate = 0.01 + 0.005 * lr
                     classifier_net, error_rate, auc_score = \
                         nnClassifier.runNNclassifier(x, y, test_params, test_y, LEARNING_RATE=learning_rate,
                                                      NUM_UNITS_HIDDEN_LAYER=layers_size[ls], NUM_OF_EPOCH=15)
@@ -302,7 +306,7 @@ def generate_positives(positives, num_negatives):
 def run_svm(pickle_name=None, X_train=None, features=None, labels=None, svm_negative_amount=800, folder_path=None):
     num_labels = labels.shape[1]
 
-    results_file = None if folder_path is None else open(folder_path + "/NN_output.txt", "a")
+    results_file = None if folder_path is None else open(folder_path + "/NN_output_new.txt", "a")
 
     if features is None:
         features, labels = images_svm(pickle_name, X_train, labels, num_labels=num_labels,

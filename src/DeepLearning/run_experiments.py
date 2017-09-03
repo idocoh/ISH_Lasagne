@@ -4,6 +4,7 @@ import platform
 from articleCat_CDAE import run
 from articleCat_CDAE import load2d
 from lasagne.nonlinearities import tanh
+from __future__ import print_function
 
 
 def run_all(use_nn_classifier=False, folder_name=None, input_size_pre=None):
