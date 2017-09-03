@@ -1,10 +1,10 @@
+from __future__ import print_function
 import time
 import theano
 import platform
 from articleCat_CDAE import run
 from articleCat_CDAE import load2d
 from lasagne.nonlinearities import tanh
-from __future__ import print_function
 
 
 def run_all(use_nn_classifier=False, folder_name=None, input_size_pre=None):
@@ -21,7 +21,7 @@ def run_all(use_nn_classifier=False, folder_name=None, input_size_pre=None):
     input_noise_rate = 0.2
     svm_negative_amount = 200
 
-    folder_name = "CAE_" + str(amount_train) + "_test_nn-" + str(time.time()) if folder_name is None else folder_name
+    folder_name = "CAE_" + str(amount_train) + "_240x120-" + str(time.time()) if folder_name is None else folder_name
 
     steps = [
         [5000, 10000, 16352],
@@ -52,17 +52,17 @@ def run_all(use_nn_classifier=False, folder_name=None, input_size_pre=None):
     image_height = [80, 100, 120, 120, 140, 140, 160, 120, 200, 240, 80,  240, 60,  480, 80,  160, 200, 160, 40, 320]
     number_pooling_layers = [2, 2, 2, 2, 2, 2, 3, 3, 3, 3, 3, 3, 1, 4, 2, 2, 2, 2, 1, 4]
     layers_size = [
-        [1, 2, 2, 2, 2, 2, 1],
-        [2, 4, 4, 4, 4, 4, 2],
-        [4, 8, 8, 8, 8, 8, 4],
-        [8, 16, 16, 16, 16, 16, 8],
+        [2, 2, 2, 2, 2, 2, 2],
+        [4, 4, 4, 4, 4, 4, 4],
+        [8, 8, 8, 8, 8, 8, 8],
+        [16, 16, 16, 16, 16, 16, 16],
         [16, 32, 32, 64, 32, 32, 16],
         [32, 64, 128, 64, 32]
     ]
 
     for zero_meaning in [False]:
         try:
-            for input_size_index in [6]:
+            for input_size_index in [3]:
                 try:
                     input_size_index = input_size_index if input_size_pre is None else input_size_pre  # for NN test
                     data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1,
@@ -70,24 +70,25 @@ def run_all(use_nn_classifier=False, folder_name=None, input_size_pre=None):
                                   image_width=image_width[input_size_index],
                                   image_height=image_height[input_size_index])
 
-                    for num_filters_index in [1]:  # range(0, 3, 1):
+                    for num_filters_index in [2]:  # range(0, 3, 1):
                         try:
-                            for lr in [0]:  # range(5, 1, -1):
+                            for lr in range(0, 4, 1):
                                 try:
-                                    for filter_type in [0]:  # range(2, -1, -2):
+                                    for filter_type in [0, 2, 4]:  # range(2, -1, -2):
                                         try:
-                                            for number_conv_layers in [4]:
+                                            for number_conv_layers in [4, 2]:
                                                 try:
                                                     for to_shuffle_input in [False]:
                                                         try:
-                                                            # if lr == 1 and filter_type == 4 and num_filters_index == 0:
-                                                            #     continue
+                                                            if (number_conv_layers == 2 and filter_type == 4 and lr != 1)\
+                                                                    or (number_conv_layers == 2 and filter_type == 2 and lr != 3):
+                                                                continue
                                                             for num_images in range(0, 1, 1):
                                                                 # data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1,
                                                                 #               steps=steps[input_size_index],
                                                                 #               image_width=image_width[input_size_index],
                                                                 #               image_height=image_height[input_size_index])
-                                                                learning_rate = 0.044 + 0.001 * lr
+                                                                learning_rate = 0.04 + 0.005 * lr
                                                                 learning_rate = learning_rate/0.02 if zero_meaning else learning_rate #because std is about 0.02
                                                                 filter_type_index = 3 + 2 * filter_type
                                                                 print("run number conv layers- ", number_conv_layers)
