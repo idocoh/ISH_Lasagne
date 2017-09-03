@@ -1,5 +1,5 @@
-from run_experiments import run_all
 from __future__ import print_function
+from run_experiments import run_all
 
 
 def test_nn_classification():
