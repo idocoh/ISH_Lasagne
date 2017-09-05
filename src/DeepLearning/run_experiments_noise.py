@@ -19,7 +19,7 @@ def run_all(use_nn_classifier=False, folder_name=None, input_size_pre=None):
     num_labels = 15 #164 #TEST: change 15
     amount_train = 16351
     svm_negative_amount = 200
-    lr = 0.055
+    learning_rate = 0.055
 
     folder_name = "CAE_" + str(amount_train) + "_noise_rate-" + str(time.time()) if folder_name is None else folder_name
 
@@ -73,7 +73,7 @@ def run_all(use_nn_classifier=False, folder_name=None, input_size_pre=None):
                     learning_rate -= 0.005
                     for num_filters_index in [2]:  # range(0, 3, 1):
                         try:
-                            for input_noise_rate in range(0, 1, 0.1):
+                            for input_noise_rate in [0, 0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9]:
                                 try:
                                     for filter_type in [0]:  # range(2, -1, -2):
                                         try:
@@ -81,9 +81,8 @@ def run_all(use_nn_classifier=False, folder_name=None, input_size_pre=None):
                                                 try:
                                                     for to_shuffle_input in [False]:
                                                         try:
-                                                            # if (number_conv_layers == 2 and filter_type == 4 and lr != 1)\
-                                                            #         or (number_conv_layers == 2 and filter_type == 2 and lr != 3):
-                                                            #     continue
+                                                            if input_size_index == 16 and [0, 0.2, 0.5, 0.7].__contains__(input_size_index):
+                                                                continue
                                                             for num_images in range(0, 1, 1):
                                                                 # data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1,
                                                                 #               steps=steps[input_size_index],
@@ -93,7 +92,7 @@ def run_all(use_nn_classifier=False, folder_name=None, input_size_pre=None):
                                                                 filter_type_index = 3 + 2 * filter_type
                                                                 print("run number conv layers- ", number_conv_layers)
                                                                 print("run Filter type #", filter_type_index)
-                                                                print("run Filter number index #", num_filters_index)
+                                                                print("run Input_noise_rate", input_noise_rate)
                                                                 print("run Learning rate- ", learning_rate)
                                                                 try:
                                                                     run(layers_size=layers_size[num_filters_index],
