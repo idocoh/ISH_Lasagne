@@ -249,13 +249,17 @@ def try_nn(test_params, test_y, x, y, results_file=None):
         # [750, 250],
         # [1000, 100],
         # [1000, 300],
-        [1000, 500],
         # [1000, 250, 50],
-        [1000, 500, 250],
+        [1000, 500],
+        # [1000, 500, 250],
         [1200, 800, 400],
-        [1500, 1000, 500],
-        [1500, 1000, 500, 250],
-        [1600, 1200, 800, 400, 200]
+        # [1500, 1000, 500],
+        # [1500, 1000, 500, 250],
+        # [1600, 1200, 800, 400, 200]
+        [1000, 1000, 1000],
+        [2000, 1500, 1000, 500, 250],
+        [2000, 1000, 500, 250, 125],
+        [3000, 2000, 1000, 500]
     ]
     temp_aucs = np.zeros((6, 3))
     i = -1
@@ -271,7 +275,7 @@ def try_nn(test_params, test_y, x, y, results_file=None):
                     learning_rate = 0.01 + 0.005 * lr
                     classifier_net, error_rate, auc_score = \
                         nnClassifier.runNNclassifier(x, y, test_params, test_y, LEARNING_RATE=learning_rate,
-                                                     NUM_UNITS_HIDDEN_LAYER=layers_size[ls], NUM_OF_EPOCH=15)
+                                                     NUM_UNITS_HIDDEN_LAYER=layers_size[ls], NUM_OF_EPOCH=25)
                     temp_aucs[i, j] = auc_score
                     print("AUC- " + str(auc_score) + ": rate " + str(learning_rate) + ", layers " + str(layers_size[ls]))
                     results_file.write("&" + str(auc_score) + "&" + str(learning_rate) + "&" + str(layers_size[ls]) + "\n")
@@ -306,7 +310,7 @@ def generate_positives(positives, num_negatives):
 def run_svm(pickle_name=None, X_train=None, features=None, labels=None, svm_negative_amount=800, folder_path=None):
     num_labels = labels.shape[1]
 
-    results_file = None if folder_path is None else open(folder_path + "/NN_output_new.txt", "a")
+    results_file = None if folder_path is None else open(folder_path + "/NN_output_big.txt", "a")
 
     if features is None:
         features, labels = images_svm(pickle_name, X_train, labels, num_labels=num_labels,
