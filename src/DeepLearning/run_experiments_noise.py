@@ -81,7 +81,7 @@ def run_all(use_nn_classifier=False, folder_name=None, input_size_pre=None):
                                                 try:
                                                     for to_shuffle_input in [False]:
                                                         try:
-                                                            if input_size_index == 16 and [0, 0.2, 0.5, 0.7].__contains__(input_size_index):
+                                                            if input_size_index == 16 and [0, 0.2, 0.5, 0.7, 0.8, 0.9].__contains__(input_size_index):
                                                                 continue
                                                             for num_images in range(0, 1, 1):
                                                                 # data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1,

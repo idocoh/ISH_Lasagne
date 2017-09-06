@@ -73,7 +73,7 @@ def run_all(use_nn_classifier=False, folder_name=None, input_size_pre=None):
                                 try:
                                     for filter_type in [2, 0, 1]:  # range(2, -1, -2):
                                         try:
-                                            for number_conv_layers in range(2, 5, 2):
+                                            for number_conv_layers in [4, 2, 3]:
                                                 try:
                                                     for to_shuffle_input in [False]:
                                                         try:
