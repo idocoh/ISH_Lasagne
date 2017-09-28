@@ -114,7 +114,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
         if not os.path.exists(folder_path):
             os.makedirs(folder_path)
 
-    All_Results_FIle = "results_dae"+FILE_SEPARATOR + "September_results.txt"
+    All_Results_FIle = "results_dae"+FILE_SEPARATOR + "September_big_results.txt"
     PARAMS_FILE_NAME = folder_path + "parameters.txt"
     # HIDDEN_LAYER_OUTPUT_FILE_NAME = folder_path + "hiddenLayerOutput.pkl.gz"
     # FIG_FILE_NAME = folder_path + "fig"
@@ -2346,18 +2346,22 @@ def run_all(use_nn_classifier=False, folder_name=None, input_size_pre=None):
 
 def test_nn_classification():
     all_cae_paths = [
-        "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_Shuffle_inputs-1502041138.18\run_18\\",
-        "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_different_sizes-1495315103.29\run_100\\",
-        "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_Shuffle_inputs-1502722116.38\run_31\\",
-        "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_Shuffle_inputs-1502722116.38\run_88\\",
-        "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_Shuffle_inputs-1502722116.38\run_11\\"
+        # "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_Shuffle_inputs-1502041138.18\run_18\\",
+        # "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_different_sizes-1495315103.29\run_100\\",
+        # "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_Shuffle_inputs-1502722116.38\run_31\\",
+        # "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_Shuffle_inputs-1502722116.38\run_88\\",
+        # "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_Shuffle_inputs-1502722116.38\run_11\\",
+        # "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_240x120-1505621223.65\run_0\\",
+        "C:\devl\work\ISH_Lasagne\src\DeepLearning\results_dae\CAE_16351_40x20-1506033312.67\run_0\\"
     ]
     all_cae_sizes = [
-        11,
-        3,
-        16,
-        17,
-        5
+        # 11,
+        # 3,
+        # 16,
+        # 17,
+        # 5,
+        # 13,
+        13
     ]
     for i in range(all_cae_paths.__len__()):
         cae_load_path = all_cae_paths[i].replace("\r", "\\r")

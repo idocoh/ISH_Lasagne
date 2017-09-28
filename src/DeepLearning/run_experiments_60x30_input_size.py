@@ -21,7 +21,7 @@ def run_all(use_nn_classifier=False, folder_name=None, input_size_pre=None):
     input_noise_rate = 0.2
     svm_negative_amount = 200
 
-    folder_name = "CAE_" + str(amount_train) + "_240x120-" + str(time.time()) if folder_name is None else folder_name
+    folder_name = "CAE_" + str(amount_train) + "_40x20-" + str(time.time()) if folder_name is None else folder_name
 
     steps = [
         [5000, 10000, 16352],
@@ -60,22 +60,22 @@ def run_all(use_nn_classifier=False, folder_name=None, input_size_pre=None):
     ]
     for zero_meaning in [False]:
         try:
-            for input_size_index in [13, 19, 18]:
+            for input_size_index in [13]: #18, 19, 13]:
                 try:
                     data = load2d(batch_index=1, num_labels=num_labels, TRAIN_PRECENT=1,
                                   steps=steps[input_size_index],
                                   image_width=image_width[input_size_index],
                                   image_height=image_height[input_size_index])
 
-                    for num_filters_index in [0, 1, 2]:  # range(0, 3, 1):
+                    for num_filters_index in [1, 0, 2]:  # range(0, 3, 1):
                         try:
-                            for lr in [2, 3, 4, 5]: #, 1, 0, 6]:  # range(5, 1, -1):
+                            for to_shuffle_input in [False]:
                                 try:
-                                    for filter_type in [2, 0, 1]:  # range(2, -1, -2):
+                                    for filter_type in [2, 1, 0]:  # range(2, -1, -2):
                                         try:
-                                            for number_conv_layers in [4, 2, 3]:
+                                            for number_conv_layers in [3, 2]:
                                                 try:
-                                                    for to_shuffle_input in [False]:
+                                                    for lr in [3, 4, 5]: #, 1, 0, 6]:  # range(5, 1, -1):
                                                         try:
                                                             if (input_size_index == 13 and (filter_type == 1 or number_conv_layers == 3 or num_filters_index > 1)) \
                                                                     or \
