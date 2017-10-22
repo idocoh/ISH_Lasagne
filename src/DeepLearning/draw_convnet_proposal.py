@@ -114,77 +114,65 @@ if __name__ == '__main__':
 
     ############################
     # conv layers
-    # size_list = [140, 140, 70, 70, 35, 35, 35, 70, 70, 140, 140, 140]
-    # width_list = [300, 300, 150, 150, 75, 75, 75, 150, 150, 300, 300, 300]
-    size_list = [480, 480, 240, 240, 120, 120, 60, 60, 30, 30, 30, 60, 60, 120, 120, 240, 240, 480, 480, 480]
-    width_list = [960, 960, 480, 480, 240, 240, 120, 120, 60, 60, 60, 120, 120, 240, 240, 480, 480, 960, 960, 960]
+    size_list = [140,  136, 68,  60,  30, 20, 10, 6, 3]
+    width_list = [300, 296, 148, 140, 70, 60, 15, 8, 4]
 
-    # num_list = [1, 32, 32, 32, 32, 64, 1, 1, 32, 32, 32, 1]
-    num_list = [1, 4, 4, 4, 4, 4, 4, 4, 4, 4, 1, 4, 4, 4, 4, 4, 4, 4, 4, 1]
-
-    # x_diff_list = [0, layer_width*1.5, layer_width*1.5, layer_width, layer_width,  layer_width, layer_width, layer_width, layer_width, layer_width,  layer_width*1.5, layer_width*1.5]
-    x_diff_list = [0, layer_width*1.5, layer_width*1.5, layer_width, layer_width, layer_width, layer_width, layer_width, layer_width,  layer_width, layer_width, layer_width, layer_width, layer_width,layer_width, layer_width, layer_width, layer_width,  layer_width*1.5, layer_width*1.5]
-
+    num_list = [1, 5, 5, 10, 10, 20, 20, 40, 40]
+    x_diff_list = [0, layer_width*1.3, layer_width*1.3, layer_width*0.9, layer_width*0.9,  layer_width*0.9, layer_width*0.8, layer_width*0.8, layer_width*0.7,  layer_width*0.9, layer_width*0.8, layer_width*0.8, layer_width*0.7]
     # text_list = ['Inputs'] + ['Feature\nmaps*', 'Feature\nmaps'] * (len(size_list)/2 - 1) + ['Outputs']
-    # text_list = ['Inputs'] + ['Feature\nmaps*', 'Feature\nmaps', 'Feature\nmaps*', 'Feature\nmaps', 'Feature\nmaps**', 'Feature\nmaps', 'Feature\nmaps', 'Feature\nmaps*', 'Feature\nmaps', 'Feature\nmaps*'] + ['Outputs']
-    text_list = ['Inputs'] + ['Feature\nmaps', 'Feature\nmaps', 'Feature\nmaps', 'Feature\nmaps', 'Feature\nmaps', 'Feature\nmaps', 'Feature\nmaps', 'Feature\nmaps', 'Feature\nmaps', 'Feature\nmaps', 'Feature\nmaps', 'Feature\nmaps', 'Feature\nmaps','Feature\nmaps', 'Feature\nmaps', 'Feature\nmaps', 'Feature\nmaps', 'Feature\nmaps'] + ['Outputs']
-
+    text_list = ['Inputs'] + ['Feature\nmaps', 'Feature\nmaps', 'Feature\nmaps*', 'Feature\nmaps', 'Feature\nmaps**', 'Feature\nmaps', 'Feature\nmaps', 'Feature\nmaps*', 'Feature\nmaps', 'Feature\nmaps*'] + ['Outputs']
 
     loc_diff_list = [[3, -3]] * len(size_list)
 
     num_show_list = list(map(min, num_list, [NumConvMax] * len(num_list)))
     top_left_list = np.c_[np.cumsum(x_diff_list), np.zeros(len(x_diff_list))]
-    flag = -1
+
     for ind in range(len(size_list)):
         add_layer(patches, colors, size=size_list[ind],
                   num=num_show_list[ind],
                   top_left=top_left_list[ind], loc_diff=loc_diff_list[ind])
         label(top_left_list[ind], text_list[ind] + '\n{}@{}x{}'.format(
-            num_list[ind], width_list[ind], size_list[ind]), xy_off=[0, 22+10*flag])
-        flag = flag*-1
+            num_list[ind], width_list[ind], size_list[ind]))
 
 
     ############################
     # in between layers
-    start_ratio_list = [[0.4, 1], [0.4, 1], [0.4, 0.95], [0.4, 0.95], [0.4, 0.75], [0.4, 0.7], [0.4, 0.7], [0.4, 0.7], [0.4, 0.7], [0.4, 0.7],[0.4, 0.7], [0.4, 0.7], [0.4, 0.7], [0.4, 0.7], [0.4, 0.75], [0.4, 0.95], [0.4, 0.95], [0.4, 1], [0.4, 1]]
-    # patch_size_list = [9, 2, 7, 2, 5, 5, 2, 7, 2, 9, 5]
-    patch_size_list = [3, 2, 3, 2, 3, 2, 3, 2, 3, 3, 2, 3, 2, 3, 2, 3, 2, 3, 3]
-
+    start_ratio_list = [[0.4, 0.5], [0.4, 0.5], [0.4, 0.5], [0.4, 0.5], [0.4, 0.5], [0.4, 0.5], [0.4, 0.5], [0.4, 0.5]]
+    patch_size_list = [3, 2, 3, 2, 3, 2, 3, 2]
     ind_bgn_list = range(len(patch_size_list))
-    text_list = ['Convolution', 'Max-pooling', 'Convolution', 'Max-pooling', 'Convolution', 'Max-pooling', 'Convolution', 'Max-pooling', 'Convolution', 'Convolution', 'Unpooling', 'Convolution', 'Unpooling', 'Convolution', 'Unpooling', 'Convolution', 'Unpooling', 'Convolution', 'Convolution']
-    flag = 0
+    text_list = ['Convolution', 'Max-pooling', 'Convolution', 'Max-pooling', 'Convolution', 'Max-pooling', 'Convolution', 'Max-pooling']
+
     for ind in range(len(patch_size_list)):
         add_mapping(patches, colors, start_ratio_list[ind],
                     patch_size_list[ind], ind,
                     top_left_list, loc_diff_list, num_show_list, size_list)
         label(top_left_list[ind], text_list[ind] + '\n{}x{} kernel'.format(
-            patch_size_list[ind], patch_size_list[ind]), xy_off=[46, -260+30*flag])
-        flag = 1-flag
+            patch_size_list[ind], patch_size_list[ind]), xy_off=[46, -95])
 
-    # label(top_left_list[1], "* Three sequential convolutional layers  ", xy_off=[-70, -135])
+    # label(top_left_list[1], "* Three sequential convolutional layers  ", xy_off=[-20, -135])
     # label(top_left_list[1], "** Two sequential convolutional layers  ", xy_off=[-20, -155])
 
 
     # ############################
     # # fully connected layers
-    # size_list = [fc_unit_size]
-    # num_list = [42000]
-    # num_show_list = list(map(min, num_list, [NumFcMax] * len(num_list)))
-    # x_diff_list = [sum(x_diff_list) + layer_width, layer_width, layer_width]
-    # top_left_list = np.c_[np.cumsum(x_diff_list), np.zeros(len(x_diff_list))]
-    # loc_diff_list = [[fc_unit_size, -fc_unit_size]] * len(top_left_list)
-    # text_list = ['Hidden\nunits'] * (len(size_list) - 1) + ['Outputs']
-    # 
-    # for ind in range(len(size_list)):
-    #     add_layer(patches, colors, size=size_list[ind], num=num_show_list[ind],
-    #               top_left=top_left_list[ind], loc_diff=loc_diff_list[ind])
-    #     label(top_left_list[ind], text_list[ind] + '\n{}'.format(
-    #         num_list[ind]))
-    #
-    # text_list = ['Flatten\n']
-    #
-    # for ind in range(len(size_list)):
-    #     label(top_left_list[ind], text_list[ind], xy_off=[-10, -65])
+    size_list = [3, 3, 3]
+    num_list = [500, 200, 100]
+    num_show_list = list(map(min, num_list, [NumFcMax] * len(num_list)))
+    x_diff_list = [sum(x_diff_list) + layer_width, layer_width, layer_width]
+    top_left_list = np.c_[np.cumsum(x_diff_list), np.zeros(len(x_diff_list))]
+    loc_diff_list = [[fc_unit_size, -fc_unit_size]] * len(top_left_list)
+    text_list = ['Hidden\nunits'] * (len(size_list) - 1) + ['Outputs']
+
+    for ind in range(len(size_list)):
+        add_layer(patches, colors, size=size_list[ind], num=num_show_list[ind],
+                  top_left=top_left_list[ind], loc_diff=loc_diff_list[ind])
+        label(top_left_list[ind], text_list[ind] + '\n{}'.format(
+            num_list[ind]))
+
+    text_list = ['Fully-Connected\n', 'Fully-Connected\n', 'Fully-Connected\n', 'Fully-Connected\n']
+
+    for ind in range(len(size_list)):
+        label(top_left_list[ind], text_list[ind], xy_off=[-10, -65])
 
     ############################
     colors += [0, 1]
@@ -195,7 +183,7 @@ if __name__ == '__main__':
     plt.axis('equal')
     plt.axis('off')
     plt.show()
-    fig.set_size_inches(9, 2.5)
+    fig.set_size_inches(8, 2.5)
 
     fig_dir = './'
     fig_ext = '.png'
