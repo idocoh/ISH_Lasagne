@@ -118,7 +118,7 @@ if __name__ == '__main__':
     width_list = [300, 296, 148, 140, 70, 60, 15, 8, 4]
 
     num_list = [1, 5, 5, 10, 10, 20, 20, 40, 40]
-    x_diff_list = [0, layer_width*1.3, layer_width*1.3, layer_width*0.9, layer_width*0.9,  layer_width*0.9, layer_width*0.8, layer_width*0.8, layer_width*0.7,  layer_width*0.9, layer_width*0.8, layer_width*0.8, layer_width*0.7]
+    x_diff_list = [0, layer_width*1.3, layer_width*1.3, layer_width*0.9, layer_width*0.9,  layer_width*0.9, layer_width*0.8, layer_width*0.8, layer_width*0.7,  layer_width*0.9, layer_width*0.5, layer_width*0.5, layer_width*0.5]
     # text_list = ['Inputs'] + ['Feature\nmaps*', 'Feature\nmaps'] * (len(size_list)/2 - 1) + ['Outputs']
     text_list = ['Inputs'] + ['Feature\nmaps', 'Feature\nmaps', 'Feature\nmaps*', 'Feature\nmaps', 'Feature\nmaps**', 'Feature\nmaps', 'Feature\nmaps', 'Feature\nmaps*', 'Feature\nmaps', 'Feature\nmaps*'] + ['Outputs']
 
@@ -155,24 +155,24 @@ if __name__ == '__main__':
 
     # ############################
     # # fully connected layers
-    size_list = [3, 3, 3]
-    num_list = [500, 200, 100]
-    num_show_list = list(map(min, num_list, [NumFcMax] * len(num_list)))
-    x_diff_list = [sum(x_diff_list) + layer_width, layer_width, layer_width]
-    top_left_list = np.c_[np.cumsum(x_diff_list), np.zeros(len(x_diff_list))]
-    loc_diff_list = [[fc_unit_size, -fc_unit_size]] * len(top_left_list)
-    text_list = ['Hidden\nunits'] * (len(size_list) - 1) + ['Outputs']
-
-    for ind in range(len(size_list)):
-        add_layer(patches, colors, size=size_list[ind], num=num_show_list[ind],
-                  top_left=top_left_list[ind], loc_diff=loc_diff_list[ind])
-        label(top_left_list[ind], text_list[ind] + '\n{}'.format(
-            num_list[ind]))
-
-    text_list = ['Fully-Connected\n', 'Fully-Connected\n', 'Fully-Connected\n', 'Fully-Connected\n']
-
-    for ind in range(len(size_list)):
-        label(top_left_list[ind], text_list[ind], xy_off=[-10, -65])
+    # size_list = [3, 3, 3]
+    # num_list = [500, 200, 100]
+    # num_show_list = list(map(min, num_list, [NumFcMax] * len(num_list)))
+    # x_diff_list = [sum(x_diff_list) + layer_width, layer_width, layer_width]
+    # top_left_list = np.c_[np.cumsum(x_diff_list), np.zeros(len(x_diff_list))]
+    # loc_diff_list = [[fc_unit_size, -fc_unit_size]] * len(top_left_list)
+    # text_list = ['Hidden\nunits'] * (len(size_list) - 1) + ['Outputs']
+    #
+    # for ind in range(len(size_list)):
+    #     add_layer(patches, colors, size=size_list[ind], num=num_show_list[ind],
+    #               top_left=top_left_list[ind], loc_diff=loc_diff_list[ind])
+    #     label(top_left_list[ind], text_list[ind] + '\n{}'.format(
+    #         num_list[ind]))
+    #
+    # text_list = ['Fully-Connected\n', 'Fully-Connected\n', 'Fully-Connected\n', 'Fully-Connected\n']
+    #
+    # for ind in range(len(size_list)):
+    #     label(top_left_list[ind], text_list[ind], xy_off=[-10, -65])
 
     ############################
     colors += [0, 1]

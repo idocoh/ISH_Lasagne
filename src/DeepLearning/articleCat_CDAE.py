@@ -2135,6 +2135,7 @@ def run(loadedData=None, learning_rate=0.04, update_momentum=0.9, update_rho=Non
     if use_nn_classifier:
         cae = load_network(folder_name)
         valid_accuracy = cae.train_history_[-1]['valid_accuracy']
+        # folder_path = None  # Do not calculate NN classifier TODO-delete!
     else:
         start_time = time.clock()
         print ("Start time: ", time.ctime())
@@ -2212,12 +2213,12 @@ def run_all(use_nn_classifier=False, folder_name=None, input_size_pre=None):
     print(theano.sandbox.cuda.dnn_available())
 
     epochs = 20
-    num_labels = 15 #164 #TEST: change 15
+    num_labels = 2081 #164 #TEST: change 15
     amount_train = 16351
     input_noise_rate = 0.2
     svm_negative_amount = 200
 
-    folder_name = "CAE_" + str(amount_train) + "_test_nn-" + str(time.time()) if folder_name is None else folder_name
+    folder_name = "CAE_" + str(amount_train) + "_test_2081_nn-" + str(time.time()) if folder_name is None else folder_name
 
     steps = [
         [5000, 10000, 16352],
@@ -2367,6 +2368,7 @@ def test_nn_classification():
         cae_load_path = all_cae_paths[i].replace("\r", "\\r")
         print("Running NN classification for " + cae_load_path)
         run_all(use_nn_classifier=True, folder_name=cae_load_path, input_size_pre=all_cae_sizes[i])
+
 
 
 if __name__ == "__main__":

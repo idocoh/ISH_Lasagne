@@ -141,10 +141,10 @@ def check_label_predict(features, labels, results_file=None, cross_validation_pa
         # clf, nn_score, test_params, test_y = classifier_score(neg_test, neg_train, pos_test, pos_train, results_file)
         # clf, nn_score, test_params, test_y = lib_linear_score(neg_test, neg_train, pos_test, pos_train)
 
-        # Test: change
-        if results_file is not None:
-            clf, nn_score, test_params, test_y = nn_classifier_score(neg_test, neg_train, pos_test, pos_train, results_file)
-            nn_auc_scores[cross_validation_index] = nn_score
+        # TODO: remove
+        # if results_file is not None:
+        #     clf, nn_score, test_params, test_y = nn_classifier_score(neg_test, neg_train, pos_test, pos_train, results_file)
+        #     nn_auc_scores[cross_validation_index] = nn_score
 
         clf_svm, svm_score, test_params_svm, test_y_svm = svc_score(neg_test, neg_train, pos_test, pos_train)
         svm_auc_scores[cross_validation_index] = svm_score
@@ -310,7 +310,7 @@ def generate_positives(positives, num_negatives):
 def run_svm(pickle_name=None, X_train=None, features=None, labels=None, svm_negative_amount=800, folder_path=None):
     num_labels = labels.shape[1]
 
-    results_file = None if folder_path is None else open(folder_path + "/NN_output_big.txt", "a")
+    results_file = None if folder_path is None else open(folder_path + "/SVM_output_2081_new.txt", "a")
 
     if features is None:
         features, labels = images_svm(pickle_name, X_train, labels, num_labels=num_labels,

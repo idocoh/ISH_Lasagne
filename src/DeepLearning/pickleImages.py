@@ -201,12 +201,12 @@ if __name__ == '__main__':#     dir = "C:\\Users\\Abigail\\Desktop\\Ido\\pyWS\\F
     dir = "C:\Users\Research\Pictures\BrainISHimages"
 
     try:
-        IMAGE_WIDTH = 640
-        IMAGE_HEIGHT = 320
-        num_iter = [2000, 3000, 4000, 5000, 6000, 7000, 8000, 9000, 10000, 11000, 12000, 13000, 14000, 15000,
+        IMAGE_WIDTH = 800
+        IMAGE_HEIGHT = 480
+        num_iter = [500, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 4500, 5000, 5500, 6000, 6500, 7000, 7500, 8000, 8500, 9000, 9500, 10000, 10500, 11000, 11500, 12000, 12500, 13000, 13500, 14000, 14500, 15000, 15500,
                     16000, 16352]
 
-        first_i = 1000
+        first_i = 0
         for i in num_iter:
             runPickleImages(dir, first_i, i)
             first_i = i
